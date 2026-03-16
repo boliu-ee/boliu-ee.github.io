@@ -1,1 +1,86 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>刘波｜项目</title><meta name="description" content="刘波项目页"/><link rel="stylesheet" href="../assets/css/style.css"></head><body><header class="site-header"><div class="container nav"><div class="brand">个人主页</div><div class="nav-links"><a href="index.html" class="">首页</a><a href="resume.html" class="">简历</a><a href="projects.html" class="active">项目</a><a href="blog.html" class="">博客</a></div><div class="lang-switch"><a href="../en/projects.html" class="active">English</a></div></div></header><main class="section"><div class="container"><div class="card feature-card"><h1>项目</h1><p class="lead">以下项目根据简历内容整理，后续你可以继续为每个项目加入论文链接、代码仓库、截图和更详细的技术说明。</p></div></div></main><section class="section"><div class="container"><div class="timeline"><div class="timeline-item"><div class="item-head"><strong>面向 800 Gb/s PAM4 CWDM4 的神经网络光通信均衡器设计</strong><span>2021.06 – 2022.12</span></div><p class="muted">博士课题</p><ul class="clean"><li>针对不同波长链路的均衡器重复设计问题，提出基于多任务学习的单均衡器多波长共享架构。</li><li>针对光/电信号吞吐差异带来的硬件并行需求，提出基于多输出学习的多输出并行均衡器架构。</li><li>在 45 nm、1 GHz 下，与传统方法性能持平，面积降低 77%，功耗降低 61%，仅配置 bias 即可适配不同波长。</li></ul></div><div class="timeline-item"><div class="item-head"><strong>高效 MAC Array 设计和高效神经网络加速器</strong><span>2023.01 – 2024.11</span></div><p class="muted">博士课题</p><ul class="clean"><li>面向神经网络硬件部署中乘加单元面积大、功耗高的问题，设计广义有权编码 MAC Array。</li><li>在 15 nm、5 GHz、64×64 MAC Array 实现中，相比传统 Systolic Array，功耗降低 43.10%，面积降低 23.69%。</li></ul></div><div class="timeline-item"><div class="item-head"><strong>低信噪比下的高精度语音活动性检测的 VLSI 设计与实现</strong><span>2018.11 – 2020.05</span></div><p class="muted">硕士毕设</p><ul class="clean"><li>面向高背景噪声场景下语音活动检测准确率低、硬件代价高的问题，设计低功耗 VLSI 实现方案。</li><li>相比现有方案，检测准确率提升至 85%–94%，功耗降低 30%，面积减少 26%。</li></ul></div><div class="timeline-item"><div class="item-head"><strong>基于 LSTM 的语音关键词识别的 FPGA 设计</strong><span>2018.09 – 2018.12</span></div><p class="muted">硕士竞赛</p><ul class="clean"><li>训练 LSTM，完成 Verilog 设计及验证，部署到 Artix-7 开发板，获 FPGA 创新设计邀请赛全国一等奖。</li></ul></div></div></div></section><footer class="footer"><div class="container"><div>基于 GitHub Pages / Gitee Pages 的中英双语个人主页初版。</div></div></footer><script src="../assets/js/main.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>刘波｜项目</title><meta name="description" content="刘波项目页">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container nav">
+    <div class="brand"><span class="brand-badge">BL</span><span>刘波 · Bo Liu</span></div>
+    <nav class="nav-center"><a href="index.html" class="">首页</a><a href="resume.html" class="">简历</a><a href="projects.html" class="active">项目</a><a href="publications.html" class="">论文</a><a href="blog.html" class="">博客</a><a href="deploy.html" class="">部署</a></nav>
+    <div class="lang-switch"><a href="../en/projects.html" class="active">English</a></div>
+  </div>
+</header>
+
+<main class="section"><div class="container"><div class="card panel"><h1>项目</h1><p class="lead">这里已经加入了项目图片位和代码链接位。当前图片是我根据你的研究方向绘制的示意占位图；你发真实图片后，我可以直接替换并进一步美化。</p></div></div></main>
+<section class="section"><div class="container grid-2">
+<div class="card project-card">
+  <div class="project-cover"><img src="../assets/img/projects/optical-equalizer.svg" alt="Optical equalizer project"></div>
+  <div class="project-content">
+    <h3>面向 800 Gb/s PAM4 CWDM4 的神经网络光通信均衡器设计</h3>
+    <p class="muted">博士课题 · 2021.06 – 2022.12</p>
+    <ul class="clean">
+      <li>提出多任务学习的单均衡器多波长共享架构。</li>
+      <li>提出多输出学习的并行均衡器架构以满足高吞吐硬件需求。</li>
+      <li>在 45 nm、1 GHz 下达到面积降低 77%、功耗降低 61%。</li>
+    </ul>
+    <div class="link-row">
+      <a class="btn secondary" href="publications.html">相关论文</a>
+      <a class="btn ghost" href="#">代码链接（待补充）</a>
+      <a class="btn ghost" href="#">项目图片（可替换）</a>
+    </div>
+  </div>
+</div>
+<div class="card project-card">
+  <div class="project-cover"><img src="../assets/img/projects/mac-array.svg" alt="MAC array project"></div>
+  <div class="project-content">
+    <h3>高效 MAC Array 设计和高效神经网络加速器</h3>
+    <p class="muted">博士课题 · 2023.01 – 2024.11</p>
+    <ul class="clean">
+      <li>设计广义有权编码 MAC Array 以降低乘加阵列的面积与功耗。</li>
+      <li>15 nm、5 GHz、64×64 实现中，相比传统 Systolic Array，功耗降低 43.10%，面积降低 23.69%。</li>
+    </ul>
+    <div class="link-row">
+      <a class="btn secondary" href="publications.html">相关论文</a>
+      <a class="btn ghost" href="#">代码链接（待补充）</a>
+      <a class="btn ghost" href="#">项目图片（可替换）</a>
+    </div>
+  </div>
+</div>
+</div></section>
+<section class="section"><div class="container"><div class="card panel"><h2>建议继续补充的项目素材</h2><ul class="clean">
+<li>论文中的系统框图、芯片架构图、结果对比图</li>
+<li>代码仓库链接：GitHub / Gitee / GitLab 任意都可以</li>
+<li>每个项目 1 句可对外展示的摘要</li>
+<li>如果项目不能公开，可给我非敏感截图，我帮你抽象成公开图示</li>
+</ul></div></div></section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <div class="footer-title">刘波 · Bo Liu</div>
+      <div class="small">这是一套面向 GitHub Pages / Gitee Pages 的中英双语静态站点模板，可继续升级为正式个人主页。</div>
+      <div class="small" style="margin-top:10px;">如需继续升级，请补充论文链接、项目图片、代码仓库和自定义域名信息。</div>
+    </div>
+    <div>
+      <div class="footer-title">快速链接</div>
+      <div class="footer-list">
+        <a href="resume.html">PDF 简历</a>
+        <a href="publications.html">论文与专利</a>
+        <a href="projects.html">项目展示</a>
+      </div>
+    </div>
+    <div>
+      <div class="footer-title">下一步建议</div>
+      <div class="footer-list">
+        <a href="deploy.html">部署与自定义域名</a>
+        <a href="blog.html">博客结构</a>
+        <a href="materials.html">待补充素材</a>
+      </div>
+    </div>
+  </div>
+</footer>
+<script src="../assets/js/main.js"></script>
+</body></html>

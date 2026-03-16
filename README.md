@@ -1,17 +1,13 @@
-# Bilingual linked personal website
+# Bo Liu bilingual personal website v2
 
-This package contains a bilingual static personal website.
+This package contains a bilingual static personal website with:
+- linked Chinese/English pages
+- improved typography and navigation
+- publications page
+- projects page with image/repository placeholders
+- blog structure with sample posts
+- deployment and custom-domain guide
+- materials checklist for future improvements
 
-## Structure
-- `index.html`: redirect to `zh/index.html`
-- `zh/`: Chinese pages
-- `en/`: English pages
-- `assets/`: shared CSS / JS / images
-- `resume/resume.pdf`: uploaded CV copied into the site package
-
-## Deployment
-Upload the whole folder to:
-- GitHub Pages
-- Gitee Pages
-
-Each Chinese page links directly to its English counterpart, and vice versa.
+Recommended next step:
+replace the placeholder project images, add real URLs, and publish on GitHub Pages.

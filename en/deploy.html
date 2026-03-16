@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bo Liu | Deployment & Domain</title><meta name="description" content="Deployment and custom domain guide">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="container nav">
+    <div class="brand"><span class="brand-badge">BL</span><span>Bo Liu · 刘波</span></div>
+    <nav class="nav-center"><a href="index.html" class="">Home</a><a href="resume.html" class="">Resume</a><a href="projects.html" class="">Projects</a><a href="publications.html" class="">Publications</a><a href="blog.html" class="">Blog</a><a href="deploy.html" class="active">Deploy</a></nav>
+    <div class="lang-switch"><a href="../zh/deploy.html" class="active">中文</a></div>
+  </div>
+</header>
+
+<main class="section"><div class="container"><div class="card panel"><h1>Deployment & Custom Domain</h1><p class="lead">This page is intended as your practical launch guide. The site is already structured as a GitHub Pages / Gitee Pages compatible static website.</p></div></div></main>
+<section class="section"><div class="container grid-2">
+<div class="card panel"><h2>GitHub Pages</h2>
+<ol class="clean"><li>Create a repository named <code>yourname.github.io</code></li><li>Upload all website files to the repository root</li><li>Settings → Pages → Deploy from branch → main / root</li><li>Wait for the site URL to be published</li></ol>
+<h3 style="margin-top:16px;">Custom domain</h3>
+<p>Create a <code>CNAME</code> file in the repository root, for example:</p>
+<div class="code-block">www.yourdomain.com</div>
+<p>Then configure the DNS records in your domain provider dashboard.</p>
+</div>
+<div class="card panel"><h2>Gitee Pages</h2>
+<ol class="clean"><li>Create a public repository and upload the same static files</li><li>Enable Gitee Pages and trigger deployment manually</li><li>Use it as the China mirror while keeping GitHub Pages as the primary site</li></ol>
+<h3 style="margin-top:16px;">My recommendation</h3>
+<ul class="clean"><li>Primary site: GitHub Pages</li><li>Mirror: Gitee Pages</li><li>Domain binding: point the domain to GitHub Pages</li></ul>
+</div>
+</div></section>
+<section class="section"><div class="container"><div class="card panel"><h2>Suggested folder structure</h2><div class="code-block">/
+├── index.html
+├── assets/
+├── docs/
+├── zh/
+│   ├── index.html
+│   ├── resume.html
+│   ├── projects.html
+│   ├── publications.html
+│   ├── blog.html
+│   └── posts/
+└── en/
+    ├── index.html
+    ├── resume.html
+    ├── projects.html
+    ├── publications.html
+    ├── blog.html
+    └── posts/</div></div></div></section>
+
+<footer class="site-footer">
+  <div class="container footer-grid">
+    <div>
+      <div class="footer-title">Bo Liu · 刘波</div>
+      <div class="small">This is a bilingual static-site template for GitHub Pages / Gitee Pages and can be further upgraded into a polished personal website.</div>
+      <div class="small" style="margin-top:10px;">To continue improving the site, please provide paper links, project figures, repository URLs, and your preferred custom domain.</div>
+    </div>
+    <div>
+      <div class="footer-title">Quick Links</div>
+      <div class="footer-list">
+        <a href="resume.html">PDF Resume</a>
+        <a href="publications.html">Papers & Patent</a>
+        <a href="projects.html">Projects</a>
+      </div>
+    </div>
+    <div>
+      <div class="footer-title">Recommended Next Step</div>
+      <div class="footer-list">
+        <a href="deploy.html">Deployment & Domain</a>
+        <a href="blog.html">Blog Structure</a>
+        <a href="materials.html">Needed Materials</a>
+      </div>
+    </div>
+  </div>
+</footer>
+<script src="../assets/js/main.js"></script>
+</body></html>

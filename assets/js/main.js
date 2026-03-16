@@ -1,1 +1,7 @@
-document.addEventListener('DOMContentLoaded',()=>{const here=location.pathname.split('/').pop()||'index.html';document.querySelectorAll('.nav-links a').forEach(a=>{if(a.getAttribute('href')===here)a.classList.add('active');});});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const current = location.pathname.split('/').pop() || 'index.html';
+  document.querySelectorAll('.nav-center a').forEach(a => {
+    if (a.getAttribute('href') === current) a.classList.add('active');
+  });
+});
