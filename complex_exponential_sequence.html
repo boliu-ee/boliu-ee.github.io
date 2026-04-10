@@ -437,7 +437,7 @@
           <div class="mini-grid two">
             <div class="field">
               <label for="nMin">n 最小值</label>
-              <input id="nMin" type="number" step="1" value="-10" />
+              <input id="nMin" type="number" step="1" value="-20" />
             </div>
             <div class="field">
               <label for="nMax">n 最大值</label>
@@ -454,7 +454,7 @@
               <span>当前 n</span>
               <span class="value-badge" id="nValueLabel">0</span>
             </div>
-            <input id="nSlider" type="range" min="-10" max="20" step="1" value="0" />
+            <input id="nSlider" type="range" min="-20" max="20" step="1" value="0" />
             <div class="hint">拖动这个滑块，复平面中的点 <span class="mono">(Re(x[n]), Im(x[n]))</span> 会实时移动。</div>
             <div class="action-row">
               <button id="animBtn" class="anim-btn" type="button">播放动画</button>
@@ -704,7 +704,7 @@
     }
 
     function syncNControls() {
-      let nMin = Math.round(toNumber(els.nMin.value, -10));
+      let nMin = Math.round(toNumber(els.nMin.value, -20));
       let nMax = Math.round(toNumber(els.nMax.value, 20));
       let messages = [];
 
@@ -743,7 +743,7 @@
 
     function advanceAnimationStep() {
       syncNControls();
-      const nMin = Math.round(toNumber(els.nSlider.min, -10));
+      const nMin = Math.round(toNumber(els.nSlider.min, -20));
       const nMax = Math.round(toNumber(els.nSlider.max, 20));
       const current = Math.round(toNumber(els.nSlider.value, nMin));
       const next = current >= nMax ? nMin : current + 1;
@@ -791,7 +791,7 @@
       const omegaDisplay = toNumber(els.wSlider.value, radToDisplay(appState.omegaRad));
       const w = displayToRad(omegaDisplay);
       appState.omegaRad = w;
-      const nMin = Math.round(toNumber(els.nMin.value, -10));
+      const nMin = Math.round(toNumber(els.nMin.value, -20));
       const nMax = Math.round(toNumber(els.nMax.value, 20));
       const nCurrent = Math.round(toNumber(els.nSlider.value, 0));
 
