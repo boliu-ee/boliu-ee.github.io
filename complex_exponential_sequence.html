@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>一般复指数序列可视化</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --sub: #6b7280;
+      --line: #dbe2ea;
+      --accent: #2563eb;
+      --accent-2: #0f766e;
+      --warn: #b45309;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero, .panel, .plot-card, .note-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      padding: 24px 26px;
+      margin-bottom: 18px;
+    }
+
+    .title {
+      margin: 0 0 10px;
+      font-size: 30px;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      margin: 0 0 16px;
+      color: var(--sub);
+      font-size: 15px;
+    }
+
+    .formula {
+      display: inline-block;
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: #0f172a;
+      color: #f8fafc;
+      font-size: 28px;
+      overflow-x: auto;
+      max-width: 100%;
+      white-space: nowrap;
+    }
+
+    .live-formula {
+      margin-top: 16px;
+      padding: 14px 16px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e3a8a;
+      border-radius: 14px;
+      font-size: 15px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 360px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      padding: 18px;
+      position: sticky;
+      top: 18px;
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 22px;
+    }
+
+    .panel p {
+      margin: 0 0 14px;
+      color: var(--sub);
+      font-size: 14px;
+    }
+
+    .group {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+      background: #fcfdff;
+    }
+
+    .group h3 {
+      margin: 0 0 10px;
+      font-size: 17px;
+    }
+
+    .control {
+      margin-bottom: 12px;
+    }
+
+    .control:last-child { margin-bottom: 0; }
+
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: baseline;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    .value-badge {
+      color: var(--accent);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin: 2px 0 8px;
+      accent-color: var(--accent);
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .mini-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--sub);
+    }
+
+    input[type="number"] {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 9px 10px;
+      font-size: 14px;
+      color: var(--text);
+      background: #fff;
+    }
+
+    .hint {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--sub);
+    }
+
+    .status {
+      margin-top: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: var(--warn);
+      font-size: 13px;
+      display: none;
+    }
+
+    .plots {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .plot-card {
+      padding: 14px 14px 10px;
+    }
+
+    .plot-title {
+      margin: 0 0 8px;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .plot-sub {
+      color: var(--sub);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    canvas {
+      width: 100%;
+      height: 300px;
+      display: block;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+      border: 1px solid #edf2f7;
+    }
+
+    .bottom-notes {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .note-card {
+      padding: 16px 18px;
+    }
+
+    .note-card h3 {
+      margin: 0 0 10px;
+      font-size: 17px;
+    }
+
+    .note-card p {
+      margin: 0 0 8px;
+      color: var(--sub);
+      font-size: 14px;
+    }
+
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      color: #0f172a;
+    }
+
+    @media (max-width: 1060px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .panel {
+        position: static;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .plots,
+      .bottom-notes {
+        grid-template-columns: 1fr;
+      }
+
+      .title { font-size: 24px; }
+      .formula { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <h1 class="title">一般复指数序列可视化</h1>
+      <p class="subtitle">
+        通过滑块实时观察 <span class="mono">r</span> 和 <span class="mono">ω</span> 对复指数序列
+        <span class="mono">x[n] = r<sup>n</sup>e<sup>jωn</sup></span> 的影响。
+        由于 <span class="mono">x[n]</span> 是复数，页面会同时绘制它的实部、虚部、幅度和相位。
+      </p>
+      <div class="formula">x[n] = r<sup>n</sup>e<sup>jωn</sup> = (re<sup>jω</sup>)<sup>n</sup>, &nbsp; r &gt; 0, &nbsp; ω ∈ ℝ</div>
+      <div class="live-formula" id="liveFormula"></div>
+    </section>
+
+    <div class="layout">
+      <aside class="panel">
+        <h2>参数控制</h2>
+        <p>每次修改都会自动重绘。你可以调整滑块当前值，也可以自定义滑块范围和序列的 <span class="mono">n</span> 范围。</p>
+
+        <div class="group">
+          <h3>r：控制幅度包络</h3>
+          <div class="control">
+            <div class="label-row">
+              <span>当前 r</span>
+              <span class="value-badge" id="rValueLabel">1.00</span>
+            </div>
+            <input id="rSlider" type="range" min="0.1" max="1.5" step="0.01" value="0.9" />
+            <div class="mini-grid">
+              <div class="field">
+                <label for="rMin">r 最小值</label>
+                <input id="rMin" type="number" step="0.01" value="0.1" />
+              </div>
+              <div class="field">
+                <label for="rMax">r 最大值</label>
+                <input id="rMax" type="number" step="0.01" value="1.5" />
+              </div>
+              <div class="field">
+                <label for="rStep">r 步长</label>
+                <input id="rStep" type="number" step="0.001" value="0.01" min="0.001" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <h3>ω：控制振荡快慢</h3>
+          <div class="control">
+            <div class="label-row">
+              <span>当前 ω（弧度）</span>
+              <span class="value-badge" id="wValueLabel">0.50</span>
+            </div>
+            <input id="wSlider" type="range" min="-6.2832" max="6.2832" step="0.01" value="0.5" />
+            <div class="mini-grid">
+              <div class="field">
+                <label for="wMin">ω 最小值</label>
+                <input id="wMin" type="number" step="0.01" value="-6.2832" />
+              </div>
+              <div class="field">
+                <label for="wMax">ω 最大值</label>
+                <input id="wMax" type="number" step="0.01" value="6.2832" />
+              </div>
+              <div class="field">
+                <label for="wStep">ω 步长</label>
+                <input id="wStep" type="number" step="0.001" value="0.01" min="0.001" />
+              </div>
+            </div>
+            <div class="hint">常用参考：<span class="mono">π ≈ 3.1416</span>，<span class="mono">2π ≈ 6.2832</span></div>
+          </div>
+        </div>
+
+        <div class="group">
+          <h3>n：离散序列范围</h3>
+          <div class="mini-grid two">
+            <div class="field">
+              <label for="nMin">n 最小值</label>
+              <input id="nMin" type="number" step="1" value="-10" />
+            </div>
+            <div class="field">
+              <label for="nMax">n 最大值</label>
+              <input id="nMax" type="number" step="1" value="20" />
+            </div>
+          </div>
+          <div class="hint">建议先把范围控制在几十个点以内，这样更容易观察离散序列的形状。</div>
+        </div>
+
+        <div class="status" id="statusBox"></div>
+      </aside>
+
+      <main>
+        <div class="plots">
+          <section class="plot-card">
+            <h3 class="plot-title">实部 Re{x[n]} <span class="plot-sub">r<sup>n</sup>cos(ωn)</span></h3>
+            <canvas id="realCanvas"></canvas>
+          </section>
+
+          <section class="plot-card">
+            <h3 class="plot-title">虚部 Im{x[n]} <span class="plot-sub">r<sup>n</sup>sin(ωn)</span></h3>
+            <canvas id="imagCanvas"></canvas>
+          </section>
+
+          <section class="plot-card">
+            <h3 class="plot-title">幅度 |x[n]| <span class="plot-sub">= r<sup>n</sup></span></h3>
+            <canvas id="magCanvas"></canvas>
+          </section>
+
+          <section class="plot-card">
+            <h3 class="plot-title">相位 ∠x[n] <span class="plot-sub">主值范围 [-π, π]</span></h3>
+            <canvas id="phaseCanvas"></canvas>
+          </section>
+        </div>
+
+        <div class="bottom-notes">
+          <section class="note-card">
+            <h3>怎么看图</h3>
+            <p>当 <span class="mono">0 &lt; r &lt; 1</span> 时，幅度通常会随 <span class="mono">n</span> 增大而衰减。</p>
+            <p>当 <span class="mono">r = 1</span> 时，幅度保持不变，序列成为纯旋转的复指数。</p>
+            <p>当 <span class="mono">r &gt; 1</span> 时，幅度会随 <span class="mono">n</span> 增大而增长。</p>
+            <p><span class="mono">|ω|</span> 越大，实部和虚部随 <span class="mono">n</span> 的振荡越快。</p>
+          </section>
+
+          <section class="note-card">
+            <h3>当前数值摘要</h3>
+            <p id="summary1"></p>
+            <p id="summary2"></p>
+            <p id="summary3"></p>
+            <p id="summary4"></p>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    const els = {
+      rSlider: $('rSlider'),
+      wSlider: $('wSlider'),
+      rMin: $('rMin'),
+      rMax: $('rMax'),
+      rStep: $('rStep'),
+      wMin: $('wMin'),
+      wMax: $('wMax'),
+      wStep: $('wStep'),
+      nMin: $('nMin'),
+      nMax: $('nMax'),
+      rValueLabel: $('rValueLabel'),
+      wValueLabel: $('wValueLabel'),
+      liveFormula: $('liveFormula'),
+      statusBox: $('statusBox'),
+      summary1: $('summary1'),
+      summary2: $('summary2'),
+      summary3: $('summary3'),
+      summary4: $('summary4'),
+      realCanvas: $('realCanvas'),
+      imagCanvas: $('imagCanvas'),
+      magCanvas: $('magCanvas'),
+      phaseCanvas: $('phaseCanvas')
+    };
+
+    function toNumber(v, fallback = 0) {
+      const num = Number(v);
+      return Number.isFinite(num) ? num : fallback;
+    }
+
+    function clamp(x, lo, hi) {
+      return Math.min(Math.max(x, lo), hi);
+    }
+
+    function fmt(x, digits = 4) {
+      if (!Number.isFinite(x)) return '∞';
+      if (Math.abs(x) >= 1e5 || (Math.abs(x) > 0 && Math.abs(x) < 1e-4)) {
+        return x.toExponential(3);
+      }
+      return x.toFixed(digits);
+    }
+
+    function fmtPi(x) {
+      const ratio = x / Math.PI;
+      return `${fmt(ratio, 4)}π`;
+    }
+
+    function wrapToPi(angle) {
+      let a = angle;
+      while (a <= -Math.PI) a += 2 * Math.PI;
+      while (a > Math.PI) a -= 2 * Math.PI;
+      return a;
+    }
+
+    function showStatus(msg = '') {
+      if (!msg) {
+        els.statusBox.style.display = 'none';
+        els.statusBox.textContent = '';
+        return;
+      }
+      els.statusBox.style.display = 'block';
+      els.statusBox.textContent = msg;
+    }
+
+    function syncSliderRanges() {
+      let rMin = Math.max(0.0001, toNumber(els.rMin.value, 0.1));
+      let rMax = Math.max(0.0002, toNumber(els.rMax.value, 1.5));
+      let rStep = Math.max(0.001, toNumber(els.rStep.value, 0.01));
+
+      let wMin = toNumber(els.wMin.value, -2 * Math.PI);
+      let wMax = toNumber(els.wMax.value, 2 * Math.PI);
+      let wStep = Math.max(0.001, toNumber(els.wStep.value, 0.01));
+
+      let statusMessages = [];
+
+      if (rMin >= rMax) {
+        rMax = rMin + rStep;
+        els.rMax.value = rMax;
+        statusMessages.push('已自动调整 r 的范围，使最小值小于最大值。');
+      }
+
+      if (wMin >= wMax) {
+        wMax = wMin + wStep;
+        els.wMax.value = wMax;
+        statusMessages.push('已自动调整 ω 的范围，使最小值小于最大值。');
+      }
+
+      els.rMin.value = rMin;
+      els.rMax.value = rMax;
+      els.rStep.value = rStep;
+      els.wMin.value = wMin;
+      els.wMax.value = wMax;
+      els.wStep.value = wStep;
+
+      els.rSlider.min = String(rMin);
+      els.rSlider.max = String(rMax);
+      els.rSlider.step = String(rStep);
+      els.wSlider.min = String(wMin);
+      els.wSlider.max = String(wMax);
+      els.wSlider.step = String(wStep);
+
+      els.rSlider.value = String(clamp(toNumber(els.rSlider.value, 0.9), rMin, rMax));
+      els.wSlider.value = String(clamp(toNumber(els.wSlider.value, 0.5), wMin, wMax));
+
+      showStatus(statusMessages.join(' '));
+    }
+
+    function getState() {
+      syncSliderRanges();
+
+      let r = toNumber(els.rSlider.value, 0.9);
+      let w = toNumber(els.wSlider.value, 0.5);
+      let nMin = Math.round(toNumber(els.nMin.value, -10));
+      let nMax = Math.round(toNumber(els.nMax.value, 20));
+
+      if (nMin > nMax) {
+        [nMin, nMax] = [nMax, nMin];
+        els.nMin.value = nMin;
+        els.nMax.value = nMax;
+        showStatus('已自动交换 n 的上下界，使 n 最小值不大于最大值。');
+      }
+
+      return { r, w, nMin, nMax };
+    }
+
+    function buildSequence({ r, w, nMin, nMax }) {
+      const nList = [];
+      const real = [];
+      const imag = [];
+      const mag = [];
+      const phase = [];
+      let overflow = false;
+
+      for (let n = nMin; n <= nMax; n++) {
+        const amp = Math.pow(r, n);
+        const re = amp * Math.cos(w * n);
+        const im = amp * Math.sin(w * n);
+        const ph = wrapToPi(Math.atan2(im, re));
+
+        if (![amp, re, im, ph].every(Number.isFinite)) overflow = true;
+
+        nList.push(n);
+        real.push(re);
+        imag.push(im);
+        mag.push(amp);
+        phase.push(ph);
+      }
+
+      return { nList, real, imag, mag, phase, overflow };
+    }
+
+    function prepareCanvas(canvas) {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const width = Math.max(300, rect.width);
+      const height = Math.max(240, rect.height);
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { ctx, width, height };
+    }
+
+    function niceTicks(min, max, count = 5) {
+      if (!Number.isFinite(min) || !Number.isFinite(max)) return [];
+      if (min === max) return [min];
+      const span = max - min;
+      const rough = span / Math.max(1, count);
+      const power = Math.pow(10, Math.floor(Math.log10(Math.abs(rough))));
+      const normalized = rough / power;
+      let step;
+      if (normalized < 1.5) step = 1;
+      else if (normalized < 3) step = 2;
+      else if (normalized < 7) step = 5;
+      else step = 10;
+      step *= power;
+
+      const start = Math.ceil(min / step) * step;
+      const ticks = [];
+      for (let x = start; x <= max + 1e-9; x += step) {
+        ticks.push(Number(x.toPrecision(12)));
+      }
+      return ticks;
+    }
+
+    function drawStemPlot(canvas, nList, yList, options = {}) {
+      const { title = '', yFixed = null, formatY = (v) => fmt(v, 2), color = '#2563eb' } = options;
+      const { ctx, width, height } = prepareCanvas(canvas);
+      ctx.clearRect(0, 0, width, height);
+
+      const pad = { top: 20, right: 18, bottom: 34, left: 56 };
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+
+      const finiteY = yList.filter(Number.isFinite);
+      let yMin = yFixed ? yFixed[0] : Math.min(...finiteY);
+      let yMax = yFixed ? yFixed[1] : Math.max(...finiteY);
+
+      if (!Number.isFinite(yMin) || !Number.isFinite(yMax)) {
+        yMin = -1;
+        yMax = 1;
+      }
+
+      if (!yFixed) {
+        yMin = Math.min(yMin, 0);
+        yMax = Math.max(yMax, 0);
+      }
+
+      if (yMin === yMax) {
+        const delta = Math.abs(yMin) < 1 ? 1 : Math.abs(yMin) * 0.2;
+        yMin -= delta;
+        yMax += delta;
+      }
+
+      const yPad = (yMax - yMin) * 0.08;
+      yMin -= yPad;
+      yMax += yPad;
+
+      const nMin = Math.min(...nList);
+      const nMax = Math.max(...nList);
+
+      const xScale = (n) => {
+        if (nMin === nMax) return pad.left + plotW / 2;
+        return pad.left + ((n - nMin) / (nMax - nMin)) * plotW;
+      };
+
+      const yScale = (y) => pad.top + (1 - (y - yMin) / (yMax - yMin)) * plotH;
+
+      // background grid
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.lineWidth = 1;
+      const yTicks = niceTicks(yMin, yMax, 5);
+      ctx.font = '12px Segoe UI, Microsoft YaHei, sans-serif';
+      ctx.fillStyle = '#6b7280';
+
+      yTicks.forEach((tick) => {
+        const py = yScale(tick);
+        ctx.beginPath();
+        ctx.moveTo(pad.left, py);
+        ctx.lineTo(width - pad.right, py);
+        ctx.stroke();
+        ctx.fillText(formatY(tick), 8, py + 4);
+      });
+
+      const xTicks = [];
+      if (nList.length <= 12) {
+        xTicks.push(...nList);
+      } else {
+        const steps = 6;
+        for (let i = 0; i <= steps; i++) {
+          xTicks.push(Math.round(nMin + (i / steps) * (nMax - nMin)));
+        }
+      }
+
+      [...new Set(xTicks)].forEach((tick) => {
+        const px = xScale(tick);
+        ctx.beginPath();
+        ctx.moveTo(px, pad.top);
+        ctx.lineTo(px, height - pad.bottom);
+        ctx.stroke();
+        ctx.fillText(String(tick), px - 8, height - 10);
+      });
+
+      // axes
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, pad.top);
+      ctx.lineTo(pad.left, height - pad.bottom);
+      ctx.lineTo(width - pad.right, height - pad.bottom);
+      ctx.stroke();
+
+      // zero line
+      if (yMin <= 0 && yMax >= 0) {
+        const y0 = yScale(0);
+        ctx.strokeStyle = '#64748b';
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y0);
+        ctx.lineTo(width - pad.right, y0);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // stems
+      const y0 = yScale(0);
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 1.5;
+      const radius = nList.length > 80 ? 2.5 : 3.5;
+
+      for (let i = 0; i < nList.length; i++) {
+        const y = yList[i];
+        if (!Number.isFinite(y)) continue;
+        const px = xScale(nList[i]);
+        const py = yScale(y);
+        ctx.beginPath();
+        ctx.moveTo(px, y0);
+        ctx.lineTo(px, py);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(px, py, radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // labels
+      ctx.fillStyle = '#334155';
+      ctx.font = '12px Segoe UI, Microsoft YaHei, sans-serif';
+      ctx.fillText('n', width - pad.right - 10, height - 12);
+      ctx.save();
+      ctx.translate(16, pad.top + plotH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(title, 0, 0);
+      ctx.restore();
+    }
+
+    function updateText(state, seq) {
+      const { r, w, nMin, nMax } = state;
+      els.rValueLabel.textContent = fmt(r, 4);
+      els.wValueLabel.textContent = `${fmt(w, 4)} rad`;
+
+      els.liveFormula.innerHTML = `
+        当前：<span class="mono">r = ${fmt(r, 4)}</span>，
+        <span class="mono">ω = ${fmt(w, 4)} rad ≈ ${fmtPi(w)}</span>，
+        <span class="mono">n ∈ [${nMin}, ${nMax}]</span><br>
+        因此：<span class="mono">x[n] = ${fmt(r, 4)}<sup>n</sup>(cos(${fmt(w, 4)}n) + j sin(${fmt(w, 4)}n))</span>
+      `;
+
+      const pointCount = seq.nList.length;
+      const x0 = Math.pow(r, 0);
+      const x1 = Math.pow(r, 1);
+      const avgMag = seq.mag.reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0) / Math.max(1, pointCount);
+
+      els.summary1.innerHTML = `共绘制 <span class="mono">${pointCount}</span> 个离散点。`;
+      els.summary2.innerHTML = `当 <span class="mono">n = 0</span> 时，<span class="mono">|x[0]| = ${fmt(x0, 4)}</span>。当 <span class="mono">n = 1</span> 时，<span class="mono">|x[1]| = ${fmt(x1, 4)}</span>。`;
+      els.summary3.innerHTML = `当前 <span class="mono">ω = ${fmt(w, 4)}</span>，对应每增加 1 个采样点，相位增加约 <span class="mono">${fmt(w, 4)} rad</span>（按主值折返显示）。`;
+      els.summary4.innerHTML = `在当前范围内，幅度平均值约为 <span class="mono">${fmt(avgMag, 4)}</span>。`;
+    }
+
+    function redraw() {
+      const state = getState();
+      const seq = buildSequence(state);
+      updateText(state, seq);
+
+      if (seq.overflow) {
+        showStatus('某些点的数值过大或超出 JavaScript 数值范围，建议减小 r 或缩小 n 的范围。');
+      }
+
+      drawStemPlot(els.realCanvas, seq.nList, seq.real, {
+        title: 'Re{x[n]}',
+        color: '#2563eb',
+        formatY: (v) => fmt(v, 2)
+      });
+
+      drawStemPlot(els.imagCanvas, seq.nList, seq.imag, {
+        title: 'Im{x[n]}',
+        color: '#0f766e',
+        formatY: (v) => fmt(v, 2)
+      });
+
+      drawStemPlot(els.magCanvas, seq.nList, seq.mag, {
+        title: '|x[n]|',
+        color: '#7c3aed',
+        formatY: (v) => fmt(v, 2)
+      });
+
+      drawStemPlot(els.phaseCanvas, seq.nList, seq.phase, {
+        title: '∠x[n]',
+        color: '#dc2626',
+        yFixed: [-Math.PI, Math.PI],
+        formatY: (v) => {
+          if (Math.abs(v) < 1e-8) return '0';
+          if (Math.abs(v - Math.PI) < 1e-6) return 'π';
+          if (Math.abs(v + Math.PI) < 1e-6) return '-π';
+          return fmt(v, 2);
+        }
+      });
+    }
+
+    [
+      els.rSlider, els.wSlider,
+      els.rMin, els.rMax, els.rStep,
+      els.wMin, els.wMax, els.wStep,
+      els.nMin, els.nMax
+    ].forEach((el) => {
+      el.addEventListener('input', redraw);
+      el.addEventListener('change', redraw);
+    });
+
+    window.addEventListener('resize', redraw);
+    redraw();
+  </script>
+</body>
+</html>
