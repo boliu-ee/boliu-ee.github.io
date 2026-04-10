@@ -173,6 +173,49 @@
       background: #fff;
     }
 
+    .toggle-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 10px 12px;
+      border: 1px solid #dbeafe;
+      background: #f8fbff;
+      border-radius: 12px;
+    }
+
+    .toggle-label {
+      font-size: 13px;
+      color: var(--sub);
+    }
+
+    .segmented {
+      display: inline-flex;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+      padding: 3px;
+      background: #eaf2ff;
+      gap: 3px;
+    }
+
+    .segmented button {
+      border: none;
+      background: transparent;
+      color: #334155;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .segmented button.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
+    }
+
     .hint {
       margin-top: 8px;
       font-size: 12px;
@@ -269,6 +312,10 @@
 
       .title { font-size: 24px; }
       .formula { font-size: 22px; }
+      .toggle-wrap {
+        flex-direction: column;
+        align-items: stretch;
+      }
     }
   </style>
 </head>
@@ -317,27 +364,34 @@
 
         <div class="group">
           <h3>ω：控制振荡快慢</h3>
+          <div class="toggle-wrap">
+            <span class="toggle-label">ω 的输入单位</span>
+            <div class="segmented" role="tablist" aria-label="omega unit switch">
+              <button id="unitRadBtn" type="button" class="active">弧度</button>
+              <button id="unitDegBtn" type="button">角度</button>
+            </div>
+          </div>
           <div class="control">
             <div class="label-row">
-              <span>当前 ω（弧度）</span>
-              <span class="value-badge" id="wValueLabel">0.50</span>
+              <span id="wCurrentLabel">当前 ω（弧度）</span>
+              <span class="value-badge" id="wValueLabel">0.50 rad</span>
             </div>
             <input id="wSlider" type="range" min="-6.2832" max="6.2832" step="0.01" value="0.5" />
             <div class="mini-grid">
               <div class="field">
-                <label for="wMin">ω 最小值</label>
+                <label for="wMin" id="wMinLabel">ω 最小值（rad）</label>
                 <input id="wMin" type="number" step="0.01" value="-6.2832" />
               </div>
               <div class="field">
-                <label for="wMax">ω 最大值</label>
+                <label for="wMax" id="wMaxLabel">ω 最大值（rad）</label>
                 <input id="wMax" type="number" step="0.01" value="6.2832" />
               </div>
               <div class="field">
-                <label for="wStep">ω 步长</label>
+                <label for="wStep" id="wStepLabel">ω 步长（rad）</label>
                 <input id="wStep" type="number" step="0.001" value="0.01" min="0.001" />
               </div>
             </div>
-            <div class="hint">常用参考：<span class="mono">π ≈ 3.1416</span>，<span class="mono">2π ≈ 6.2832</span></div>
+            <div class="hint" id="wHint">常用参考：<span class="mono">π ≈ 3.1416</span>，<span class="mono">2π ≈ 6.2832</span></div>
           </div>
         </div>
 
@@ -405,6 +459,10 @@
 
   <script>
     const $ = (id) => document.getElementById(id);
+    const DEG_PER_RAD = 180 / Math.PI;
+    const RAD_PER_DEG = Math.PI / 180;
+
+    let omegaUnit = 'rad';
 
     const els = {
       rSlider: $('rSlider'),
@@ -419,6 +477,13 @@
       nMax: $('nMax'),
       rValueLabel: $('rValueLabel'),
       wValueLabel: $('wValueLabel'),
+      wCurrentLabel: $('wCurrentLabel'),
+      wMinLabel: $('wMinLabel'),
+      wMaxLabel: $('wMaxLabel'),
+      wStepLabel: $('wStepLabel'),
+      wHint: $('wHint'),
+      unitRadBtn: $('unitRadBtn'),
+      unitDegBtn: $('unitDegBtn'),
       liveFormula: $('liveFormula'),
       statusBox: $('statusBox'),
       summary1: $('summary1'),
@@ -453,6 +518,34 @@
       return `${fmt(ratio, 4)}π`;
     }
 
+    function radToDeg(rad) {
+      return rad * DEG_PER_RAD;
+    }
+
+    function degToRad(deg) {
+      return deg * RAD_PER_DEG;
+    }
+
+    function displayToRad(value) {
+      return omegaUnit === 'rad' ? value : degToRad(value);
+    }
+
+    function radToDisplay(value) {
+      return omegaUnit === 'rad' ? value : radToDeg(value);
+    }
+
+    function getOmegaUnitText() {
+      return omegaUnit === 'rad' ? '弧度' : '角度';
+    }
+
+    function getOmegaUnitShort() {
+      return omegaUnit === 'rad' ? 'rad' : '°';
+    }
+
+    function getOmegaFieldDigits() {
+      return omegaUnit === 'rad' ? 4 : 2;
+    }
+
     function wrapToPi(angle) {
       let a = angle;
       while (a <= -Math.PI) a += 2 * Math.PI;
@@ -470,14 +563,31 @@
       els.statusBox.textContent = msg;
     }
 
+    function refreshOmegaUnitUI() {
+      const isRad = omegaUnit === 'rad';
+      els.unitRadBtn.classList.toggle('active', isRad);
+      els.unitDegBtn.classList.toggle('active', !isRad);
+
+      els.wCurrentLabel.textContent = `当前 ω（${getOmegaUnitText()}）`;
+      els.wMinLabel.textContent = `ω 最小值（${getOmegaUnitShort()}）`;
+      els.wMaxLabel.textContent = `ω 最大值（${getOmegaUnitShort()}）`;
+      els.wStepLabel.textContent = `ω 步长（${getOmegaUnitShort()}）`;
+
+      if (isRad) {
+        els.wHint.innerHTML = '常用参考：<span class="mono">π ≈ 3.1416</span>，<span class="mono">2π ≈ 6.2832</span>';
+      } else {
+        els.wHint.innerHTML = '常用参考：<span class="mono">180° = π</span>，<span class="mono">360° = 2π</span>';
+      }
+    }
+
     function syncSliderRanges() {
       let rMin = Math.max(0.0001, toNumber(els.rMin.value, 0.1));
       let rMax = Math.max(0.0002, toNumber(els.rMax.value, 1.5));
       let rStep = Math.max(0.001, toNumber(els.rStep.value, 0.01));
 
-      let wMin = toNumber(els.wMin.value, -2 * Math.PI);
-      let wMax = toNumber(els.wMax.value, 2 * Math.PI);
-      let wStep = Math.max(0.001, toNumber(els.wStep.value, 0.01));
+      let wMinDisplay = toNumber(els.wMin.value, omegaUnit === 'rad' ? -2 * Math.PI : -360);
+      let wMaxDisplay = toNumber(els.wMax.value, omegaUnit === 'rad' ? 2 * Math.PI : 360);
+      let wStepDisplay = Math.max(omegaUnit === 'rad' ? 0.001 : 0.01, toNumber(els.wStep.value, omegaUnit === 'rad' ? 0.01 : 1));
 
       let statusMessages = [];
 
@@ -487,28 +597,28 @@
         statusMessages.push('已自动调整 r 的范围，使最小值小于最大值。');
       }
 
-      if (wMin >= wMax) {
-        wMax = wMin + wStep;
-        els.wMax.value = wMax;
+      if (wMinDisplay >= wMaxDisplay) {
+        wMaxDisplay = wMinDisplay + wStepDisplay;
+        els.wMax.value = fmt(wMaxDisplay, getOmegaFieldDigits());
         statusMessages.push('已自动调整 ω 的范围，使最小值小于最大值。');
       }
 
       els.rMin.value = rMin;
       els.rMax.value = rMax;
       els.rStep.value = rStep;
-      els.wMin.value = wMin;
-      els.wMax.value = wMax;
-      els.wStep.value = wStep;
+      els.wMin.value = fmt(wMinDisplay, getOmegaFieldDigits());
+      els.wMax.value = fmt(wMaxDisplay, getOmegaFieldDigits());
+      els.wStep.value = fmt(wStepDisplay, getOmegaFieldDigits());
 
       els.rSlider.min = String(rMin);
       els.rSlider.max = String(rMax);
       els.rSlider.step = String(rStep);
-      els.wSlider.min = String(wMin);
-      els.wSlider.max = String(wMax);
-      els.wSlider.step = String(wStep);
+      els.wSlider.min = String(wMinDisplay);
+      els.wSlider.max = String(wMaxDisplay);
+      els.wSlider.step = String(wStepDisplay);
 
       els.rSlider.value = String(clamp(toNumber(els.rSlider.value, 0.9), rMin, rMax));
-      els.wSlider.value = String(clamp(toNumber(els.wSlider.value, 0.5), wMin, wMax));
+      els.wSlider.value = String(clamp(toNumber(els.wSlider.value, omegaUnit === 'rad' ? 0.5 : radToDeg(0.5)), wMinDisplay, wMaxDisplay));
 
       showStatus(statusMessages.join(' '));
     }
@@ -517,7 +627,8 @@
       syncSliderRanges();
 
       let r = toNumber(els.rSlider.value, 0.9);
-      let w = toNumber(els.wSlider.value, 0.5);
+      let wDisplay = toNumber(els.wSlider.value, omegaUnit === 'rad' ? 0.5 : radToDeg(0.5));
+      let w = displayToRad(wDisplay);
       let nMin = Math.round(toNumber(els.nMin.value, -10));
       let nMax = Math.round(toNumber(els.nMax.value, 20));
 
@@ -528,7 +639,7 @@
         showStatus('已自动交换 n 的上下界，使 n 最小值不大于最大值。');
       }
 
-      return { r, w, nMin, nMax };
+      return { r, w, wDisplay, nMin, nMax };
     }
 
     function buildSequence({ r, w, nMin, nMax }) {
@@ -634,7 +745,6 @@
 
       const yScale = (y) => pad.top + (1 - (y - yMin) / (yMax - yMin)) * plotH;
 
-      // background grid
       ctx.strokeStyle = '#e5e7eb';
       ctx.lineWidth = 1;
       const yTicks = niceTicks(yMin, yMax, 5);
@@ -669,7 +779,6 @@
         ctx.fillText(String(tick), px - 8, height - 10);
       });
 
-      // axes
       ctx.strokeStyle = '#94a3b8';
       ctx.lineWidth = 1.3;
       ctx.beginPath();
@@ -678,7 +787,6 @@
       ctx.lineTo(width - pad.right, height - pad.bottom);
       ctx.stroke();
 
-      // zero line
       if (yMin <= 0 && yMax >= 0) {
         const y0 = yScale(0);
         ctx.strokeStyle = '#64748b';
@@ -690,7 +798,6 @@
         ctx.setLineDash([]);
       }
 
-      // stems
       const y0 = yScale(0);
       ctx.strokeStyle = color;
       ctx.fillStyle = color;
@@ -711,7 +818,6 @@
         ctx.fill();
       }
 
-      // labels
       ctx.fillStyle = '#334155';
       ctx.font = '12px Segoe UI, Microsoft YaHei, sans-serif';
       ctx.fillText('n', width - pad.right - 10, height - 12);
@@ -723,16 +829,29 @@
     }
 
     function updateText(state, seq) {
-      const { r, w, nMin, nMax } = state;
-      els.rValueLabel.textContent = fmt(r, 4);
-      els.wValueLabel.textContent = `${fmt(w, 4)} rad`;
+      const { r, w, wDisplay, nMin, nMax } = state;
+      const displayDigits = getOmegaFieldDigits();
+      const displayUnit = getOmegaUnitShort();
+      const degreeText = `${fmt(radToDeg(w), 2)}°`;
 
-      els.liveFormula.innerHTML = `
-        当前：<span class="mono">r = ${fmt(r, 4)}</span>，
-        <span class="mono">ω = ${fmt(w, 4)} rad ≈ ${fmtPi(w)}</span>，
-        <span class="mono">n ∈ [${nMin}, ${nMax}]</span><br>
-        因此：<span class="mono">x[n] = ${fmt(r, 4)}<sup>n</sup>(cos(${fmt(w, 4)}n) + j sin(${fmt(w, 4)}n))</span>
-      `;
+      els.rValueLabel.textContent = fmt(r, 4);
+      els.wValueLabel.textContent = `${fmt(wDisplay, displayDigits)} ${displayUnit}`;
+
+      if (omegaUnit === 'rad') {
+        els.liveFormula.innerHTML = `
+          当前：<span class="mono">r = ${fmt(r, 4)}</span>，
+          <span class="mono">ω = ${fmt(w, 4)} rad ≈ ${fmtPi(w)} = ${degreeText}</span>，
+          <span class="mono">n ∈ [${nMin}, ${nMax}]</span><br>
+          因此：<span class="mono">x[n] = ${fmt(r, 4)}<sup>n</sup>(cos(${fmt(w, 4)}n) + j sin(${fmt(w, 4)}n))</span>
+        `;
+      } else {
+        els.liveFormula.innerHTML = `
+          当前：<span class="mono">r = ${fmt(r, 4)}</span>，
+          <span class="mono">ω = ${fmt(wDisplay, displayDigits)}° = ${fmt(w, 4)} rad ≈ ${fmtPi(w)}</span>，
+          <span class="mono">n ∈ [${nMin}, ${nMax}]</span><br>
+          计算时自动换算为弧度：<span class="mono">x[n] = ${fmt(r, 4)}<sup>n</sup>(cos(${fmt(w, 4)}n) + j sin(${fmt(w, 4)}n))</span>
+        `;
+      }
 
       const pointCount = seq.nList.length;
       const x0 = Math.pow(r, 0);
@@ -741,8 +860,36 @@
 
       els.summary1.innerHTML = `共绘制 <span class="mono">${pointCount}</span> 个离散点。`;
       els.summary2.innerHTML = `当 <span class="mono">n = 0</span> 时，<span class="mono">|x[0]| = ${fmt(x0, 4)}</span>。当 <span class="mono">n = 1</span> 时，<span class="mono">|x[1]| = ${fmt(x1, 4)}</span>。`;
-      els.summary3.innerHTML = `当前 <span class="mono">ω = ${fmt(w, 4)}</span>，对应每增加 1 个采样点，相位增加约 <span class="mono">${fmt(w, 4)} rad</span>（按主值折返显示）。`;
+      els.summary3.innerHTML = `当前 <span class="mono">ω = ${fmt(wDisplay, displayDigits)} ${displayUnit}</span>，等价于 <span class="mono">${fmt(w, 4)} rad</span>，对应每增加 1 个采样点，相位增加约 <span class="mono">${fmt(w, 4)} rad</span>（按主值折返显示）。`;
       els.summary4.innerHTML = `在当前范围内，幅度平均值约为 <span class="mono">${fmt(avgMag, 4)}</span>。`;
+    }
+
+    function switchOmegaUnit(nextUnit) {
+      if (nextUnit === omegaUnit) return;
+
+      const currentValue = toNumber(els.wSlider.value, omegaUnit === 'rad' ? 0.5 : radToDeg(0.5));
+      const currentMin = toNumber(els.wMin.value, omegaUnit === 'rad' ? -2 * Math.PI : -360);
+      const currentMax = toNumber(els.wMax.value, omegaUnit === 'rad' ? 2 * Math.PI : 360);
+      const currentStep = Math.max(omegaUnit === 'rad' ? 0.001 : 0.01, toNumber(els.wStep.value, omegaUnit === 'rad' ? 0.01 : 1));
+
+      const currentRadValue = omegaUnit === 'rad' ? currentValue : degToRad(currentValue);
+      const currentRadMin = omegaUnit === 'rad' ? currentMin : degToRad(currentMin);
+      const currentRadMax = omegaUnit === 'rad' ? currentMax : degToRad(currentMax);
+      const currentRadStep = omegaUnit === 'rad' ? currentStep : degToRad(currentStep);
+
+      omegaUnit = nextUnit;
+      refreshOmegaUnitUI();
+
+      const convertOut = (radValue) => omegaUnit === 'rad' ? radValue : radToDeg(radValue);
+      const digits = getOmegaFieldDigits();
+
+      els.wSlider.value = String(convertOut(currentRadValue));
+      els.wMin.value = fmt(convertOut(currentRadMin), digits);
+      els.wMax.value = fmt(convertOut(currentRadMax), digits);
+      els.wStep.value = fmt(convertOut(currentRadStep), digits);
+      els.wStep.min = omegaUnit === 'rad' ? '0.001' : '0.01';
+
+      redraw();
     }
 
     function redraw() {
@@ -795,7 +942,11 @@
       el.addEventListener('change', redraw);
     });
 
+    els.unitRadBtn.addEventListener('click', () => switchOmegaUnit('rad'));
+    els.unitDegBtn.addEventListener('click', () => switchOmegaUnit('deg'));
+
     window.addEventListener('resize', redraw);
+    refreshOmegaUnitUI();
     redraw();
   </script>
 </body>
