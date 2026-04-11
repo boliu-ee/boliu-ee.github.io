@@ -6,7 +6,7 @@
   <title>一般复指数序列可视化</title>
   <style>
     :root {
-      --bg: #f3f6fb;
+      --bg: #f4f7fb;
       --panel: #ffffff;
       --line: #dbe4f0;
       --text: #1f2937;
@@ -14,8 +14,11 @@
       --primary: #2563eb;
       --primary-soft: #eff6ff;
       --danger: #dc2626;
-      --shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      --danger-soft: #fee2e2;
+      --shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
       --radius: 16px;
+      --main-panel-width: 45%;
+      --dashboard-height: 520px;
     }
 
     * { box-sizing: border-box; }
@@ -50,6 +53,11 @@
     .sidebar { padding-right: 4px; }
     .content { padding-right: 4px; }
 
+    .stack {
+      display: grid;
+      gap: 14px;
+    }
+
     .card {
       background: var(--panel);
       border: 1px solid var(--line);
@@ -57,29 +65,23 @@
       box-shadow: var(--shadow);
     }
 
-    .sidebar-inner,
-    .content-inner {
-      display: grid;
-      gap: 14px;
-    }
-
     .block { padding: 14px; }
 
+    h1, h2, h3 { margin: 0; }
+
     h1 {
-      margin: 0;
-      font-size: 25px;
-      line-height: 1.2;
+      font-size: 28px;
+      line-height: 1.18;
     }
 
     h2 {
-      margin: 0 0 10px;
-      font-size: 16px;
+      font-size: 17px;
       line-height: 1.25;
+      margin-bottom: 10px;
     }
 
     h3 {
-      margin: 0;
-      font-size: 15px;
+      font-size: 14px;
       line-height: 1.25;
     }
 
@@ -88,7 +90,7 @@
     .muted {
       color: var(--muted);
       font-size: 13px;
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
     .formula {
@@ -103,86 +105,83 @@
       white-space: nowrap;
     }
 
-    .live-box,
-    .status-box,
-    .summary-box {
+    .live-formula {
       margin-top: 10px;
       padding: 10px 12px;
       border-radius: 12px;
-      border: 1px solid #dbeafe;
-      background: #f8fbff;
-      font-size: 13px;
+      background: var(--primary-soft);
+      border: 1px solid #cfe0ff;
+      font-size: 14px;
       line-height: 1.55;
+      color: #0f172a;
     }
 
-    .status-box {
-      display: none;
-      border-color: #fde68a;
-      background: #fffbeb;
-    }
-
-    .mono {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .group {
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 14px;
-      background: #fcfdff;
-      display: grid;
-      gap: 12px;
+    .group + .group {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid #e7edf5;
     }
 
     .group-head {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      gap: 8px;
+      gap: 10px;
+      margin-bottom: 10px;
     }
 
-    .tag {
-      color: var(--primary);
-      background: var(--primary-soft);
-      border: 1px solid #bfdbfe;
-      padding: 2px 8px;
-      border-radius: 999px;
+    .group-head .tiny {
       font-size: 12px;
-      font-weight: 600;
-      white-space: nowrap;
+      color: var(--muted);
     }
 
     .control {
-      display: grid;
-      gap: 8px;
+      padding: 12px;
+      border: 1px solid #e8eef7;
+      border-radius: 14px;
+      background: #fafcff;
+    }
+
+    .label-row,
+    .inline-row,
+    .button-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .button-row .tiny {
+      font-size: 12px;
+      color: var(--muted);
     }
 
     .label-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      align-items: baseline;
-      font-size: 14px;
+      margin-bottom: 8px;
+      font-size: 13px;
     }
 
     .value-badge {
-      color: var(--primary);
-      font-weight: 700;
+      min-width: 84px;
+      text-align: right;
       font-variant-numeric: tabular-nums;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 600;
     }
 
     input[type="range"] {
       width: 100%;
-      margin: 0;
+      margin: 4px 0 10px;
       accent-color: var(--primary);
-      cursor: pointer;
     }
 
     .mini-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
+      gap: 10px;
     }
 
     .mini-grid.two {
@@ -190,10 +189,8 @@
     }
 
     .field {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      min-width: 0;
+      display: grid;
+      gap: 5px;
     }
 
     .field label {
@@ -203,208 +200,341 @@
 
     input[type="number"] {
       width: 100%;
-      border: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      border: 1px solid #d7e1ee;
       border-radius: 10px;
-      padding: 9px 10px;
-      font-size: 14px;
-      color: var(--text);
       background: #fff;
-    }
-
-    .toggle-wrap {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 10px 12px;
-      border: 1px solid #dbeafe;
-      background: #f8fbff;
-      border-radius: 12px;
-    }
-
-    .toggle-label {
       font-size: 13px;
-      color: var(--muted);
+      color: var(--text);
+    }
+
+    button {
+      border: 1px solid #cfe0ff;
+      background: #fff;
+      color: var(--primary);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    button:hover {
+      background: var(--primary-soft);
+    }
+
+    button.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    button.danger.active {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: #fff;
     }
 
     .segmented {
       display: inline-flex;
-      border: 1px solid #bfdbfe;
-      border-radius: 999px;
-      padding: 3px;
-      background: #eaf2ff;
-      gap: 3px;
-    }
-
-    .segmented button,
-    .action-row button {
-      border: none;
-      cursor: pointer;
-      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease, color 0.2s ease;
-    }
-
-    .segmented button {
-      background: transparent;
-      color: #334155;
-      padding: 7px 12px;
-      border-radius: 999px;
-      font-size: 13px;
-    }
-
-    .segmented button.active {
-      background: var(--primary);
-      color: #fff;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
     .hint {
+      margin-top: 8px;
       color: var(--muted);
       font-size: 12px;
-      line-height: 1.45;
+      line-height: 1.5;
     }
 
-    .action-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
+    .status {
+      display: none;
+      margin-top: 14px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #fecaca;
+      background: #fff1f2;
+      color: #9f1239;
+      font-size: 13px;
+      line-height: 1.5;
     }
 
-    .action-row button {
-      padding: 9px 14px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      background: var(--primary);
-      color: #fff;
-      box-shadow: 0 6px 14px rgba(37, 99, 235, 0.18);
-    }
-
-    .action-row button.secondary {
-      background: #e5eefc;
-      color: #1e3a8a;
-      box-shadow: none;
-    }
-
-    .action-row button:hover,
-    .segmented button:hover { transform: translateY(-1px); }
-
-    .plots-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .plot-card,
-    .plane-card {
-      padding: 12px;
-      display: grid;
-      gap: 10px;
-    }
-
-    .plot-head,
-    .plane-head {
+    .topbar {
       display: flex;
       justify-content: space-between;
-      gap: 8px;
-      align-items: baseline;
+      align-items: center;
+      gap: 16px;
       flex-wrap: wrap;
     }
 
-    .plot-head span,
-    .plane-head span {
+    .topbar .mini {
       font-size: 12px;
-      color: var(--muted);
-    }
-
-    .plot-canvas-wrap {
-      height: 190px;
-    }
-
-    .plane-canvas-wrap {
-      height: 560px;
-    }
-
-    canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-      border-radius: 12px;
-      background: #fff;
-    }
-
-    .plane-meta {
-      font-size: 13px;
       color: var(--muted);
       line-height: 1.5;
     }
 
-    .summary-list {
-      display: grid;
-      gap: 8px;
+    .current-readout {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      font-size: 12px;
+      line-height: 1.6;
     }
 
-    @media (max-width: 1280px) {
-      .app { grid-template-columns: 330px minmax(0, 1fr); }
-      .plots-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .dashboard-shell {
+      display: grid;
+      grid-template-rows: auto 18px;
+      gap: 0;
+      align-items: start;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: minmax(280px, var(--main-panel-width)) 24px minmax(380px, 1fr);
+      gap: 0;
+      align-items: stretch;
+      height: var(--dashboard-height);
+      min-height: 520px;
+    }
+
+    .main-plot-card,
+    .plot-card {
+      padding: 12px;
+    }
+
+    .main-plot-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .plot-card {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .plot-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .plot-head span,
+    .plot-sub {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .dashboard-resizer,
+    .dashboard-height-resizer {
+      position: relative;
+      touch-action: none;
+      user-select: none;
+      background: transparent;
+      z-index: 2;
+    }
+
+    .dashboard-resizer {
+      width: 24px;
+      min-width: 24px;
+      cursor: col-resize;
+    }
+
+    .dashboard-resizer::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      border-radius: 999px;
+      background: #d7e3f3;
+      transition: background 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .dashboard-height-resizer {
+      height: 18px;
+      margin-top: 8px;
+      cursor: row-resize;
+    }
+
+    .dashboard-height-resizer::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 4px;
+      border-radius: 999px;
+      background: #d7e3f3;
+      transition: background 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .dashboard-resizer:hover::before,
+    .dashboard-resizer.dragging::before,
+    .dashboard-height-resizer:hover::before,
+    .dashboard-height-resizer.dragging::before {
+      background: #93c5fd;
+      box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.22);
+    }
+
+    .secondary-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      min-height: 0;
+      height: 100%;
+      padding-left: 0;
+    }
+
+    canvas {
+      width: 100%;
+      display: block;
+      border-radius: 12px;
+      background: linear-gradient(to bottom, #ffffff, #fbfdff);
+      border: 1px solid #edf2f7;
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    #complexPlaneCanvas {
+      height: 100%;
+      min-height: 420px;
+    }
+
+    .small-canvas {
+      height: 100%;
+      min-height: 210px;
+    }
+
+    .footer-note {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .mono {
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    body.dashboard-resizing,
+    body.dashboard-resizing * {
+      cursor: col-resize !important;
+      user-select: none !important;
+    }
+
+    body.dashboard-height-resizing,
+    body.dashboard-height-resizing * {
+      cursor: row-resize !important;
+      user-select: none !important;
+    }
+
+    @media (max-width: 1240px) {
+      .dashboard-shell {
+        grid-template-rows: auto;
+        gap: 14px;
+      }
+
+      .dashboard {
+        grid-template-columns: 1fr;
+        gap: 14px;
+        height: auto;
+        min-height: auto;
+      }
+
+      .dashboard-resizer,
+      .dashboard-height-resizer {
+        display: none;
+      }
+
+      .secondary-grid {
+        grid-template-columns: repeat(2, minmax(240px, 1fr));
+        grid-template-rows: auto;
+        height: auto;
+      }
+
+      #complexPlaneCanvas {
+        min-height: 500px;
+      }
     }
 
     @media (max-width: 980px) {
       body { overflow: auto; }
+
       .app {
         height: auto;
         min-height: 100vh;
         grid-template-columns: 1fr;
       }
+
       .sidebar,
       .content {
         overflow: visible;
-        min-height: auto;
+        padding-right: 0;
       }
-      .plots-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .plane-canvas-wrap { height: 500px; }
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 760px) {
       .mini-grid,
       .mini-grid.two,
-      .plots-grid { grid-template-columns: 1fr; }
-      .toggle-wrap,
-      .plot-head,
-      .plane-head,
-      .group-head { align-items: flex-start; }
-      .plane-canvas-wrap { height: 420px; }
+      .secondary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      #complexPlaneCanvas {
+        min-height: 420px;
+      }
+
+      .small-canvas {
+        min-height: 220px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="app">
     <aside class="sidebar">
-      <div class="sidebar-inner">
+      <div class="stack">
         <section class="card block">
-          <h1>一般复指数序列</h1>
-          <p class="muted" style="margin-top:8px;">拖动参数后立即重绘。左边控制独立滚动，右边图形独立滚动。</p>
-          <div class="formula mono">x[n] = r<sup>n</sup>(cos(ωn) + j sin(ωn))</div>
-          <div class="live-box" id="liveFormula"></div>
-          <div class="summary-box" id="selectedReadout"></div>
-          <div class="status-box" id="statusBox"></div>
+          <h1>一般复指数序列可视化</h1>
+          <p class="muted" style="margin-top:8px;">
+            实时观察 <span class="mono">x[n] = r<sup>n</sup>e<sup>jωn</sup></span> 随参数变化的规律。
+            左边调参数，右边看复平面主图和四个次图同步更新。
+          </p>
+          <div class="formula">x[n] = r<sup>n</sup>e<sup>jωn</sup> = r<sup>n</sup>(cos(ωn)+j sin(ωn))</div>
+          <div class="live-formula" id="liveFormula"></div>
         </section>
 
         <section class="card block">
+          <h2>参数控制</h2>
+
           <div class="group">
             <div class="group-head">
-              <h2>r：控制幅度变化</h2>
-              <span class="tag">幅度因子</span>
+              <h3>r：包络幅度</h3>
+              <span class="tiny">要求 r &gt; 0</span>
             </div>
             <div class="control">
               <div class="label-row">
                 <span>当前 r</span>
-                <span class="value-badge" id="rValueLabel">0.9000</span>
+                <span class="value-badge" id="rValueLabel">0.90</span>
               </div>
               <input id="rSlider" type="range" min="0.1" max="1.5" step="0.01" value="0.9" />
               <div class="mini-grid">
                 <div class="field">
                   <label for="rMin">r 最小值</label>
-                  <input id="rMin" type="number" step="0.01" value="0.1" min="0.0001" />
+                  <input id="rMin" type="number" step="0.01" value="0.1" />
                 </div>
                 <div class="field">
                   <label for="rMax">r 最大值</label>
@@ -418,134 +548,139 @@
             </div>
           </div>
 
-          <div class="group" style="margin-top:14px;">
+          <div class="group">
             <div class="group-head">
-              <h2>ω：控制旋转快慢</h2>
-              <span class="tag">角频率</span>
-            </div>
-            <div class="toggle-wrap">
-              <span class="toggle-label">ω 的显示单位</span>
-              <div class="segmented">
-                <button id="radBtn" class="active" type="button">弧度</button>
-                <button id="degBtn" type="button">角度</button>
-              </div>
+              <h3>ω：振荡速度</h3>
+              <span class="tiny">弧度 / 角度可切换</span>
             </div>
             <div class="control">
+              <div class="inline-row" style="margin-bottom:8px;">
+                <span style="font-size:13px;">ω 单位</span>
+                <div class="segmented">
+                  <button id="radBtn" class="active" type="button">弧度</button>
+                  <button id="degBtn" type="button">角度</button>
+                </div>
+              </div>
               <div class="label-row">
                 <span id="wCurrentLabel">当前 ω（弧度）</span>
-                <span class="value-badge" id="wValueLabel">0.5000 rad</span>
+                <span class="value-badge" id="wValueLabel">0.50</span>
               </div>
               <input id="wSlider" type="range" min="-6.2832" max="6.2832" step="0.01" value="0.5" />
               <div class="mini-grid">
                 <div class="field">
-                  <label for="wMin" id="wMinLabel">ω 最小值（rad）</label>
+                  <label for="wMin" id="wMinLabel">ω 最小值</label>
                   <input id="wMin" type="number" step="0.01" value="-6.2832" />
                 </div>
                 <div class="field">
-                  <label for="wMax" id="wMaxLabel">ω 最大值（rad）</label>
+                  <label for="wMax" id="wMaxLabel">ω 最大值</label>
                   <input id="wMax" type="number" step="0.01" value="6.2832" />
                 </div>
                 <div class="field">
-                  <label for="wStep" id="wStepLabel">ω 步长（rad）</label>
+                  <label for="wStep" id="wStepLabel">ω 步长</label>
                   <input id="wStep" type="number" step="0.001" value="0.01" min="0.001" />
                 </div>
               </div>
-              <div class="hint" id="wHint">常用参考：<span class="mono">π ≈ 3.1416</span>，<span class="mono">2π ≈ 6.2832</span></div>
+              <div class="hint" id="wHint">常用参考：π ≈ 3.1416，2π ≈ 6.2832</div>
             </div>
           </div>
 
-          <div class="group" style="margin-top:14px;">
+          <div class="group">
             <div class="group-head">
-              <h2>n：离散范围与当前样值</h2>
-              <span class="tag">当前点</span>
-            </div>
-            <div class="mini-grid two">
-              <div class="field">
-                <label for="nMin">n 最小值</label>
-                <input id="nMin" type="number" step="1" value="-20" />
-              </div>
-              <div class="field">
-                <label for="nMax">n 最大值</label>
-                <input id="nMax" type="number" step="1" value="20" />
-              </div>
+              <h3>n：序列范围与当前点</h3>
+              <span class="tiny">播放时会自动循环</span>
             </div>
             <div class="control">
+              <div class="mini-grid two" style="margin-bottom:10px;">
+                <div class="field">
+                  <label for="nMin">n 最小值</label>
+                  <input id="nMin" type="number" step="1" value="-20" />
+                </div>
+                <div class="field">
+                  <label for="nMax">n 最大值</label>
+                  <input id="nMax" type="number" step="1" value="20" />
+                </div>
+              </div>
+
               <div class="label-row">
                 <span>当前 n</span>
-                <span class="value-badge" id="nValueLabel">0</span>
+                <span class="value-badge" id="currentNLabel">0</span>
               </div>
               <input id="nSlider" type="range" min="-20" max="20" step="1" value="0" />
-            </div>
-            <div class="action-row">
-              <button id="animBtn" type="button">播放动画</button>
-              <button id="resetBtn" class="secondary" type="button">回到 n 最小值</button>
-            </div>
-            <div class="hint" id="animStatus">动画已暂停。</div>
-          </div>
-        </section>
 
-        <section class="card block">
-          <h2>观察提示</h2>
-          <div class="summary-list">
-            <p class="muted">当 <span class="mono">0 &lt; r &lt; 1</span> 时，幅度通常随 n 增大而衰减。</p>
-            <p class="muted">当 <span class="mono">r = 1</span> 时，点会绕原点旋转，轨迹落在单位圆上。</p>
-            <p class="muted">当 <span class="mono">r &gt; 1</span> 时，轨迹会逐渐向外扩张。</p>
-            <p class="muted">右侧主图中，浅蓝色轨迹表示整个 n 范围内所有点的连接结果，红点表示当前 n 对应的位置。</p>
+              <div class="button-row" style="margin-top:6px;">
+                <button id="playBtn" type="button">播放动画</button>
+                <span class="tiny">步进：每次 +1，至边界后循环</span>
+              </div>
+            </div>
           </div>
-          <div class="summary-box" style="margin-top:12px;">
-            <div id="summary1"></div>
-            <div id="summary2" style="margin-top:6px;"></div>
-            <div id="summary3" style="margin-top:6px;"></div>
-            <div id="summary4" style="margin-top:6px;"></div>
-          </div>
+
+          <div class="status" id="statusBox"></div>
         </section>
       </div>
     </aside>
 
     <main class="content">
-      <div class="content-inner">
-        <section class="plots-grid">
-          <article class="plot-card card">
-            <div class="plot-head">
-              <h3>实部 Re{x[n]}</h3>
-              <span>r<sup>n</sup> cos(ωn)</span>
+      <div class="stack">
+        <section class="card block">
+          <div class="topbar">
+            <div>
+              <h2 style="margin-bottom:4px;">图形区</h2>
+              <div class="mini">左侧主图显示复平面中的轨迹与当前点；右侧 4 个次图显示实部、虚部、幅度和相位。</div>
             </div>
-            <div class="plot-canvas-wrap"><canvas id="realCanvas"></canvas></div>
-          </article>
-
-          <article class="plot-card card">
-            <div class="plot-head">
-              <h3>虚部 Im{x[n]}</h3>
-              <span>r<sup>n</sup> sin(ωn)</span>
-            </div>
-            <div class="plot-canvas-wrap"><canvas id="imagCanvas"></canvas></div>
-          </article>
-
-          <article class="plot-card card">
-            <div class="plot-head">
-              <h3>幅度 |x[n]|</h3>
-              <span>r<sup>n</sup></span>
-            </div>
-            <div class="plot-canvas-wrap"><canvas id="magCanvas"></canvas></div>
-          </article>
-
-          <article class="plot-card card">
-            <div class="plot-head">
-              <h3>相位 ∠x[n]</h3>
-              <span>主值范围 [-π, π]</span>
-            </div>
-            <div class="plot-canvas-wrap"><canvas id="phaseCanvas"></canvas></div>
-          </article>
-        </section>
-
-        <section class="plane-card card">
-          <div class="plane-head">
-            <h2>复平面中的当前点</h2>
-            <span id="planeMeta">浅蓝色轨迹表示所有 n 的连接结果，红色线段表示从原点到当前点。</span>
+            <div class="mini" id="planeMeta">主图：Re(x[n]) 为横轴，Im(x[n]) 为纵轴</div>
           </div>
-          <div class="plane-canvas-wrap"><canvas id="complexPlaneCanvas"></canvas></div>
-          <div class="plane-meta" id="planeReadout"></div>
+          <div class="current-readout" id="selectedReadout"></div>
         </section>
+
+        <section class="dashboard-shell" id="dashboardShell">
+        <section class="dashboard" id="dashboard">
+          <article class="main-plot-card card">
+            <div class="plot-head">
+              <h3>复平面轨迹与当前点</h3>
+              <span>主图</span>
+            </div>
+            <canvas id="complexPlaneCanvas"></canvas>
+            <div class="footer-note">浅蓝色折线表示不同 n 对应的轨迹，红点表示当前 n 对应的坐标点，红线表示从原点指向当前点的向量。</div>
+          </article>
+
+          <div class="dashboard-resizer" id="dashboardResizer" title="左右拖动，调整主图与次图宽度"></div>
+
+          <section class="secondary-grid">
+            <article class="plot-card card">
+              <div class="plot-head">
+                <h3>实部 Re{x[n]}</h3>
+                <span>r<sup>n</sup>cos(ωn)</span>
+              </div>
+              <canvas id="realCanvas" class="small-canvas"></canvas>
+            </article>
+
+            <article class="plot-card card">
+              <div class="plot-head">
+                <h3>虚部 Im{x[n]}</h3>
+                <span>r<sup>n</sup>sin(ωn)</span>
+              </div>
+              <canvas id="imagCanvas" class="small-canvas"></canvas>
+            </article>
+
+            <article class="plot-card card">
+              <div class="plot-head">
+                <h3>幅度 |x[n]|</h3>
+                <span>r<sup>n</sup></span>
+              </div>
+              <canvas id="magCanvas" class="small-canvas"></canvas>
+            </article>
+
+            <article class="plot-card card">
+              <div class="plot-head">
+                <h3>相位 ∠x[n]</h3>
+                <span>主值范围 [-π, π]</span>
+              </div>
+              <canvas id="phaseCanvas" class="small-canvas"></canvas>
+            </article>
+          </section>
+        </section>
+        <div class="dashboard-height-resizer" id="dashboardHeightResizer" title="上下拖动，统一调整图形区高度"></div>
+      </section>
       </div>
     </main>
   </div>
@@ -554,782 +689,665 @@
     const DEG_PER_RAD = 180 / Math.PI;
     const RAD_PER_DEG = Math.PI / 180;
 
-    const $ = (id) => document.getElementById(id);
+    let omegaUnit = 'rad';
+    let animationTimer = null;
 
     const els = {
-      rSlider: $('rSlider'),
-      rMin: $('rMin'),
-      rMax: $('rMax'),
-      rStep: $('rStep'),
-      rValueLabel: $('rValueLabel'),
+      rSlider: document.getElementById('rSlider'),
+      rMin: document.getElementById('rMin'),
+      rMax: document.getElementById('rMax'),
+      rStep: document.getElementById('rStep'),
+      rValueLabel: document.getElementById('rValueLabel'),
 
-      radBtn: $('radBtn'),
-      degBtn: $('degBtn'),
-      wCurrentLabel: $('wCurrentLabel'),
-      wSlider: $('wSlider'),
-      wMin: $('wMin'),
-      wMax: $('wMax'),
-      wStep: $('wStep'),
-      wMinLabel: $('wMinLabel'),
-      wMaxLabel: $('wMaxLabel'),
-      wStepLabel: $('wStepLabel'),
-      wValueLabel: $('wValueLabel'),
-      wHint: $('wHint'),
+      radBtn: document.getElementById('radBtn'),
+      degBtn: document.getElementById('degBtn'),
+      wCurrentLabel: document.getElementById('wCurrentLabel'),
+      wSlider: document.getElementById('wSlider'),
+      wMin: document.getElementById('wMin'),
+      wMax: document.getElementById('wMax'),
+      wStep: document.getElementById('wStep'),
+      wMinLabel: document.getElementById('wMinLabel'),
+      wMaxLabel: document.getElementById('wMaxLabel'),
+      wStepLabel: document.getElementById('wStepLabel'),
+      wValueLabel: document.getElementById('wValueLabel'),
+      wHint: document.getElementById('wHint'),
 
-      nMin: $('nMin'),
-      nMax: $('nMax'),
-      nSlider: $('nSlider'),
-      nValueLabel: $('nValueLabel'),
-      animBtn: $('animBtn'),
-      resetBtn: $('resetBtn'),
-      animStatus: $('animStatus'),
+      nMin: document.getElementById('nMin'),
+      nMax: document.getElementById('nMax'),
+      nSlider: document.getElementById('nSlider'),
+      currentNLabel: document.getElementById('currentNLabel'),
+      playBtn: document.getElementById('playBtn'),
 
-      liveFormula: $('liveFormula'),
-      selectedReadout: $('selectedReadout'),
-      statusBox: $('statusBox'),
-      summary1: $('summary1'),
-      summary2: $('summary2'),
-      summary3: $('summary3'),
-      summary4: $('summary4'),
-      planeMeta: $('planeMeta'),
-      planeReadout: $('planeReadout'),
+      liveFormula: document.getElementById('liveFormula'),
+      selectedReadout: document.getElementById('selectedReadout'),
+      planeMeta: document.getElementById('planeMeta'),
+      statusBox: document.getElementById('statusBox'),
+      dashboardShell: document.getElementById('dashboardShell'),
+      dashboard: document.getElementById('dashboard'),
+      dashboardResizer: document.getElementById('dashboardResizer'),
+      dashboardHeightResizer: document.getElementById('dashboardHeightResizer'),
 
-      realCanvas: $('realCanvas'),
-      imagCanvas: $('imagCanvas'),
-      magCanvas: $('magCanvas'),
-      phaseCanvas: $('phaseCanvas'),
-      complexPlaneCanvas: $('complexPlaneCanvas')
+      complexPlaneCanvas: document.getElementById('complexPlaneCanvas'),
+      realCanvas: document.getElementById('realCanvas'),
+      imagCanvas: document.getElementById('imagCanvas'),
+      magCanvas: document.getElementById('magCanvas'),
+      phaseCanvas: document.getElementById('phaseCanvas'),
     };
 
-    const appState = {
-      omegaUnit: 'rad',
+    const state = {
+      r: 0.9,
+      rMin: 0.1,
+      rMax: 1.5,
+      rStep: 0.01,
+
       omegaRad: 0.5,
-      omegaDisplayRange: {
-        rad: { min: -2 * Math.PI, max: 2 * Math.PI, step: 0.01 },
-        deg: { min: -360, max: 360, step: 1 }
-      },
-      animation: {
-        playing: false,
-        rafId: null,
-        lastTs: 0,
-        intervalMs: 260
-      }
+      omegaMinRad: -2 * Math.PI,
+      omegaMaxRad: 2 * Math.PI,
+      omegaStepRad: 0.01,
+
+      nMin: -20,
+      nMax: 20,
+      currentN: 0,
     };
 
-    function toNumber(v, fallback = 0) {
-      const x = Number(v);
-      return Number.isFinite(x) ? x : fallback;
-    }
-
-    function clamp(v, min, max) {
-      return Math.min(max, Math.max(min, v));
-    }
-
-    function fmt(v, digits = 4) {
+    const fmt = (v, digits = 4) => {
       if (!Number.isFinite(v)) return '∞';
       const abs = Math.abs(v);
-      if (abs > 0 && (abs >= 1e5 || abs < 1e-3)) return v.toExponential(3);
+      if (abs !== 0 && (abs >= 100000 || abs < 0.0001)) return v.toExponential(3);
       return Number(v).toFixed(digits).replace(/\.0+$/, '').replace(/(\.\d*?)0+$/, '$1');
-    }
+    };
 
-    function fmtPi(rad) {
-      const ratio = rad / Math.PI;
-      const candidates = [1, 2, 3, 4, 6, 8, 12];
-      for (const d of candidates) {
-        const n = Math.round(ratio * d);
-        if (Math.abs(ratio - n / d) < 1e-3) {
-          if (n === 0) return '0';
-          const sign = n < 0 ? '-' : '';
-          const absN = Math.abs(n);
-          if (d === 1) return `${sign}${absN === 1 ? '' : absN}π`;
-          return `${sign}${absN === 1 ? 'π' : absN + 'π'}/${d}`;
-        }
-      }
-      return `${fmt(ratio, 3)}π`;
-    }
+    const clamp = (x, min, max) => Math.min(max, Math.max(min, x));
+    const toDisplayOmega = (rad) => omegaUnit === 'rad' ? rad : rad * DEG_PER_RAD;
+    const fromDisplayOmega = (display) => omegaUnit === 'rad' ? display : display * RAD_PER_DEG;
+    const getUnitText = () => omegaUnit === 'rad' ? 'rad' : '°';
+    const getOmegaSuffix = () => omegaUnit === 'rad' ? 'rad' : '°';
 
-    function wrapToPi(x) {
-      let y = ((x + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI;
-      if (Math.abs(y + Math.PI) < 1e-10) y = Math.PI;
-      return y;
-    }
-
-    function radToDisplay(rad) {
-      return appState.omegaUnit === 'rad' ? rad : rad * DEG_PER_RAD;
-    }
-
-    function displayToRad(v) {
-      return appState.omegaUnit === 'rad' ? v : v * RAD_PER_DEG;
-    }
-
-    function showStatus(msg = '') {
-      if (!msg) {
+    function showStatus(message = '') {
+      if (!message) {
         els.statusBox.style.display = 'none';
         els.statusBox.textContent = '';
         return;
       }
       els.statusBox.style.display = 'block';
-      els.statusBox.textContent = msg;
+      els.statusBox.textContent = message;
     }
 
-    function syncRControls() {
-      let min = Math.max(0.0001, toNumber(els.rMin.value, 0.1));
-      let max = Math.max(0.0002, toNumber(els.rMax.value, 1.5));
-      let step = Math.max(0.001, toNumber(els.rStep.value, 0.01));
-      let message = '';
-
-      if (min >= max) {
-        max = min + step;
-        message = '已自动调整 r 的范围，使最小值小于最大值。';
-      }
-
-      els.rMin.value = fmt(min, 4);
-      els.rMax.value = fmt(max, 4);
-      els.rStep.value = fmt(step, 4);
-      els.rSlider.min = String(min);
-      els.rSlider.max = String(max);
-      els.rSlider.step = String(step);
-      els.rSlider.value = String(clamp(toNumber(els.rSlider.value, 0.9), min, max));
-
-      if (message) showStatus(message);
+    function syncRControls({ setValue = true } = {}) {
+      els.rSlider.min = String(state.rMin);
+      els.rSlider.max = String(state.rMax);
+      els.rSlider.step = String(state.rStep);
+      if (setValue) els.rSlider.value = String(state.r);
+      els.rMin.value = fmt(state.rMin, 4);
+      els.rMax.value = fmt(state.rMax, 4);
+      els.rStep.value = fmt(state.rStep, 4);
+      els.rValueLabel.textContent = fmt(state.r, 4);
     }
 
-    function syncNControls() {
-      let nMin = Math.round(toNumber(els.nMin.value, -20));
-      let nMax = Math.round(toNumber(els.nMax.value, 20));
-      let message = '';
+    function syncOmegaControls({ setValue = true } = {}) {
+      const minD = toDisplayOmega(state.omegaMinRad);
+      const maxD = toDisplayOmega(state.omegaMaxRad);
+      const stepD = Math.abs(toDisplayOmega(state.omegaStepRad));
+      const valueD = toDisplayOmega(state.omegaRad);
 
-      if (nMin > nMax) {
-        [nMin, nMax] = [nMax, nMin];
-        message = '已自动交换 n 的上下界，使 n 最小值不大于最大值。';
-      }
+      els.wCurrentLabel.textContent = `当前 ω（${getUnitText()}）`;
+      els.wMinLabel.textContent = `ω 最小值 (${getUnitText()})`;
+      els.wMaxLabel.textContent = `ω 最大值 (${getUnitText()})`;
+      els.wStepLabel.textContent = `ω 步长 (${getUnitText()})`;
+      els.wValueLabel.textContent = `${fmt(valueD, 4)} ${getOmegaSuffix()}`;
 
-      els.nMin.value = String(nMin);
-      els.nMax.value = String(nMax);
-      els.nSlider.min = String(nMin);
-      els.nSlider.max = String(nMax);
+      els.wSlider.min = String(minD);
+      els.wSlider.max = String(maxD);
+      els.wSlider.step = String(stepD || 0.01);
+      if (setValue) els.wSlider.value = String(valueD);
+
+      els.wMin.value = fmt(minD, 4);
+      els.wMax.value = fmt(maxD, 4);
+      els.wStep.value = fmt(stepD || 0.01, 4);
+      els.wHint.textContent = omegaUnit === 'rad'
+        ? '常用参考：π ≈ 3.1416，2π ≈ 6.2832'
+        : '常用参考：180° = π，360° = 2π';
+
+      els.radBtn.classList.toggle('active', omegaUnit === 'rad');
+      els.degBtn.classList.toggle('active', omegaUnit === 'deg');
+    }
+
+    function syncNControls({ setValue = true } = {}) {
+      els.nMin.value = String(state.nMin);
+      els.nMax.value = String(state.nMax);
+      els.nSlider.min = String(state.nMin);
+      els.nSlider.max = String(state.nMax);
       els.nSlider.step = '1';
-      els.nSlider.value = String(clamp(Math.round(toNumber(els.nSlider.value, 0)), nMin, nMax));
-
-      if (message) showStatus(message);
+      if (setValue) els.nSlider.value = String(state.currentN);
+      els.currentNLabel.textContent = String(state.currentN);
     }
 
-    function syncOmegaUnitUI() {
-      const isRad = appState.omegaUnit === 'rad';
-      els.radBtn.classList.toggle('active', isRad);
-      els.degBtn.classList.toggle('active', !isRad);
-      els.wCurrentLabel.textContent = isRad ? '当前 ω（弧度）' : '当前 ω（角度）';
-      els.wMinLabel.textContent = isRad ? 'ω 最小值（rad）' : 'ω 最小值（°）';
-      els.wMaxLabel.textContent = isRad ? 'ω 最大值（rad）' : 'ω 最大值（°）';
-      els.wStepLabel.textContent = isRad ? 'ω 步长（rad）' : 'ω 步长（°）';
-      els.wHint.innerHTML = isRad
-        ? '常用参考：<span class="mono">π ≈ 3.1416</span>，<span class="mono">2π ≈ 6.2832</span>'
-        : '常用参考：<span class="mono">180° = π</span>，<span class="mono">360° = 2π</span>';
-
-      const cfg = appState.omegaDisplayRange[appState.omegaUnit];
-      els.wMin.value = fmt(cfg.min, isRad ? 4 : 2);
-      els.wMax.value = fmt(cfg.max, isRad ? 4 : 2);
-      els.wStep.value = fmt(cfg.step, isRad ? 4 : 2);
-      els.wMin.step = isRad ? '0.01' : '1';
-      els.wMax.step = isRad ? '0.01' : '1';
-      els.wStep.step = isRad ? '0.001' : '0.1';
-
-      syncOmegaRangeFromFields(radToDisplay(appState.omegaRad));
-    }
-
-    function syncOmegaRangeFromFields(preferredDisplayValue = null) {
-      const cfg = appState.omegaDisplayRange[appState.omegaUnit];
-      let min = toNumber(els.wMin.value, cfg.min);
-      let max = toNumber(els.wMax.value, cfg.max);
-      let step = Math.max(appState.omegaUnit === 'rad' ? 0.001 : 0.1, toNumber(els.wStep.value, cfg.step));
-      let message = '';
-
-      if (min >= max) {
-        max = min + step;
-        message = '已自动调整 ω 的范围，使最小值小于最大值。';
+    function getSequenceData() {
+      const data = [];
+      for (let n = state.nMin; n <= state.nMax; n += 1) {
+        const mag = Math.pow(state.r, n);
+        const re = mag * Math.cos(state.omegaRad * n);
+        const im = mag * Math.sin(state.omegaRad * n);
+        const phase = Math.atan2(im, re);
+        data.push({ n, re, im, mag, phase });
       }
-
-      appState.omegaDisplayRange[appState.omegaUnit] = { min, max, step };
-      els.wMin.value = fmt(min, appState.omegaUnit === 'rad' ? 4 : 2);
-      els.wMax.value = fmt(max, appState.omegaUnit === 'rad' ? 4 : 2);
-      els.wStep.value = fmt(step, appState.omegaUnit === 'rad' ? 4 : 2);
-
-      const fallbackDisplay = radToDisplay(appState.omegaRad);
-      const displayValue = clamp(
-        preferredDisplayValue !== null ? preferredDisplayValue : toNumber(els.wSlider.value, fallbackDisplay),
-        min,
-        max
-      );
-
-      els.wSlider.min = String(min);
-      els.wSlider.max = String(max);
-      els.wSlider.step = String(step);
-      els.wSlider.value = String(displayValue);
-      appState.omegaRad = displayToRad(displayValue);
-
-      if (message) showStatus(message);
+      return data;
     }
 
-    function setAnimationUI() {
-      const playing = appState.animation.playing;
-      els.animBtn.textContent = playing ? '暂停动画' : '播放动画';
-      els.animStatus.textContent = playing ? '动画播放中：n 会自动递增，并在边界处循环。' : '动画已暂停。';
+    function updateFormulaAndReadout(data) {
+      const current = data.find(d => d.n === state.currentN) || data[0];
+      const omegaDisplay = toDisplayOmega(state.omegaRad);
+      const unit = omegaUnit === 'rad' ? 'rad' : '°';
+      const rText = fmt(state.r, 4);
+      const wText = fmt(omegaDisplay, 4);
+
+      els.liveFormula.innerHTML = [
+        `<strong>当前参数：</strong> r = ${rText}，ω = ${wText} ${unit}，`,
+        `<br>`,
+        `n ∈ [${state.nMin}, ${state.nMax}]，当前 n = ${state.currentN}`,
+        `<br>`,
+        `<strong>x[${state.currentN}]</strong> = ${fmt(current.re, 4)} + j${fmt(current.im, 4)}，`,
+        `<br>`,
+        `|x[${state.currentN}]| = ${fmt(current.mag, 4)}，∠x[${state.currentN}] = ${fmt(current.phase, 4)} rad`
+      ].join('');
+
+      els.selectedReadout.innerHTML = [
+        `当前点 <span class="mono">x[${state.currentN}]</span>：`,
+        `<span class="mono">Re = ${fmt(current.re, 4)}</span>，`,
+        `<span class="mono">Im = ${fmt(current.im, 4)}</span>，`,
+        `<span class="mono">|x| = ${fmt(current.mag, 4)}</span>，`,
+        `<span class="mono">∠x = ${fmt(current.phase, 4)} rad</span>`
+      ].join('');
+
+      els.planeMeta.textContent = `主图：点 (${fmt(current.re, 4)}, ${fmt(current.im, 4)})，当前 n = ${state.currentN}`;
     }
 
-    function stopAnimation() {
-      if (appState.animation.rafId !== null) {
-        cancelAnimationFrame(appState.animation.rafId);
-        appState.animation.rafId = null;
-      }
-      appState.animation.playing = false;
-      appState.animation.lastTs = 0;
-      setAnimationUI();
-    }
-
-    function advanceAnimationStep() {
-      syncNControls();
-      const nMin = Math.round(toNumber(els.nSlider.min, -20));
-      const nMax = Math.round(toNumber(els.nSlider.max, 20));
-      const current = Math.round(toNumber(els.nSlider.value, nMin));
-      const next = current >= nMax ? nMin : current + 1;
-      els.nSlider.value = String(next);
-      redraw();
-    }
-
-    function animationFrame(ts) {
-      if (!appState.animation.playing) return;
-      if (!appState.animation.lastTs) appState.animation.lastTs = ts;
-      if (ts - appState.animation.lastTs >= appState.animation.intervalMs) {
-        advanceAnimationStep();
-        appState.animation.lastTs = ts;
-      }
-      appState.animation.rafId = requestAnimationFrame(animationFrame);
-    }
-
-    function startAnimation() {
-      if (appState.animation.playing) return;
-      appState.animation.playing = true;
-      appState.animation.lastTs = 0;
-      setAnimationUI();
-      appState.animation.rafId = requestAnimationFrame(animationFrame);
-    }
-
-    function toggleAnimation() {
-      if (appState.animation.playing) stopAnimation();
-      else startAnimation();
-    }
-
-    function prepareCanvas(canvas) {
-      const dpr = window.devicePixelRatio || 1;
+    function prepCanvas(canvas) {
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
       const rect = canvas.getBoundingClientRect();
-      const width = Math.max(280, rect.width);
-      const height = Math.max(180, rect.height);
+      const width = Math.max(320, rect.width || canvas.clientWidth || 320);
+      const height = Math.max(180, rect.height || canvas.clientHeight || 180);
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       const ctx = canvas.getContext('2d');
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, width, height);
       return { ctx, width, height };
     }
 
-    function niceTicks(min, max, count = 5) {
-      if (!Number.isFinite(min) || !Number.isFinite(max)) return [];
-      if (min === max) return [min];
-      const span = max - min;
-      const rough = span / Math.max(1, count);
-      const power = Math.pow(10, Math.floor(Math.log10(Math.abs(rough))));
-      const normalized = rough / power;
-      let step;
-      if (normalized < 1.5) step = 1;
-      else if (normalized < 3) step = 2;
-      else if (normalized < 7) step = 5;
-      else step = 10;
-      step *= power;
-      const start = Math.ceil(min / step) * step;
-      const ticks = [];
-      for (let x = start; x <= max + 1e-9; x += step) ticks.push(Number(x.toPrecision(12)));
-      return ticks;
-    }
-
-    function buildSequence({ r, w, nMin, nMax }) {
-      const nList = [];
-      const real = [];
-      const imag = [];
-      const mag = [];
-      const phase = [];
-      let overflow = false;
-
-      for (let n = nMin; n <= nMax; n++) {
-        const amp = Math.pow(r, n);
-        const re = amp * Math.cos(w * n);
-        const im = amp * Math.sin(w * n);
-        const ph = wrapToPi(Math.atan2(im, re));
-        if (![amp, re, im, ph].every(Number.isFinite)) overflow = true;
-        nList.push(n);
-        real.push(re);
-        imag.push(im);
-        mag.push(amp);
-        phase.push(ph);
-      }
-      return { nList, real, imag, mag, phase, overflow };
-    }
-
-    function getState() {
-      const r = toNumber(els.rSlider.value, 0.9);
-      const wDisplay = toNumber(els.wSlider.value, radToDisplay(appState.omegaRad));
-      const w = displayToRad(wDisplay);
-      appState.omegaRad = w;
-      const nMin = Math.round(toNumber(els.nMin.value, -20));
-      const nMax = Math.round(toNumber(els.nMax.value, 20));
-      const nCurrent = Math.round(toNumber(els.nSlider.value, 0));
-      return { r, w, nMin, nMax, nCurrent };
-    }
-
-    function drawStemPlot(canvas, nList, yList, options = {}) {
-      const { title = '', yFixed = null, formatY = (v) => fmt(v, 2), color = '#2563eb', currentN = null } = options;
-      const { ctx, width, height } = prepareCanvas(canvas);
-      ctx.clearRect(0, 0, width, height);
-
-      const pad = { top: 18, right: 16, bottom: 30, left: 52 };
-      const plotW = width - pad.left - pad.right;
-      const plotH = height - pad.top - pad.bottom;
-
-      const finiteY = yList.filter(Number.isFinite);
-      let yMin = yFixed ? yFixed[0] : Math.min(...finiteY);
-      let yMax = yFixed ? yFixed[1] : Math.max(...finiteY);
-      if (!Number.isFinite(yMin) || !Number.isFinite(yMax)) {
-        yMin = -1;
-        yMax = 1;
-      }
-
-      if (!yFixed) {
-        yMin = Math.min(yMin, 0);
-        yMax = Math.max(yMax, 0);
-      }
-
-      if (yMin === yMax) {
-        const delta = Math.abs(yMin) < 1 ? 1 : Math.abs(yMin) * 0.2;
-        yMin -= delta;
-        yMax += delta;
-      }
-
-      const yPad = (yMax - yMin) * 0.08;
-      yMin -= yPad;
-      yMax += yPad;
-
-      const nMin = Math.min(...nList);
-      const nMax = Math.max(...nList);
-      const xScale = (n) => nMin === nMax ? pad.left + plotW / 2 : pad.left + ((n - nMin) / (nMax - nMin)) * plotW;
-      const yScale = (y) => pad.top + (1 - (y - yMin) / (yMax - yMin)) * plotH;
-
-      ctx.font = '12px Segoe UI, Microsoft YaHei, sans-serif';
-      ctx.fillStyle = '#6b7280';
-      ctx.strokeStyle = '#e5e7eb';
-      ctx.lineWidth = 1;
-
-      niceTicks(yMin, yMax, 4).forEach((tick) => {
-        const py = yScale(tick);
-        ctx.beginPath();
-        ctx.moveTo(pad.left, py);
-        ctx.lineTo(width - pad.right, py);
-        ctx.stroke();
-        ctx.fillText(formatY(tick), 8, py + 4);
-      });
-
-      const xTicks = [];
-      if (nList.length <= 10) xTicks.push(...nList);
-      else {
-        const steps = 5;
-        for (let i = 0; i <= steps; i++) xTicks.push(Math.round(nMin + (i / steps) * (nMax - nMin)));
-      }
-
-      [...new Set(xTicks)].forEach((tick) => {
-        const px = xScale(tick);
-        ctx.beginPath();
-        ctx.moveTo(px, pad.top);
-        ctx.lineTo(px, height - pad.bottom);
-        ctx.stroke();
-        ctx.fillText(String(tick), px - 8, height - 8);
-      });
-
-      ctx.strokeStyle = '#94a3b8';
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.moveTo(pad.left, pad.top);
-      ctx.lineTo(pad.left, height - pad.bottom);
-      ctx.lineTo(width - pad.right, height - pad.bottom);
-      ctx.stroke();
-
-      const y0 = yScale(0);
-      if (yMin <= 0 && yMax >= 0) {
-        ctx.strokeStyle = '#64748b';
-        ctx.setLineDash([4, 4]);
-        ctx.beginPath();
-        ctx.moveTo(pad.left, y0);
-        ctx.lineTo(width - pad.right, y0);
-        ctx.stroke();
-        ctx.setLineDash([]);
-      }
-
-      ctx.strokeStyle = color;
-      ctx.fillStyle = color;
-      ctx.lineWidth = 1.4;
-      const radius = nList.length > 80 ? 2.5 : 3.2;
-
-      for (let i = 0; i < nList.length; i++) {
-        const y = yList[i];
-        if (!Number.isFinite(y)) continue;
-        const px = xScale(nList[i]);
-        const py = yScale(y);
-        ctx.beginPath();
-        ctx.moveTo(px, y0);
-        ctx.lineTo(px, py);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(px, py, radius, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      if (currentN !== null && currentN >= nMin && currentN <= nMax) {
-        const idx = currentN - nMin;
-        const y = yList[idx];
-        if (Number.isFinite(y)) {
-          const px = xScale(currentN);
-          const py = yScale(y);
-          ctx.strokeStyle = '#111827';
-          ctx.setLineDash([6, 4]);
-          ctx.beginPath();
-          ctx.moveTo(px, pad.top);
-          ctx.lineTo(px, height - pad.bottom);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          ctx.fillStyle = '#111827';
-          ctx.beginPath();
-          ctx.arc(px, py, radius + 2.2, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = '#ffffff';
-          ctx.beginPath();
-          ctx.arc(px, py, radius - 0.4, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      ctx.fillStyle = '#334155';
-      ctx.fillText('n', width - pad.right - 10, height - 8);
+    function drawAxesBox(ctx, x, y, w, h) {
       ctx.save();
-      ctx.translate(14, pad.top + plotH / 2);
-      ctx.rotate(-Math.PI / 2);
-      ctx.fillText(title, 0, 0);
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x, y, w, h);
       ctx.restore();
     }
 
-    function drawComplexPlane(canvas, seq, state) {
-      const { ctx, width, height } = prepareCanvas(canvas);
-      ctx.clearRect(0, 0, width, height);
+    function drawStemPlot(canvas, data, key, yLabel) {
+      const { ctx, width, height } = prepCanvas(canvas);
+      const pad = { left: 52, right: 16, top: 20, bottom: 36 };
+      const innerW = width - pad.left - pad.right;
+      const innerH = height - pad.top - pad.bottom;
+      const values = data.map(d => d[key]).filter(Number.isFinite);
+      if (!values.length) return;
 
-      const pad = { top: 24, right: 24, bottom: 40, left: 54 };
-      const plotW = width - pad.left - pad.right;
-      const plotH = height - pad.top - pad.bottom;
-      const size = Math.min(plotW, plotH);
-      const left = pad.left + (plotW - size) / 2;
-      const top = pad.top + (plotH - size) / 2;
+      let ymin = Math.min(...values);
+      let ymax = Math.max(...values);
+      if (Math.abs(ymax - ymin) < 1e-9) {
+        ymin -= 1;
+        ymax += 1;
+      }
+      const yPad = 0.12 * (ymax - ymin);
+      ymin -= yPad;
+      ymax += yPad;
 
-      const currentIndex = state.nCurrent - state.nMin;
-      const currentRe = seq.real[currentIndex];
-      const currentIm = seq.imag[currentIndex];
+      const xs = data.map((_, i) => data.length === 1 ? pad.left + innerW / 2 : pad.left + (i / (data.length - 1)) * innerW);
+      const yToPx = (v) => pad.top + (ymax - v) / (ymax - ymin) * innerH;
+      const baseY = yToPx(clamp(0, ymin, ymax));
 
-      const finiteRe = seq.real.filter(Number.isFinite);
-      const finiteIm = seq.imag.filter(Number.isFinite);
-      let maxAbs = Math.max(
-        1,
-        ...finiteRe.map((v) => Math.abs(v)),
-        ...finiteIm.map((v) => Math.abs(v)),
-        Math.abs(currentRe || 0),
-        Math.abs(currentIm || 0)
-      );
-      maxAbs *= 1.15;
+      ctx.save();
+      drawAxesBox(ctx, pad.left, pad.top, innerW, innerH);
 
-      const xScale = (x) => left + ((x + maxAbs) / (2 * maxAbs)) * size;
-      const yScale = (y) => top + ((maxAbs - y) / (2 * maxAbs)) * size;
-
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(left, top, size, size);
-
-      const ticks = niceTicks(-maxAbs, maxAbs, 4);
-      ctx.strokeStyle = '#e5e7eb';
+      ctx.strokeStyle = '#e2e8f0';
       ctx.lineWidth = 1;
-      ticks.forEach((t) => {
-        const px = xScale(t);
-        const py = yScale(t);
+      for (let i = 0; i <= 4; i += 1) {
+        const yy = pad.top + (i / 4) * innerH;
         ctx.beginPath();
-        ctx.moveTo(px, top);
-        ctx.lineTo(px, top + size);
+        ctx.moveTo(pad.left, yy);
+        ctx.lineTo(pad.left + innerW, yy);
         ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(left, py);
-        ctx.lineTo(left + size, py);
-        ctx.stroke();
-      });
+      }
 
-      const x0 = xScale(0);
-      const y0 = yScale(0);
-      ctx.strokeStyle = '#64748b';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = '#94a3b8';
       ctx.beginPath();
-      ctx.moveTo(left, y0);
-      ctx.lineTo(left + size, y0);
-      ctx.moveTo(x0, top);
-      ctx.lineTo(x0, top + size);
+      ctx.moveTo(pad.left, baseY);
+      ctx.lineTo(pad.left + innerW, baseY);
       ctx.stroke();
 
-      ctx.fillStyle = '#6b7280';
-      ctx.font = '12px Segoe UI, Microsoft YaHei, sans-serif';
-      ticks.forEach((t) => {
-        if (Math.abs(t) < 1e-12) return;
-        ctx.fillText(fmt(t, 2), xScale(t) - 10, y0 + 16);
-        ctx.fillText(fmt(t, 2), x0 + 6, yScale(t) + 4);
-      });
+      ctx.fillStyle = '#64748b';
+      ctx.font = '12px Segoe UI';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      for (let i = 0; i <= 4; i += 1) {
+        const value = ymax - (i / 4) * (ymax - ymin);
+        const yy = pad.top + (i / 4) * innerH;
+        ctx.fillText(fmt(value, 3), pad.left - 8, yy);
+      }
 
-      ctx.fillStyle = '#334155';
-      ctx.fillText('Re{x[n]}', left + size - 56, y0 - 8);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      const tickIdx = Array.from(new Set([0, Math.floor((data.length - 1) / 2), data.length - 1])).filter(i => i >= 0);
+      for (const idx of tickIdx) {
+        ctx.fillText(String(data[idx].n), xs[idx], pad.top + innerH + 8);
+      }
+
+      ctx.fillStyle = '#475569';
+      ctx.fillText('n', pad.left + innerW / 2, height - 18);
       ctx.save();
-      ctx.translate(x0 + 14, top + 14);
+      ctx.translate(16, pad.top + innerH / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(yLabel, 0, 0);
+      ctx.restore();
+
+      data.forEach((d, i) => {
+        const x = xs[i];
+        const y = yToPx(d[key]);
+        const isCurrent = d.n === state.currentN;
+        ctx.strokeStyle = isCurrent ? '#dc2626' : '#2563eb';
+        ctx.lineWidth = isCurrent ? 2.2 : 1.4;
+        ctx.beginPath();
+        ctx.moveTo(x, baseY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+
+        ctx.fillStyle = isCurrent ? '#dc2626' : '#2563eb';
+        ctx.beginPath();
+        ctx.arc(x, y, isCurrent ? 4.8 : 3.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function drawComplexPlane(canvas, data) {
+      const { ctx, width, height } = prepCanvas(canvas);
+      const pad = 38;
+      const innerW = width - pad * 2;
+      const innerH = height - pad * 2;
+      const current = data.find(d => d.n === state.currentN) || data[0];
+      const finite = data.filter(d => Number.isFinite(d.re) && Number.isFinite(d.im));
+      if (!finite.length) return;
+
+      let maxAbs = 1;
+      finite.forEach(d => {
+        maxAbs = Math.max(maxAbs, Math.abs(d.re), Math.abs(d.im));
+      });
+      maxAbs *= 1.18;
+
+      const cx = pad + innerW / 2;
+      const cy = pad + innerH / 2;
+      const scale = Math.min(innerW, innerH) / 2 / maxAbs;
+      const toX = (v) => cx + v * scale;
+      const toY = (v) => cy - v * scale;
+
+      ctx.save();
+      drawAxesBox(ctx, pad, pad, innerW, innerH);
+
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      const gridStep = maxAbs / 2;
+      for (let k = -2; k <= 2; k += 1) {
+        const gx = toX(k * gridStep);
+        const gy = toY(k * gridStep);
+        ctx.beginPath();
+        ctx.moveTo(gx, pad);
+        ctx.lineTo(gx, pad + innerH);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(pad, gy);
+        ctx.lineTo(pad + innerW, gy);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = '#64748b';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(pad, cy);
+      ctx.lineTo(pad + innerW, cy);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(cx, pad);
+      ctx.lineTo(cx, pad + innerH);
+      ctx.stroke();
+
+      ctx.fillStyle = '#475569';
+      ctx.font = '12px Segoe UI';
+      ctx.textAlign = 'center';
+      ctx.fillText('Re{x[n]}', pad + innerW - 34, cy - 10);
+      ctx.save();
+      ctx.translate(cx + 12, pad + 16);
       ctx.rotate(-Math.PI / 2);
       ctx.fillText('Im{x[n]}', 0, 0);
       ctx.restore();
 
-      ctx.strokeStyle = 'rgba(37, 99, 235, 0.36)';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(37, 99, 235, 0.28)';
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      let started = false;
-      for (let i = 0; i < seq.nList.length; i++) {
-        const re = seq.real[i];
-        const im = seq.imag[i];
-        if (!Number.isFinite(re) || !Number.isFinite(im)) continue;
-        const px = xScale(re);
-        const py = yScale(im);
-        if (!started) {
-          ctx.moveTo(px, py);
-          started = true;
-        } else {
-          ctx.lineTo(px, py);
-        }
-      }
+      finite.forEach((d, idx) => {
+        const x = toX(d.re);
+        const y = toY(d.im);
+        if (idx === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
       ctx.stroke();
 
-      ctx.fillStyle = 'rgba(37, 99, 235, 0.18)';
-      for (let i = 0; i < seq.nList.length; i++) {
-        const re = seq.real[i];
-        const im = seq.imag[i];
-        if (!Number.isFinite(re) || !Number.isFinite(im)) continue;
+      finite.forEach(d => {
+        ctx.fillStyle = d.n === state.currentN ? '#dc2626' : 'rgba(37, 99, 235, 0.45)';
         ctx.beginPath();
-        ctx.arc(xScale(re), yScale(im), 3.2, 0, Math.PI * 2);
+        ctx.arc(toX(d.re), toY(d.im), d.n === state.currentN ? 5.5 : 3, 0, Math.PI * 2);
         ctx.fill();
+      });
+
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(toX(current.re), toY(current.im));
+      ctx.stroke();
+
+      ctx.fillStyle = '#dc2626';
+      ctx.beginPath();
+      ctx.arc(toX(current.re), toY(current.im), 6.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#dc2626';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(`n = ${state.currentN}`, toX(current.re) + 8, toY(current.im) - 8);
+
+      ctx.restore();
+    }
+
+
+    function applyDashboardWidth(percent) {
+      const next = clamp(percent, 22, 60);
+      document.documentElement.style.setProperty('--main-panel-width', `${next.toFixed(2)}%`);
+    }
+
+    function applyDashboardHeight(px) {
+      const next = clamp(px, 520, 1400);
+      document.documentElement.style.setProperty('--dashboard-height', `${next.toFixed(0)}px`);
+    }
+
+    function initDashboardResizer() {
+      const dashboard = els.dashboard;
+      const handle = els.dashboardResizer;
+      if (!dashboard || !handle) return;
+
+      let dragging = false;
+      let rafId = null;
+      let pendingPercent = null;
+
+      const flush = () => {
+        rafId = null;
+        if (pendingPercent == null) return;
+        applyDashboardWidth(pendingPercent);
+        pendingPercent = null;
+        renderAll();
+      };
+
+      const queueWidth = (percent) => {
+        pendingPercent = percent;
+        if (rafId == null) rafId = requestAnimationFrame(flush);
+      };
+
+      const updateFromClientX = (clientX) => {
+        const rect = dashboard.getBoundingClientRect();
+        if (!rect.width) return;
+        const resizerWidth = handle.getBoundingClientRect().width || 24;
+        const usableWidth = rect.width - resizerWidth;
+        if (usableWidth <= 0) return;
+        const relativeX = clientX - rect.left - resizerWidth / 2;
+        const percent = (relativeX / usableWidth) * 100;
+        queueWidth(percent);
+      };
+
+      const stopDrag = () => {
+        if (!dragging) return;
+        dragging = false;
+        handle.classList.remove('dragging');
+        document.body.classList.remove('dashboard-resizing');
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+        if (rafId != null) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        if (pendingPercent != null) {
+          applyDashboardWidth(pendingPercent);
+          pendingPercent = null;
+        }
+        renderAll();
+      };
+
+      const onMove = (event) => {
+        if (!dragging) return;
+        updateFromClientX(event.clientX);
+      };
+
+      const onUp = () => stopDrag();
+
+      handle.addEventListener('pointerdown', (event) => {
+        if (window.matchMedia('(max-width: 1240px)').matches) return;
+        dragging = true;
+        handle.classList.add('dragging');
+        document.body.classList.add('dashboard-resizing');
+        handle.setPointerCapture?.(event.pointerId);
+        updateFromClientX(event.clientX);
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+        window.addEventListener('pointercancel', onUp);
+      });
+    }
+
+    function initDashboardHeightResizer() {
+      const dashboard = els.dashboard;
+      const handle = els.dashboardHeightResizer;
+      if (!dashboard || !handle) return;
+
+      let dragging = false;
+      let startY = 0;
+      let startHeight = 0;
+      let rafId = null;
+      let pendingHeight = null;
+
+      const flush = () => {
+        rafId = null;
+        if (pendingHeight == null) return;
+        applyDashboardHeight(pendingHeight);
+        pendingHeight = null;
+        renderAll();
+      };
+
+      const queueHeight = (px) => {
+        pendingHeight = px;
+        if (rafId == null) rafId = requestAnimationFrame(flush);
+      };
+
+      const onMove = (event) => {
+        if (!dragging) return;
+        const nextHeight = startHeight + (event.clientY - startY);
+        queueHeight(nextHeight);
+      };
+
+      const stopDrag = () => {
+        if (!dragging) return;
+        dragging = false;
+        handle.classList.remove('dragging');
+        document.body.classList.remove('dashboard-height-resizing');
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+        if (rafId != null) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        if (pendingHeight != null) {
+          applyDashboardHeight(pendingHeight);
+          pendingHeight = null;
+        }
+        renderAll();
+      };
+
+      const onUp = () => stopDrag();
+
+      handle.addEventListener('pointerdown', (event) => {
+        if (window.matchMedia('(max-width: 1240px)').matches) return;
+        dragging = true;
+        startY = event.clientY;
+        startHeight = dashboard.getBoundingClientRect().height;
+        handle.classList.add('dragging');
+        document.body.classList.add('dashboard-height-resizing');
+        handle.setPointerCapture?.(event.pointerId);
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+        window.addEventListener('pointercancel', onUp);
+      });
+    }
+
+    function renderAll() {
+      showStatus('');
+      const data = getSequenceData();
+      updateFormulaAndReadout(data);
+      drawComplexPlane(els.complexPlaneCanvas, data);
+      drawStemPlot(els.realCanvas, data, 're', 'Re{x[n]}');
+      drawStemPlot(els.imagCanvas, data, 'im', 'Im{x[n]}');
+      drawStemPlot(els.magCanvas, data, 'mag', '|x[n]|');
+      drawStemPlot(els.phaseCanvas, data, 'phase', '∠x[n]');
+    }
+
+    function applyRRange() {
+      let min = Number(els.rMin.value);
+      let max = Number(els.rMax.value);
+      let step = Number(els.rStep.value);
+      if (!Number.isFinite(min) || !Number.isFinite(max) || !Number.isFinite(step)) {
+        showStatus('r 的范围输入无效。');
+        return;
       }
+      if (step <= 0) step = 0.01;
+      min = Math.max(0.0001, min);
+      if (max <= min) max = min + step;
+      state.rMin = min;
+      state.rMax = max;
+      state.rStep = step;
+      state.r = clamp(state.r, min, max);
+      syncRControls();
+      renderAll();
+    }
 
-      if (Number.isFinite(currentRe) && Number.isFinite(currentIm)) {
-        const px = xScale(currentRe);
-        const py = yScale(currentIm);
-
-        ctx.strokeStyle = '#dc2626';
-        ctx.lineWidth = 2.2;
-        ctx.beginPath();
-        ctx.moveTo(x0, y0);
-        ctx.lineTo(px, py);
-        ctx.stroke();
-
-        ctx.fillStyle = '#dc2626';
-        ctx.beginPath();
-        ctx.arc(px, py, 6.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(px, py, 2.6, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = '#111827';
-        ctx.font = '13px Segoe UI, Microsoft YaHei, sans-serif';
-        ctx.fillText(`n = ${state.nCurrent}`, px + 10, py - 10);
+    function applyOmegaRange() {
+      let minD = Number(els.wMin.value);
+      let maxD = Number(els.wMax.value);
+      let stepD = Number(els.wStep.value);
+      if (!Number.isFinite(minD) || !Number.isFinite(maxD) || !Number.isFinite(stepD)) {
+        showStatus('ω 的范围输入无效。');
+        return;
       }
-
-      ctx.strokeStyle = '#cbd5e1';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(left, top, size, size);
+      if (stepD <= 0) stepD = 0.01;
+      let minR = fromDisplayOmega(minD);
+      let maxR = fromDisplayOmega(maxD);
+      let stepR = Math.abs(fromDisplayOmega(stepD));
+      if (stepR <= 0) stepR = 0.01;
+      if (maxR <= minR) maxR = minR + stepR;
+      state.omegaMinRad = minR;
+      state.omegaMaxRad = maxR;
+      state.omegaStepRad = stepR;
+      state.omegaRad = clamp(state.omegaRad, minR, maxR);
+      syncOmegaControls();
+      renderAll();
     }
 
-    function updateText(state, seq) {
-      const { r, w, nMin, nMax, nCurrent } = state;
-      const idx = nCurrent - nMin;
-      const currentRe = seq.real[idx];
-      const currentIm = seq.imag[idx];
-      const currentMag = seq.mag[idx];
-      const currentPhase = seq.phase[idx];
-
-      els.rValueLabel.textContent = fmt(r, 4);
-      els.wValueLabel.textContent = appState.omegaUnit === 'rad'
-        ? `${fmt(radToDisplay(w), 4)} rad`
-        : `${fmt(radToDisplay(w), 2)}°`;
-      els.nValueLabel.textContent = String(nCurrent);
-
-      const omegaText = appState.omegaUnit === 'rad'
-        ? `${fmt(w, 4)} rad ≈ ${fmtPi(w)}`
-        : `${fmt(w * DEG_PER_RAD, 2)}° = ${fmt(w, 4)} rad ≈ ${fmtPi(w)}`;
-
-      els.liveFormula.innerHTML = `
-        当前：<span class="mono">r = ${fmt(r, 4)}</span>，
-        <span class="mono">ω = ${omegaText}</span>，
-        <span class="mono">n ∈ [${nMin}, ${nMax}]</span>，
-        <span class="mono">当前观察 n = ${nCurrent}</span><br>
-        因此：<span class="mono">x[${nCurrent}] = ${fmt(r, 4)}<sup>${nCurrent}</sup>(cos(${fmt(w, 4)}×${nCurrent}) + j sin(${fmt(w, 4)}×${nCurrent}))</span>
-      `;
-
-      els.selectedReadout.innerHTML = `
-        <span class="mono">x[${nCurrent}] = ${fmt(currentRe, 4)} + j${fmt(currentIm, 4)}</span><br>
-        <span class="mono">Re(x[${nCurrent}]) = ${fmt(currentRe, 4)}</span>，
-        <span class="mono">Im(x[${nCurrent}]) = ${fmt(currentIm, 4)}</span>，
-        <span class="mono">|x[${nCurrent}]| = ${fmt(currentMag, 4)}</span>，
-        <span class="mono">∠x[${nCurrent}] = ${fmt(currentPhase, 4)} rad</span>
-      `;
-
-      els.planeReadout.innerHTML = `
-        当前点坐标：<span class="mono">(${fmt(currentRe, 4)}, ${fmt(currentIm, 4)})</span>；
-        从原点到该点的线段长度为 <span class="mono">${fmt(currentMag, 4)}</span>；
-        当前相位为 <span class="mono">${fmt(currentPhase, 4)} rad</span>。
-      `;
-
-      const pointCount = seq.nList.length;
-      const avgMag = seq.mag.reduce((sum, v) => sum + (Number.isFinite(v) ? v : 0), 0) / Math.max(1, pointCount);
-      const maxMag = Math.max(...seq.mag.filter(Number.isFinite), 0);
-
-      els.summary1.innerHTML = `共绘制 <span class="mono">${pointCount}</span> 个离散点，主图中的浅蓝色折线把所有点按 <span class="mono">n</span> 的顺序连接起来。`;
-      els.summary2.innerHTML = `当前点在复平面中的坐标是 <span class="mono">(${fmt(currentRe, 4)}, ${fmt(currentIm, 4)})</span>，它到原点的距离就是 <span class="mono">|x[${nCurrent}]| = ${fmt(currentMag, 4)}</span>。`;
-      els.summary3.innerHTML = `每当 <span class="mono">n</span> 增加 1，相位会增加约 <span class="mono">${fmt(w, 4)} rad</span>${appState.omegaUnit === 'deg' ? `（约 ${fmt(w * DEG_PER_RAD, 2)}°）` : ''}。`;
-      els.summary4.innerHTML = `在当前范围内，幅度平均值约为 <span class="mono">${fmt(avgMag, 4)}</span>，最大幅度约为 <span class="mono">${fmt(maxMag, 4)}</span>。`;
-    }
-
-    function redraw() {
-      const state = getState();
-      const seq = buildSequence(state);
-      updateText(state, seq);
-      if (seq.overflow) showStatus('某些点的数值过大或超出 JavaScript 数值范围，建议减小 r 或缩小 n 的范围。');
-
-      drawStemPlot(els.realCanvas, seq.nList, seq.real, {
-        title: 'Re{x[n]}',
-        color: '#2563eb',
-        formatY: (v) => fmt(v, 2),
-        currentN: state.nCurrent
-      });
-
-      drawStemPlot(els.imagCanvas, seq.nList, seq.imag, {
-        title: 'Im{x[n]}',
-        color: '#0f766e',
-        formatY: (v) => fmt(v, 2),
-        currentN: state.nCurrent
-      });
-
-      drawStemPlot(els.magCanvas, seq.nList, seq.mag, {
-        title: '|x[n]|',
-        color: '#7c3aed',
-        formatY: (v) => fmt(v, 2),
-        currentN: state.nCurrent
-      });
-
-      drawStemPlot(els.phaseCanvas, seq.nList, seq.phase, {
-        title: '∠x[n]',
-        color: '#dc2626',
-        yFixed: [-Math.PI, Math.PI],
-        formatY: (v) => {
-          if (Math.abs(v) < 1e-8) return '0';
-          if (Math.abs(v - Math.PI) < 1e-6) return 'π';
-          if (Math.abs(v + Math.PI) < 1e-6) return '-π';
-          return fmt(v, 2);
-        },
-        currentN: state.nCurrent
-      });
-
-      drawComplexPlane(els.complexPlaneCanvas, seq, state);
-    }
-
-    function handleOmegaSliderInput() {
-      const displayValue = toNumber(els.wSlider.value, radToDisplay(appState.omegaRad));
-      appState.omegaRad = displayToRad(displayValue);
-      redraw();
-    }
-
-    function handleOmegaRangeChange() {
-      syncOmegaRangeFromFields(toNumber(els.wSlider.value, radToDisplay(appState.omegaRad)));
-      redraw();
-    }
-
-    [els.rSlider].forEach((el) => {
-      el.addEventListener('input', redraw);
-      el.addEventListener('change', redraw);
-    });
-
-    [els.rMin, els.rMax, els.rStep].forEach((el) => {
-      el.addEventListener('input', () => {
-        syncRControls();
-        redraw();
-      });
-      el.addEventListener('change', () => {
-        syncRControls();
-        redraw();
-      });
-    });
-
-    els.wSlider.addEventListener('input', handleOmegaSliderInput);
-    els.wSlider.addEventListener('change', handleOmegaSliderInput);
-    [els.wMin, els.wMax, els.wStep].forEach((el) => {
-      el.addEventListener('input', handleOmegaRangeChange);
-      el.addEventListener('change', handleOmegaRangeChange);
-    });
-
-    [els.nMin, els.nMax].forEach((el) => {
-      el.addEventListener('input', () => {
-        syncNControls();
-        redraw();
-      });
-      el.addEventListener('change', () => {
-        syncNControls();
-        redraw();
-      });
-    });
-
-    els.nSlider.addEventListener('input', redraw);
-    els.nSlider.addEventListener('change', redraw);
-
-    els.radBtn.addEventListener('click', () => {
-      if (appState.omegaUnit !== 'rad') {
-        appState.omegaUnit = 'rad';
-        syncOmegaUnitUI();
-        redraw();
+    function applyNRange() {
+      let min = Math.round(Number(els.nMin.value));
+      let max = Math.round(Number(els.nMax.value));
+      if (!Number.isFinite(min) || !Number.isFinite(max)) {
+        showStatus('n 的范围输入无效。');
+        return;
       }
-    });
-
-    els.degBtn.addEventListener('click', () => {
-      if (appState.omegaUnit !== 'deg') {
-        appState.omegaUnit = 'deg';
-        syncOmegaUnitUI();
-        redraw();
-      }
-    });
-
-    els.animBtn.addEventListener('click', toggleAnimation);
-    els.resetBtn.addEventListener('click', () => {
-      stopAnimation();
+      if (max < min) [min, max] = [max, min];
+      state.nMin = min;
+      state.nMax = max;
+      state.currentN = clamp(state.currentN, min, max);
       syncNControls();
-      els.nSlider.value = els.nSlider.min;
-      redraw();
+      renderAll();
+    }
+
+    function setOmegaUnit(nextUnit) {
+      if (omegaUnit === nextUnit) return;
+      omegaUnit = nextUnit;
+      syncOmegaControls();
+      renderAll();
+    }
+
+    function toggleAnimation() {
+      if (animationTimer) {
+        clearInterval(animationTimer);
+        animationTimer = null;
+        els.playBtn.textContent = '播放动画';
+        els.playBtn.classList.remove('active', 'danger');
+        return;
+      }
+      animationTimer = setInterval(() => {
+        state.currentN = state.currentN >= state.nMax ? state.nMin : state.currentN + 1;
+        syncNControls();
+        renderAll();
+      }, 220);
+      els.playBtn.textContent = '暂停动画';
+      els.playBtn.classList.add('active', 'danger');
+    }
+
+    els.rSlider.addEventListener('input', () => {
+      state.r = Number(els.rSlider.value);
+      els.rValueLabel.textContent = fmt(state.r, 4);
+      renderAll();
+    });
+    ['input', 'change'].forEach(evt => {
+      els.rMin.addEventListener(evt, applyRRange);
+      els.rMax.addEventListener(evt, applyRRange);
+      els.rStep.addEventListener(evt, applyRRange);
     });
 
-    window.addEventListener('resize', redraw);
-    window.addEventListener('beforeunload', stopAnimation);
+    els.wSlider.addEventListener('input', () => {
+      state.omegaRad = fromDisplayOmega(Number(els.wSlider.value));
+      els.wValueLabel.textContent = `${fmt(toDisplayOmega(state.omegaRad), 4)} ${getOmegaSuffix()}`;
+      renderAll();
+    });
+    ['input', 'change'].forEach(evt => {
+      els.wMin.addEventListener(evt, applyOmegaRange);
+      els.wMax.addEventListener(evt, applyOmegaRange);
+      els.wStep.addEventListener(evt, applyOmegaRange);
+    });
+    els.radBtn.addEventListener('click', () => setOmegaUnit('rad'));
+    els.degBtn.addEventListener('click', () => setOmegaUnit('deg'));
+
+    els.nSlider.addEventListener('input', () => {
+      state.currentN = Math.round(Number(els.nSlider.value));
+      els.currentNLabel.textContent = String(state.currentN);
+      renderAll();
+    });
+    ['input', 'change'].forEach(evt => {
+      els.nMin.addEventListener(evt, applyNRange);
+      els.nMax.addEventListener(evt, applyNRange);
+    });
+    els.playBtn.addEventListener('click', toggleAnimation);
+
+    window.addEventListener('resize', renderAll);
 
     syncRControls();
+    syncOmegaControls();
     syncNControls();
-    syncOmegaUnitUI();
-    setAnimationUI();
-    redraw();
+    initDashboardResizer();
+    initDashboardHeightResizer();
+    renderAll();
   </script>
 </body>
 </html>
