@@ -6,143 +6,177 @@
   <title>一般复指数序列可视化</title>
   <style>
     :root {
-      --bg: #f5f7fb;
-      --card: #ffffff;
+      --bg: #f3f6fb;
+      --panel: #ffffff;
+      --line: #dbe4f0;
       --text: #1f2937;
-      --sub: #6b7280;
-      --line: #dbe3ef;
-      --accent: #2563eb;
-      --accent-2: #0f766e;
-      --accent-3: #7c3aed;
-      --accent-4: #dc2626;
-      --shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
-      --radius: 18px;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-soft: #eff6ff;
+      --danger: #dc2626;
+      --shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+      --radius: 16px;
     }
 
     * { box-sizing: border-box; }
 
-    body {
+    html, body {
       margin: 0;
+      width: 100%;
+      height: 100%;
       font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.5;
     }
 
-    .page {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 24px;
+    body { overflow: hidden; }
+
+    .app {
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 360px minmax(0, 1fr);
+      gap: 14px;
+      padding: 14px;
     }
 
-    .hero, .panel, .plot-card, .note-card {
-      background: var(--card);
+    .sidebar,
+    .content {
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-gutter: stable;
+    }
+
+    .sidebar { padding-right: 4px; }
+    .content { padding-right: 4px; }
+
+    .card {
+      background: var(--panel);
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
     }
 
-    .hero {
-      padding: 24px 26px;
-      margin-bottom: 18px;
+    .sidebar-inner,
+    .content-inner {
+      display: grid;
+      gap: 14px;
     }
 
-    .title {
+    .block { padding: 14px; }
+
+    h1 {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.2;
+    }
+
+    h2 {
       margin: 0 0 10px;
-      font-size: 30px;
-      font-weight: 700;
+      font-size: 16px;
+      line-height: 1.25;
     }
 
-    .subtitle {
-      margin: 0 0 16px;
-      color: var(--sub);
+    h3 {
+      margin: 0;
       font-size: 15px;
+      line-height: 1.25;
+    }
+
+    p { margin: 0; }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
     }
 
     .formula {
-      display: inline-block;
-      padding: 14px 18px;
-      border-radius: 14px;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
       background: #0f172a;
       color: #f8fafc;
-      font-size: 28px;
+      font-size: 18px;
+      line-height: 1.35;
       overflow-x: auto;
-      max-width: 100%;
       white-space: nowrap;
     }
 
-    .live-formula {
-      margin-top: 16px;
-      padding: 14px 16px;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      color: #1e3a8a;
-      border-radius: 14px;
-      font-size: 15px;
+    .live-box,
+    .status-box,
+    .summary-box {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid #dbeafe;
+      background: #f8fbff;
+      font-size: 13px;
+      line-height: 1.55;
     }
 
-    .layout {
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 18px;
-      align-items: start;
+    .status-box {
+      display: none;
+      border-color: #fde68a;
+      background: #fffbeb;
     }
 
-    .panel {
-      padding: 18px;
-      position: sticky;
-      top: 18px;
-    }
-
-    .panel h2 {
-      margin: 0 0 12px;
-      font-size: 22px;
-    }
-
-    .panel p {
-      margin: 0 0 14px;
-      color: var(--sub);
-      font-size: 14px;
+    .mono {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-variant-numeric: tabular-nums;
     }
 
     .group {
       border: 1px solid var(--line);
       border-radius: 14px;
       padding: 14px;
-      margin-bottom: 14px;
       background: #fcfdff;
+      display: grid;
+      gap: 12px;
     }
 
-    .group h3 {
-      margin: 0 0 10px;
-      font-size: 17px;
+    .group-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .tag {
+      color: var(--primary);
+      background: var(--primary-soft);
+      border: 1px solid #bfdbfe;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
     }
 
     .control {
-      margin-bottom: 12px;
+      display: grid;
+      gap: 8px;
     }
-
-    .control:last-child { margin-bottom: 0; }
 
     .label-row {
       display: flex;
       justify-content: space-between;
       gap: 8px;
       align-items: baseline;
-      margin-bottom: 6px;
       font-size: 14px;
     }
 
     .value-badge {
-      color: var(--accent);
+      color: var(--primary);
       font-weight: 700;
       font-variant-numeric: tabular-nums;
     }
 
     input[type="range"] {
       width: 100%;
-      margin: 2px 0 8px;
-      accent-color: var(--accent);
+      margin: 0;
+      accent-color: var(--primary);
+      cursor: pointer;
     }
 
     .mini-grid {
@@ -159,11 +193,12 @@
       display: flex;
       flex-direction: column;
       gap: 4px;
+      min-width: 0;
     }
 
     .field label {
       font-size: 12px;
-      color: var(--sub);
+      color: var(--muted);
     }
 
     input[type="number"] {
@@ -181,7 +216,6 @@
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin-bottom: 12px;
       padding: 10px 12px;
       border: 1px solid #dbeafe;
       background: #f8fbff;
@@ -190,7 +224,7 @@
 
     .toggle-label {
       font-size: 13px;
-      color: var(--sub);
+      color: var(--muted);
     }
 
     .segmented {
@@ -202,364 +236,369 @@
       gap: 3px;
     }
 
-    .segmented button {
+    .segmented button,
+    .action-row button {
       border: none;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease, color 0.2s ease;
+    }
+
+    .segmented button {
       background: transparent;
       color: #334155;
       padding: 7px 12px;
       border-radius: 999px;
-      cursor: pointer;
       font-size: 13px;
-      font-weight: 600;
     }
 
     .segmented button.active {
-      background: var(--accent);
+      background: var(--primary);
       color: #fff;
-      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
     }
 
     .hint {
-      margin-top: 8px;
+      color: var(--muted);
       font-size: 12px;
-      color: var(--sub);
-    }
-
-    .status {
-      min-height: 22px;
-      padding: 2px 2px 0;
-      font-size: 13px;
-      color: #a16207;
-    }
-
-    .mono {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    }
-
-    .plots {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .plot-card {
-      padding: 16px;
-    }
-
-    .plot-title {
-      margin: 0 0 12px;
-      font-size: 18px;
-    }
-
-    .plot-sub {
-      color: var(--sub);
-      font-weight: 400;
-      font-size: 13px;
-    }
-
-    canvas {
-      width: 100%;
-      height: 300px;
-      display: block;
-      border-radius: 12px;
-      background: linear-gradient(to bottom, #ffffff, #fbfdff);
-    }
-
-    #complexPlaneCanvas {
-      height: 380px;
-    }
-
-    .bottom-notes {
-      margin-top: 16px;
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 16px;
-    }
-
-    .note-card {
-      padding: 16px;
-    }
-
-    .note-card h3 {
-      margin-top: 0;
-      margin-bottom: 10px;
-      font-size: 18px;
-    }
-
-    .note-card p {
-      margin: 8px 0;
-      font-size: 14px;
-    }
-
-    .selected-readout {
-      margin-top: 10px;
-      padding: 12px 14px;
-      border-radius: 12px;
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      font-size: 14px;
+      line-height: 1.45;
     }
 
     .action-row {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 10px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
-    .anim-btn {
-      border: none;
-      border-radius: 999px;
+    .action-row button {
       padding: 9px 14px;
+      border-radius: 10px;
       font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      background: var(--accent);
-      color: #ffffff;
-      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.22);
+      font-weight: 600;
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 6px 14px rgba(37, 99, 235, 0.18);
     }
 
-    .anim-btn.playing {
-      background: #dc2626;
-      box-shadow: 0 6px 16px rgba(220, 38, 38, 0.22);
+    .action-row button.secondary {
+      background: #e5eefc;
+      color: #1e3a8a;
+      box-shadow: none;
     }
 
-    .anim-status {
+    .action-row button:hover,
+    .segmented button:hover { transform: translateY(-1px); }
+
+    .plots-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .plot-card,
+    .plane-card {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .plot-head,
+    .plane-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      align-items: baseline;
+      flex-wrap: wrap;
+    }
+
+    .plot-head span,
+    .plane-head span {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .plot-canvas-wrap {
+      height: 190px;
+    }
+
+    .plane-canvas-wrap {
+      height: 560px;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .plane-meta {
       font-size: 13px;
-      color: var(--sub);
+      color: var(--muted);
+      line-height: 1.5;
     }
 
-    @media (max-width: 1080px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-
-      .panel {
-        position: static;
-      }
+    .summary-list {
+      display: grid;
+      gap: 8px;
     }
 
-    @media (max-width: 860px) {
-      .plots,
-      .bottom-notes {
+    @media (max-width: 1280px) {
+      .app { grid-template-columns: 330px minmax(0, 1fr); }
+      .plots-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 980px) {
+      body { overflow: auto; }
+      .app {
+        height: auto;
+        min-height: 100vh;
         grid-template-columns: 1fr;
       }
-
-      .formula {
-        font-size: 22px;
+      .sidebar,
+      .content {
+        overflow: visible;
+        min-height: auto;
       }
+      .plots-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .plane-canvas-wrap { height: 500px; }
+    }
 
-      .page {
-        padding: 14px;
-      }
+    @media (max-width: 640px) {
+      .mini-grid,
+      .mini-grid.two,
+      .plots-grid { grid-template-columns: 1fr; }
+      .toggle-wrap,
+      .plot-head,
+      .plane-head,
+      .group-head { align-items: flex-start; }
+      .plane-canvas-wrap { height: 420px; }
     }
   </style>
 </head>
 <body>
-  <div class="page">
-    <section class="hero">
-      <h1 class="title">一般复指数序列可视化</h1>
-      <p class="subtitle">
-        通过滑块实时观察 <span class="mono">r</span>、<span class="mono">ω</span> 和选定的 <span class="mono">n</span>
-        对复指数序列 <span class="mono">x[n] = r<sup>n</sup>e<sup>jωn</sup></span> 的影响。
-        页面会同时绘制实部、虚部、幅度、相位，以及复平面中的当前点位置。
-      </p>
-      <div class="formula">x[n] = (re<sup>jω</sup>)<sup>n</sup> = r<sup>n</sup>e<sup>jωn</sup> = r<sup>n</sup>(cos(ωn)+j sin(ωn))</div>
-      <div class="live-formula" id="liveFormula"></div>
-    </section>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-inner">
+        <section class="card block">
+          <h1>一般复指数序列</h1>
+          <p class="muted" style="margin-top:8px;">拖动参数后立即重绘。左边控制独立滚动，右边图形独立滚动。</p>
+          <div class="formula mono">x[n] = r<sup>n</sup>(cos(ωn) + j sin(ωn))</div>
+          <div class="live-box" id="liveFormula"></div>
+          <div class="summary-box" id="selectedReadout"></div>
+          <div class="status-box" id="statusBox"></div>
+        </section>
 
-    <div class="layout">
-      <aside class="panel">
-        <h2>参数控制</h2>
-        <p>每次修改都会自动重绘。你可以自定义滑块范围，并用开关切换 <span class="mono">ω</span> 的单位。</p>
-
-        <div class="group">
-          <h3>r：控制包络幅度</h3>
-          <div class="control">
-            <div class="label-row">
-              <span>当前 r</span>
-              <span class="value-badge" id="rValueLabel">0.9000</span>
+        <section class="card block">
+          <div class="group">
+            <div class="group-head">
+              <h2>r：控制幅度变化</h2>
+              <span class="tag">幅度因子</span>
             </div>
-            <input id="rSlider" type="range" min="0.1" max="1.5" step="0.01" value="0.9" />
-            <div class="mini-grid">
-              <div class="field">
-                <label for="rMin">r 最小值</label>
-                <input id="rMin" type="number" step="0.01" value="0.1" />
+            <div class="control">
+              <div class="label-row">
+                <span>当前 r</span>
+                <span class="value-badge" id="rValueLabel">0.9000</span>
               </div>
-              <div class="field">
-                <label for="rMax">r 最大值</label>
-                <input id="rMax" type="number" step="0.01" value="1.5" />
-              </div>
-              <div class="field">
-                <label for="rStep">r 步长</label>
-                <input id="rStep" type="number" step="0.001" value="0.01" min="0.001" />
+              <input id="rSlider" type="range" min="0.1" max="1.5" step="0.01" value="0.9" />
+              <div class="mini-grid">
+                <div class="field">
+                  <label for="rMin">r 最小值</label>
+                  <input id="rMin" type="number" step="0.01" value="0.1" min="0.0001" />
+                </div>
+                <div class="field">
+                  <label for="rMax">r 最大值</label>
+                  <input id="rMax" type="number" step="0.01" value="1.5" />
+                </div>
+                <div class="field">
+                  <label for="rStep">r 步长</label>
+                  <input id="rStep" type="number" step="0.001" value="0.01" min="0.001" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="group">
-          <h3>ω：控制振荡快慢</h3>
-          <div class="toggle-wrap">
-            <span class="toggle-label">ω 的显示单位</span>
-            <div class="segmented">
-              <button id="radBtn" class="active" type="button">弧度</button>
-              <button id="degBtn" type="button">角度</button>
+          <div class="group" style="margin-top:14px;">
+            <div class="group-head">
+              <h2>ω：控制旋转快慢</h2>
+              <span class="tag">角频率</span>
             </div>
-          </div>
-          <div class="control">
-            <div class="label-row">
-              <span id="wCurrentLabel">当前 ω（弧度）</span>
-              <span class="value-badge" id="wValueLabel">0.5000 rad</span>
-            </div>
-            <input id="wSlider" type="range" min="-6.2832" max="6.2832" step="0.01" value="0.5" />
-            <div class="mini-grid">
-              <div class="field">
-                <label for="wMin" id="wMinLabel">ω 最小值</label>
-                <input id="wMin" type="number" step="0.01" value="-6.2832" />
-              </div>
-              <div class="field">
-                <label for="wMax" id="wMaxLabel">ω 最大值</label>
-                <input id="wMax" type="number" step="0.01" value="6.2832" />
-              </div>
-              <div class="field">
-                <label for="wStep" id="wStepLabel">ω 步长</label>
-                <input id="wStep" type="number" step="0.001" value="0.01" min="0.001" />
+            <div class="toggle-wrap">
+              <span class="toggle-label">ω 的显示单位</span>
+              <div class="segmented">
+                <button id="radBtn" class="active" type="button">弧度</button>
+                <button id="degBtn" type="button">角度</button>
               </div>
             </div>
-            <div class="hint" id="wHint">常用参考：<span class="mono">π ≈ 3.1416</span>，<span class="mono">2π ≈ 6.2832</span></div>
+            <div class="control">
+              <div class="label-row">
+                <span id="wCurrentLabel">当前 ω（弧度）</span>
+                <span class="value-badge" id="wValueLabel">0.5000 rad</span>
+              </div>
+              <input id="wSlider" type="range" min="-6.2832" max="6.2832" step="0.01" value="0.5" />
+              <div class="mini-grid">
+                <div class="field">
+                  <label for="wMin" id="wMinLabel">ω 最小值（rad）</label>
+                  <input id="wMin" type="number" step="0.01" value="-6.2832" />
+                </div>
+                <div class="field">
+                  <label for="wMax" id="wMaxLabel">ω 最大值（rad）</label>
+                  <input id="wMax" type="number" step="0.01" value="6.2832" />
+                </div>
+                <div class="field">
+                  <label for="wStep" id="wStepLabel">ω 步长（rad）</label>
+                  <input id="wStep" type="number" step="0.001" value="0.01" min="0.001" />
+                </div>
+              </div>
+              <div class="hint" id="wHint">常用参考：<span class="mono">π ≈ 3.1416</span>，<span class="mono">2π ≈ 6.2832</span></div>
+            </div>
           </div>
-        </div>
 
-        <div class="group">
-          <h3>n：离散序列范围</h3>
-          <div class="mini-grid two">
-            <div class="field">
-              <label for="nMin">n 最小值</label>
-              <input id="nMin" type="number" step="1" value="-20" />
+          <div class="group" style="margin-top:14px;">
+            <div class="group-head">
+              <h2>n：离散范围与当前样值</h2>
+              <span class="tag">当前点</span>
             </div>
-            <div class="field">
-              <label for="nMax">n 最大值</label>
-              <input id="nMax" type="number" step="1" value="20" />
+            <div class="mini-grid two">
+              <div class="field">
+                <label for="nMin">n 最小值</label>
+                <input id="nMin" type="number" step="1" value="-20" />
+              </div>
+              <div class="field">
+                <label for="nMax">n 最大值</label>
+                <input id="nMax" type="number" step="1" value="20" />
+              </div>
             </div>
-          </div>
-          <div class="hint">这些值决定上面四个离散图的横轴范围，也决定复平面轨迹的取点范围。</div>
-        </div>
-
-        <div class="group">
-          <h3>当前观察的 n</h3>
-          <div class="control">
-            <div class="label-row">
-              <span>当前 n</span>
-              <span class="value-badge" id="nValueLabel">0</span>
+            <div class="control">
+              <div class="label-row">
+                <span>当前 n</span>
+                <span class="value-badge" id="nValueLabel">0</span>
+              </div>
+              <input id="nSlider" type="range" min="-20" max="20" step="1" value="0" />
             </div>
-            <input id="nSlider" type="range" min="-20" max="20" step="1" value="0" />
-            <div class="hint">拖动这个滑块，复平面中的点 <span class="mono">(Re(x[n]), Im(x[n]))</span> 会实时移动。</div>
             <div class="action-row">
-              <button id="animBtn" class="anim-btn" type="button">播放动画</button>
-              <span class="anim-status" id="animStatus">动画已暂停。</span>
+              <button id="animBtn" type="button">播放动画</button>
+              <button id="resetBtn" class="secondary" type="button">回到 n 最小值</button>
             </div>
+            <div class="hint" id="animStatus">动画已暂停。</div>
           </div>
-        </div>
+        </section>
 
-        <div class="status" id="statusBox"></div>
-      </aside>
+        <section class="card block">
+          <h2>观察提示</h2>
+          <div class="summary-list">
+            <p class="muted">当 <span class="mono">0 &lt; r &lt; 1</span> 时，幅度通常随 n 增大而衰减。</p>
+            <p class="muted">当 <span class="mono">r = 1</span> 时，点会绕原点旋转，轨迹落在单位圆上。</p>
+            <p class="muted">当 <span class="mono">r &gt; 1</span> 时，轨迹会逐渐向外扩张。</p>
+            <p class="muted">右侧主图中，浅蓝色轨迹表示整个 n 范围内所有点的连接结果，红点表示当前 n 对应的位置。</p>
+          </div>
+          <div class="summary-box" style="margin-top:12px;">
+            <div id="summary1"></div>
+            <div id="summary2" style="margin-top:6px;"></div>
+            <div id="summary3" style="margin-top:6px;"></div>
+            <div id="summary4" style="margin-top:6px;"></div>
+          </div>
+        </section>
+      </div>
+    </aside>
 
-      <main>
-        <div class="plots">
-          <section class="plot-card">
-            <h3 class="plot-title">实部 Re{x[n]} <span class="plot-sub">r<sup>n</sup>cos(ωn)</span></h3>
-            <canvas id="realCanvas"></canvas>
-          </section>
+    <main class="content">
+      <div class="content-inner">
+        <section class="plots-grid">
+          <article class="plot-card card">
+            <div class="plot-head">
+              <h3>实部 Re{x[n]}</h3>
+              <span>r<sup>n</sup> cos(ωn)</span>
+            </div>
+            <div class="plot-canvas-wrap"><canvas id="realCanvas"></canvas></div>
+          </article>
 
-          <section class="plot-card">
-            <h3 class="plot-title">虚部 Im{x[n]} <span class="plot-sub">r<sup>n</sup>sin(ωn)</span></h3>
-            <canvas id="imagCanvas"></canvas>
-          </section>
+          <article class="plot-card card">
+            <div class="plot-head">
+              <h3>虚部 Im{x[n]}</h3>
+              <span>r<sup>n</sup> sin(ωn)</span>
+            </div>
+            <div class="plot-canvas-wrap"><canvas id="imagCanvas"></canvas></div>
+          </article>
 
-          <section class="plot-card">
-            <h3 class="plot-title">幅度 |x[n]| <span class="plot-sub">= r<sup>n</sup></span></h3>
-            <canvas id="magCanvas"></canvas>
-          </section>
+          <article class="plot-card card">
+            <div class="plot-head">
+              <h3>幅度 |x[n]|</h3>
+              <span>r<sup>n</sup></span>
+            </div>
+            <div class="plot-canvas-wrap"><canvas id="magCanvas"></canvas></div>
+          </article>
 
-          <section class="plot-card">
-            <h3 class="plot-title">相位 ∠x[n] <span class="plot-sub">主值范围 [-π, π]</span></h3>
-            <canvas id="phaseCanvas"></canvas>
-          </section>
+          <article class="plot-card card">
+            <div class="plot-head">
+              <h3>相位 ∠x[n]</h3>
+              <span>主值范围 [-π, π]</span>
+            </div>
+            <div class="plot-canvas-wrap"><canvas id="phaseCanvas"></canvas></div>
+          </article>
+        </section>
 
-          <section class="plot-card" style="grid-column: 1 / -1;">
-            <h3 class="plot-title">复平面中的当前点 <span class="plot-sub">横轴：Re(x[n])，纵轴：Im(x[n])</span></h3>
-            <canvas id="complexPlaneCanvas"></canvas>
-            <div class="selected-readout" id="selectedReadout"></div>
-          </section>
-        </div>
-
-        <div class="bottom-notes">
-          <section class="note-card">
-            <h3>怎么看图</h3>
-            <p>当 <span class="mono">0 &lt; r &lt; 1</span> 时，幅度会随 <span class="mono">n</span> 增大而衰减；当 <span class="mono">r &gt; 1</span> 时，幅度会增长。</p>
-            <p>当 <span class="mono">r = 1</span> 时，点会在复平面上沿圆周旋转；当 <span class="mono">r ≠ 1</span> 时，轨迹通常呈向内或向外的螺旋趋势。</p>
-            <p><span class="mono">|ω|</span> 越大，相位变化越快，实部和虚部的振荡也越快。</p>
-            <p>拖动“当前观察的 n”滑块时，可以直接看到当前点在复平面中的位置怎样随 <span class="mono">n</span> 变化。</p>
-          </section>
-
-          <section class="note-card">
-            <h3>当前数值摘要</h3>
-            <p id="summary1"></p>
-            <p id="summary2"></p>
-            <p id="summary3"></p>
-            <p id="summary4"></p>
-          </section>
-        </div>
-      </main>
-    </div>
+        <section class="plane-card card">
+          <div class="plane-head">
+            <h2>复平面中的当前点</h2>
+            <span id="planeMeta">浅蓝色轨迹表示所有 n 的连接结果，红色线段表示从原点到当前点。</span>
+          </div>
+          <div class="plane-canvas-wrap"><canvas id="complexPlaneCanvas"></canvas></div>
+          <div class="plane-meta" id="planeReadout"></div>
+        </section>
+      </div>
+    </main>
   </div>
 
   <script>
     const DEG_PER_RAD = 180 / Math.PI;
     const RAD_PER_DEG = Math.PI / 180;
 
+    const $ = (id) => document.getElementById(id);
+
     const els = {
-      rSlider: document.getElementById('rSlider'),
-      rMin: document.getElementById('rMin'),
-      rMax: document.getElementById('rMax'),
-      rStep: document.getElementById('rStep'),
-      rValueLabel: document.getElementById('rValueLabel'),
+      rSlider: $('rSlider'),
+      rMin: $('rMin'),
+      rMax: $('rMax'),
+      rStep: $('rStep'),
+      rValueLabel: $('rValueLabel'),
 
-      radBtn: document.getElementById('radBtn'),
-      degBtn: document.getElementById('degBtn'),
-      wCurrentLabel: document.getElementById('wCurrentLabel'),
-      wSlider: document.getElementById('wSlider'),
-      wMin: document.getElementById('wMin'),
-      wMax: document.getElementById('wMax'),
-      wStep: document.getElementById('wStep'),
-      wMinLabel: document.getElementById('wMinLabel'),
-      wMaxLabel: document.getElementById('wMaxLabel'),
-      wStepLabel: document.getElementById('wStepLabel'),
-      wValueLabel: document.getElementById('wValueLabel'),
-      wHint: document.getElementById('wHint'),
+      radBtn: $('radBtn'),
+      degBtn: $('degBtn'),
+      wCurrentLabel: $('wCurrentLabel'),
+      wSlider: $('wSlider'),
+      wMin: $('wMin'),
+      wMax: $('wMax'),
+      wStep: $('wStep'),
+      wMinLabel: $('wMinLabel'),
+      wMaxLabel: $('wMaxLabel'),
+      wStepLabel: $('wStepLabel'),
+      wValueLabel: $('wValueLabel'),
+      wHint: $('wHint'),
 
-      nMin: document.getElementById('nMin'),
-      nMax: document.getElementById('nMax'),
-      nSlider: document.getElementById('nSlider'),
-      nValueLabel: document.getElementById('nValueLabel'),
-      animBtn: document.getElementById('animBtn'),
-      animStatus: document.getElementById('animStatus'),
+      nMin: $('nMin'),
+      nMax: $('nMax'),
+      nSlider: $('nSlider'),
+      nValueLabel: $('nValueLabel'),
+      animBtn: $('animBtn'),
+      resetBtn: $('resetBtn'),
+      animStatus: $('animStatus'),
 
-      liveFormula: document.getElementById('liveFormula'),
-      selectedReadout: document.getElementById('selectedReadout'),
-      statusBox: document.getElementById('statusBox'),
-      summary1: document.getElementById('summary1'),
-      summary2: document.getElementById('summary2'),
-      summary3: document.getElementById('summary3'),
-      summary4: document.getElementById('summary4'),
+      liveFormula: $('liveFormula'),
+      selectedReadout: $('selectedReadout'),
+      statusBox: $('statusBox'),
+      summary1: $('summary1'),
+      summary2: $('summary2'),
+      summary3: $('summary3'),
+      summary4: $('summary4'),
+      planeMeta: $('planeMeta'),
+      planeReadout: $('planeReadout'),
 
-      realCanvas: document.getElementById('realCanvas'),
-      imagCanvas: document.getElementById('imagCanvas'),
-      magCanvas: document.getElementById('magCanvas'),
-      phaseCanvas: document.getElementById('phaseCanvas'),
-      complexPlaneCanvas: document.getElementById('complexPlaneCanvas')
+      realCanvas: $('realCanvas'),
+      imagCanvas: $('imagCanvas'),
+      magCanvas: $('magCanvas'),
+      phaseCanvas: $('phaseCanvas'),
+      complexPlaneCanvas: $('complexPlaneCanvas')
     };
 
     const appState = {
@@ -615,19 +654,67 @@
       return y;
     }
 
-    function showStatus(msg = '') {
-      els.statusBox.textContent = msg;
-    }
-
     function radToDisplay(rad) {
       return appState.omegaUnit === 'rad' ? rad : rad * DEG_PER_RAD;
     }
 
-    function displayToRad(displayValue) {
-      return appState.omegaUnit === 'rad' ? displayValue : displayValue * RAD_PER_DEG;
+    function displayToRad(v) {
+      return appState.omegaUnit === 'rad' ? v : v * RAD_PER_DEG;
     }
 
-    function syncUnitUI() {
+    function showStatus(msg = '') {
+      if (!msg) {
+        els.statusBox.style.display = 'none';
+        els.statusBox.textContent = '';
+        return;
+      }
+      els.statusBox.style.display = 'block';
+      els.statusBox.textContent = msg;
+    }
+
+    function syncRControls() {
+      let min = Math.max(0.0001, toNumber(els.rMin.value, 0.1));
+      let max = Math.max(0.0002, toNumber(els.rMax.value, 1.5));
+      let step = Math.max(0.001, toNumber(els.rStep.value, 0.01));
+      let message = '';
+
+      if (min >= max) {
+        max = min + step;
+        message = '已自动调整 r 的范围，使最小值小于最大值。';
+      }
+
+      els.rMin.value = fmt(min, 4);
+      els.rMax.value = fmt(max, 4);
+      els.rStep.value = fmt(step, 4);
+      els.rSlider.min = String(min);
+      els.rSlider.max = String(max);
+      els.rSlider.step = String(step);
+      els.rSlider.value = String(clamp(toNumber(els.rSlider.value, 0.9), min, max));
+
+      if (message) showStatus(message);
+    }
+
+    function syncNControls() {
+      let nMin = Math.round(toNumber(els.nMin.value, -20));
+      let nMax = Math.round(toNumber(els.nMax.value, 20));
+      let message = '';
+
+      if (nMin > nMax) {
+        [nMin, nMax] = [nMax, nMin];
+        message = '已自动交换 n 的上下界，使 n 最小值不大于最大值。';
+      }
+
+      els.nMin.value = String(nMin);
+      els.nMax.value = String(nMax);
+      els.nSlider.min = String(nMin);
+      els.nSlider.max = String(nMax);
+      els.nSlider.step = '1';
+      els.nSlider.value = String(clamp(Math.round(toNumber(els.nSlider.value, 0)), nMin, nMax));
+
+      if (message) showStatus(message);
+    }
+
+    function syncOmegaUnitUI() {
       const isRad = appState.omegaUnit === 'rad';
       els.radBtn.classList.toggle('active', isRad);
       els.degBtn.classList.toggle('active', !isRad);
@@ -647,19 +734,19 @@
       els.wMax.step = isRad ? '0.01' : '1';
       els.wStep.step = isRad ? '0.001' : '0.1';
 
-      syncOmegaControls(radToDisplay(appState.omegaRad));
+      syncOmegaRangeFromFields(radToDisplay(appState.omegaRad));
     }
 
-    function syncOmegaControls(preferredDisplayValue = null) {
+    function syncOmegaRangeFromFields(preferredDisplayValue = null) {
       const cfg = appState.omegaDisplayRange[appState.omegaUnit];
       let min = toNumber(els.wMin.value, cfg.min);
       let max = toNumber(els.wMax.value, cfg.max);
       let step = Math.max(appState.omegaUnit === 'rad' ? 0.001 : 0.1, toNumber(els.wStep.value, cfg.step));
-      let messages = [];
+      let message = '';
 
       if (min >= max) {
         max = min + step;
-        messages.push('已自动调整 ω 的范围，使最小值小于最大值。');
+        message = '已自动调整 ω 的范围，使最小值小于最大值。';
       }
 
       appState.omegaDisplayRange[appState.omegaUnit] = { min, max, step };
@@ -667,68 +754,26 @@
       els.wMax.value = fmt(max, appState.omegaUnit === 'rad' ? 4 : 2);
       els.wStep.value = fmt(step, appState.omegaUnit === 'rad' ? 4 : 2);
 
-      const fallbackDisplayValue = radToDisplay(appState.omegaRad);
-      const rawDisplayValue = preferredDisplayValue !== null
-        ? preferredDisplayValue
-        : toNumber(els.wSlider.value, fallbackDisplayValue);
-      const displayValue = clamp(rawDisplayValue, min, max);
-      appState.omegaRad = displayToRad(displayValue);
+      const fallbackDisplay = radToDisplay(appState.omegaRad);
+      const displayValue = clamp(
+        preferredDisplayValue !== null ? preferredDisplayValue : toNumber(els.wSlider.value, fallbackDisplay),
+        min,
+        max
+      );
+
       els.wSlider.min = String(min);
       els.wSlider.max = String(max);
       els.wSlider.step = String(step);
       els.wSlider.value = String(displayValue);
+      appState.omegaRad = displayToRad(displayValue);
 
-      if (messages.length) showStatus(messages.join(' '));
+      if (message) showStatus(message);
     }
-
-    function syncRControls() {
-      let min = Math.max(0.0001, toNumber(els.rMin.value, 0.1));
-      let max = Math.max(0.0002, toNumber(els.rMax.value, 1.5));
-      let step = Math.max(0.001, toNumber(els.rStep.value, 0.01));
-      let messages = [];
-
-      if (min >= max) {
-        max = min + step;
-        messages.push('已自动调整 r 的范围，使最小值小于最大值。');
-      }
-
-      els.rMin.value = fmt(min, 4);
-      els.rMax.value = fmt(max, 4);
-      els.rStep.value = fmt(step, 4);
-      els.rSlider.min = String(min);
-      els.rSlider.max = String(max);
-      els.rSlider.step = String(step);
-      els.rSlider.value = String(clamp(toNumber(els.rSlider.value, 0.9), min, max));
-
-      if (messages.length) showStatus(messages.join(' '));
-    }
-
-    function syncNControls() {
-      let nMin = Math.round(toNumber(els.nMin.value, -20));
-      let nMax = Math.round(toNumber(els.nMax.value, 20));
-      let messages = [];
-
-      if (nMin > nMax) {
-        [nMin, nMax] = [nMax, nMin];
-        messages.push('已自动交换 n 的上下界，使 n 最小值不大于最大值。');
-      }
-
-      els.nMin.value = String(nMin);
-      els.nMax.value = String(nMax);
-      els.nSlider.min = String(nMin);
-      els.nSlider.max = String(nMax);
-      els.nSlider.step = '1';
-      els.nSlider.value = String(clamp(Math.round(toNumber(els.nSlider.value, 0)), nMin, nMax));
-
-      if (messages.length) showStatus(messages.join(' '));
-    }
-
 
     function setAnimationUI() {
       const playing = appState.animation.playing;
       els.animBtn.textContent = playing ? '暂停动画' : '播放动画';
-      els.animBtn.classList.toggle('playing', playing);
-      els.animStatus.textContent = playing ? '动画播放中：n 会自动递增并在边界处循环。' : '动画已暂停。';
+      els.animStatus.textContent = playing ? '动画播放中：n 会自动递增，并在边界处循环。' : '动画已暂停。';
     }
 
     function stopAnimation() {
@@ -753,16 +798,11 @@
 
     function animationFrame(ts) {
       if (!appState.animation.playing) return;
-
-      if (!appState.animation.lastTs) {
-        appState.animation.lastTs = ts;
-      }
-
+      if (!appState.animation.lastTs) appState.animation.lastTs = ts;
       if (ts - appState.animation.lastTs >= appState.animation.intervalMs) {
         advanceAnimationStep();
         appState.animation.lastTs = ts;
       }
-
       appState.animation.rafId = requestAnimationFrame(animationFrame);
     }
 
@@ -775,60 +815,15 @@
     }
 
     function toggleAnimation() {
-      if (appState.animation.playing) {
-        stopAnimation();
-      } else {
-        startAnimation();
-      }
-    }
-
-    function getState() {
-      syncRControls();
-      syncOmegaControls();
-      syncNControls();
-
-      const r = toNumber(els.rSlider.value, 0.9);
-      const omegaDisplay = toNumber(els.wSlider.value, radToDisplay(appState.omegaRad));
-      const w = displayToRad(omegaDisplay);
-      appState.omegaRad = w;
-      const nMin = Math.round(toNumber(els.nMin.value, -20));
-      const nMax = Math.round(toNumber(els.nMax.value, 20));
-      const nCurrent = Math.round(toNumber(els.nSlider.value, 0));
-
-      return { r, w, nMin, nMax, nCurrent };
-    }
-
-    function buildSequence({ r, w, nMin, nMax }) {
-      const nList = [];
-      const real = [];
-      const imag = [];
-      const mag = [];
-      const phase = [];
-      let overflow = false;
-
-      for (let n = nMin; n <= nMax; n++) {
-        const amp = Math.pow(r, n);
-        const re = amp * Math.cos(w * n);
-        const im = amp * Math.sin(w * n);
-        const ph = wrapToPi(Math.atan2(im, re));
-
-        if (![amp, re, im, ph].every(Number.isFinite)) overflow = true;
-
-        nList.push(n);
-        real.push(re);
-        imag.push(im);
-        mag.push(amp);
-        phase.push(ph);
-      }
-
-      return { nList, real, imag, mag, phase, overflow };
+      if (appState.animation.playing) stopAnimation();
+      else startAnimation();
     }
 
     function prepareCanvas(canvas) {
       const dpr = window.devicePixelRatio || 1;
       const rect = canvas.getBoundingClientRect();
-      const width = Math.max(300, rect.width);
-      const height = Math.max(240, rect.height);
+      const width = Math.max(280, rect.width);
+      const height = Math.max(180, rect.height);
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       const ctx = canvas.getContext('2d');
@@ -849,13 +844,44 @@
       else if (normalized < 7) step = 5;
       else step = 10;
       step *= power;
-
       const start = Math.ceil(min / step) * step;
       const ticks = [];
-      for (let x = start; x <= max + 1e-9; x += step) {
-        ticks.push(Number(x.toPrecision(12)));
-      }
+      for (let x = start; x <= max + 1e-9; x += step) ticks.push(Number(x.toPrecision(12)));
       return ticks;
+    }
+
+    function buildSequence({ r, w, nMin, nMax }) {
+      const nList = [];
+      const real = [];
+      const imag = [];
+      const mag = [];
+      const phase = [];
+      let overflow = false;
+
+      for (let n = nMin; n <= nMax; n++) {
+        const amp = Math.pow(r, n);
+        const re = amp * Math.cos(w * n);
+        const im = amp * Math.sin(w * n);
+        const ph = wrapToPi(Math.atan2(im, re));
+        if (![amp, re, im, ph].every(Number.isFinite)) overflow = true;
+        nList.push(n);
+        real.push(re);
+        imag.push(im);
+        mag.push(amp);
+        phase.push(ph);
+      }
+      return { nList, real, imag, mag, phase, overflow };
+    }
+
+    function getState() {
+      const r = toNumber(els.rSlider.value, 0.9);
+      const wDisplay = toNumber(els.wSlider.value, radToDisplay(appState.omegaRad));
+      const w = displayToRad(wDisplay);
+      appState.omegaRad = w;
+      const nMin = Math.round(toNumber(els.nMin.value, -20));
+      const nMax = Math.round(toNumber(els.nMax.value, 20));
+      const nCurrent = Math.round(toNumber(els.nSlider.value, 0));
+      return { r, w, nMin, nMax, nCurrent };
     }
 
     function drawStemPlot(canvas, nList, yList, options = {}) {
@@ -863,14 +889,13 @@
       const { ctx, width, height } = prepareCanvas(canvas);
       ctx.clearRect(0, 0, width, height);
 
-      const pad = { top: 20, right: 18, bottom: 34, left: 60 };
+      const pad = { top: 18, right: 16, bottom: 30, left: 52 };
       const plotW = width - pad.left - pad.right;
       const plotH = height - pad.top - pad.bottom;
 
       const finiteY = yList.filter(Number.isFinite);
       let yMin = yFixed ? yFixed[0] : Math.min(...finiteY);
       let yMax = yFixed ? yFixed[1] : Math.max(...finiteY);
-
       if (!Number.isFinite(yMin) || !Number.isFinite(yMax)) {
         yMin = -1;
         yMax = 1;
@@ -893,21 +918,15 @@
 
       const nMin = Math.min(...nList);
       const nMax = Math.max(...nList);
-
-      const xScale = (n) => {
-        if (nMin === nMax) return pad.left + plotW / 2;
-        return pad.left + ((n - nMin) / (nMax - nMin)) * plotW;
-      };
-
+      const xScale = (n) => nMin === nMax ? pad.left + plotW / 2 : pad.left + ((n - nMin) / (nMax - nMin)) * plotW;
       const yScale = (y) => pad.top + (1 - (y - yMin) / (yMax - yMin)) * plotH;
 
-      ctx.strokeStyle = '#e5e7eb';
-      ctx.lineWidth = 1;
-      const yTicks = niceTicks(yMin, yMax, 5);
       ctx.font = '12px Segoe UI, Microsoft YaHei, sans-serif';
       ctx.fillStyle = '#6b7280';
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.lineWidth = 1;
 
-      yTicks.forEach((tick) => {
+      niceTicks(yMin, yMax, 4).forEach((tick) => {
         const py = yScale(tick);
         ctx.beginPath();
         ctx.moveTo(pad.left, py);
@@ -917,13 +936,10 @@
       });
 
       const xTicks = [];
-      if (nList.length <= 12) {
-        xTicks.push(...nList);
-      } else {
-        const steps = 6;
-        for (let i = 0; i <= steps; i++) {
-          xTicks.push(Math.round(nMin + (i / steps) * (nMax - nMin)));
-        }
+      if (nList.length <= 10) xTicks.push(...nList);
+      else {
+        const steps = 5;
+        for (let i = 0; i <= steps; i++) xTicks.push(Math.round(nMin + (i / steps) * (nMax - nMin)));
       }
 
       [...new Set(xTicks)].forEach((tick) => {
@@ -932,19 +948,19 @@
         ctx.moveTo(px, pad.top);
         ctx.lineTo(px, height - pad.bottom);
         ctx.stroke();
-        ctx.fillText(String(tick), px - 8, height - 10);
+        ctx.fillText(String(tick), px - 8, height - 8);
       });
 
       ctx.strokeStyle = '#94a3b8';
-      ctx.lineWidth = 1.3;
+      ctx.lineWidth = 1.2;
       ctx.beginPath();
       ctx.moveTo(pad.left, pad.top);
       ctx.lineTo(pad.left, height - pad.bottom);
       ctx.lineTo(width - pad.right, height - pad.bottom);
       ctx.stroke();
 
+      const y0 = yScale(0);
       if (yMin <= 0 && yMax >= 0) {
-        const y0 = yScale(0);
         ctx.strokeStyle = '#64748b';
         ctx.setLineDash([4, 4]);
         ctx.beginPath();
@@ -954,11 +970,10 @@
         ctx.setLineDash([]);
       }
 
-      const y0 = yScale(0);
       ctx.strokeStyle = color;
       ctx.fillStyle = color;
-      ctx.lineWidth = 1.5;
-      const radius = nList.length > 80 ? 2.5 : 3.5;
+      ctx.lineWidth = 1.4;
+      const radius = nList.length > 80 ? 2.5 : 3.2;
 
       for (let i = 0; i < nList.length; i++) {
         const y = yList[i];
@@ -989,20 +1004,19 @@
           ctx.setLineDash([]);
           ctx.fillStyle = '#111827';
           ctx.beginPath();
-          ctx.arc(px, py, radius + 2.5, 0, Math.PI * 2);
+          ctx.arc(px, py, radius + 2.2, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = '#ffffff';
           ctx.beginPath();
-          ctx.arc(px, py, radius - 0.5, 0, Math.PI * 2);
+          ctx.arc(px, py, radius - 0.4, 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
       ctx.fillStyle = '#334155';
-      ctx.font = '12px Segoe UI, Microsoft YaHei, sans-serif';
-      ctx.fillText('n', width - pad.right - 10, height - 12);
+      ctx.fillText('n', width - pad.right - 10, height - 8);
       ctx.save();
-      ctx.translate(16, pad.top + plotH / 2);
+      ctx.translate(14, pad.top + plotH / 2);
       ctx.rotate(-Math.PI / 2);
       ctx.fillText(title, 0, 0);
       ctx.restore();
@@ -1012,7 +1026,7 @@
       const { ctx, width, height } = prepareCanvas(canvas);
       ctx.clearRect(0, 0, width, height);
 
-      const pad = { top: 24, right: 24, bottom: 42, left: 54 };
+      const pad = { top: 24, right: 24, bottom: 40, left: 54 };
       const plotW = width - pad.left - pad.right;
       const plotH = height - pad.top - pad.bottom;
       const size = Math.min(plotW, plotH);
@@ -1040,9 +1054,9 @@
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(left, top, size, size);
 
+      const ticks = niceTicks(-maxAbs, maxAbs, 4);
       ctx.strokeStyle = '#e5e7eb';
       ctx.lineWidth = 1;
-      const ticks = niceTicks(-maxAbs, maxAbs, 4);
       ticks.forEach((t) => {
         const px = xScale(t);
         const py = yScale(t);
@@ -1059,7 +1073,7 @@
       const x0 = xScale(0);
       const y0 = yScale(0);
       ctx.strokeStyle = '#64748b';
-      ctx.lineWidth = 1.4;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(left, y0);
       ctx.lineTo(left + size, y0);
@@ -1076,25 +1090,15 @@
       });
 
       ctx.fillStyle = '#334155';
-      ctx.fillText('Re{x[n]}', left + size - 52, y0 - 8);
+      ctx.fillText('Re{x[n]}', left + size - 56, y0 - 8);
       ctx.save();
       ctx.translate(x0 + 14, top + 14);
       ctx.rotate(-Math.PI / 2);
       ctx.fillText('Im{x[n]}', 0, 0);
       ctx.restore();
 
-      // full trajectory points for the whole n range
-      ctx.fillStyle = 'rgba(37, 99, 235, 0.22)';
-      for (let i = 0; i < seq.nList.length; i++) {
-        if (!Number.isFinite(seq.real[i]) || !Number.isFinite(seq.imag[i])) continue;
-        ctx.beginPath();
-        ctx.arc(xScale(seq.real[i]), yScale(seq.imag[i]), 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // connect trajectory in n order
-      ctx.strokeStyle = 'rgba(37, 99, 235, 0.28)';
-      ctx.lineWidth = 1.2;
+      ctx.strokeStyle = 'rgba(37, 99, 235, 0.36)';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       let started = false;
       for (let i = 0; i < seq.nList.length; i++) {
@@ -1112,7 +1116,16 @@
       }
       ctx.stroke();
 
-      // line from origin to current point
+      ctx.fillStyle = 'rgba(37, 99, 235, 0.18)';
+      for (let i = 0; i < seq.nList.length; i++) {
+        const re = seq.real[i];
+        const im = seq.imag[i];
+        if (!Number.isFinite(re) || !Number.isFinite(im)) continue;
+        ctx.beginPath();
+        ctx.arc(xScale(re), yScale(im), 3.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       if (Number.isFinite(currentRe) && Number.isFinite(currentIm)) {
         const px = xScale(currentRe);
         const py = yScale(currentIm);
@@ -1126,12 +1139,12 @@
 
         ctx.fillStyle = '#dc2626';
         ctx.beginPath();
-        ctx.arc(px, py, 6, 0, Math.PI * 2);
+        ctx.arc(px, py, 6.5, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(px, py, 2.4, 0, Math.PI * 2);
+        ctx.arc(px, py, 2.6, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = '#111827';
@@ -1146,11 +1159,11 @@
 
     function updateText(state, seq) {
       const { r, w, nMin, nMax, nCurrent } = state;
-      const currentIndex = nCurrent - nMin;
-      const currentRe = seq.real[currentIndex];
-      const currentIm = seq.imag[currentIndex];
-      const currentMag = seq.mag[currentIndex];
-      const currentPhase = seq.phase[currentIndex];
+      const idx = nCurrent - nMin;
+      const currentRe = seq.real[idx];
+      const currentIm = seq.imag[idx];
+      const currentMag = seq.mag[idx];
+      const currentPhase = seq.phase[idx];
 
       els.rValueLabel.textContent = fmt(r, 4);
       els.wValueLabel.textContent = appState.omegaUnit === 'rad'
@@ -1158,13 +1171,13 @@
         : `${fmt(radToDisplay(w), 2)}°`;
       els.nValueLabel.textContent = String(nCurrent);
 
-      const omegaDisplayText = appState.omegaUnit === 'rad'
+      const omegaText = appState.omegaUnit === 'rad'
         ? `${fmt(w, 4)} rad ≈ ${fmtPi(w)}`
         : `${fmt(w * DEG_PER_RAD, 2)}° = ${fmt(w, 4)} rad ≈ ${fmtPi(w)}`;
 
       els.liveFormula.innerHTML = `
         当前：<span class="mono">r = ${fmt(r, 4)}</span>，
-        <span class="mono">ω = ${omegaDisplayText}</span>，
+        <span class="mono">ω = ${omegaText}</span>，
         <span class="mono">n ∈ [${nMin}, ${nMax}]</span>，
         <span class="mono">当前观察 n = ${nCurrent}</span><br>
         因此：<span class="mono">x[${nCurrent}] = ${fmt(r, 4)}<sup>${nCurrent}</sup>(cos(${fmt(w, 4)}×${nCurrent}) + j sin(${fmt(w, 4)}×${nCurrent}))</span>
@@ -1178,13 +1191,19 @@
         <span class="mono">∠x[${nCurrent}] = ${fmt(currentPhase, 4)} rad</span>
       `;
 
+      els.planeReadout.innerHTML = `
+        当前点坐标：<span class="mono">(${fmt(currentRe, 4)}, ${fmt(currentIm, 4)})</span>；
+        从原点到该点的线段长度为 <span class="mono">${fmt(currentMag, 4)}</span>；
+        当前相位为 <span class="mono">${fmt(currentPhase, 4)} rad</span>。
+      `;
+
       const pointCount = seq.nList.length;
-      const avgMag = seq.mag.reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0) / Math.max(1, pointCount);
+      const avgMag = seq.mag.reduce((sum, v) => sum + (Number.isFinite(v) ? v : 0), 0) / Math.max(1, pointCount);
       const maxMag = Math.max(...seq.mag.filter(Number.isFinite), 0);
 
-      els.summary1.innerHTML = `共绘制 <span class="mono">${pointCount}</span> 个离散点，当前重点观察第 <span class="mono">n = ${nCurrent}</span> 个样值。`;
+      els.summary1.innerHTML = `共绘制 <span class="mono">${pointCount}</span> 个离散点，主图中的浅蓝色折线把所有点按 <span class="mono">n</span> 的顺序连接起来。`;
       els.summary2.innerHTML = `当前点在复平面中的坐标是 <span class="mono">(${fmt(currentRe, 4)}, ${fmt(currentIm, 4)})</span>，它到原点的距离就是 <span class="mono">|x[${nCurrent}]| = ${fmt(currentMag, 4)}</span>。`;
-      els.summary3.innerHTML = `当前相位增量由 <span class="mono">ω</span> 决定。每当 <span class="mono">n</span> 增加 1，相位会增加约 <span class="mono">${fmt(w, 4)} rad</span>${appState.omegaUnit === 'deg' ? `（约 ${fmt(w * DEG_PER_RAD, 2)}°）` : ''}。`;
+      els.summary3.innerHTML = `每当 <span class="mono">n</span> 增加 1，相位会增加约 <span class="mono">${fmt(w, 4)} rad</span>${appState.omegaUnit === 'deg' ? `（约 ${fmt(w * DEG_PER_RAD, 2)}°）` : ''}。`;
       els.summary4.innerHTML = `在当前范围内，幅度平均值约为 <span class="mono">${fmt(avgMag, 4)}</span>，最大幅度约为 <span class="mono">${fmt(maxMag, 4)}</span>。`;
     }
 
@@ -1192,10 +1211,7 @@
       const state = getState();
       const seq = buildSequence(state);
       updateText(state, seq);
-
-      if (seq.overflow) {
-        showStatus('某些点的数值过大或超出 JavaScript 数值范围，建议减小 r 或缩小 n 的范围。');
-      }
+      if (seq.overflow) showStatus('某些点的数值过大或超出 JavaScript 数值范围，建议减小 r 或缩小 n 的范围。');
 
       drawStemPlot(els.realCanvas, seq.nList, seq.real, {
         title: 'Re{x[n]}',
@@ -1234,19 +1250,58 @@
       drawComplexPlane(els.complexPlaneCanvas, seq, state);
     }
 
-    [
-      els.rSlider, els.rMin, els.rMax, els.rStep,
-      els.wSlider, els.wMin, els.wMax, els.wStep,
-      els.nMin, els.nMax, els.nSlider
-    ].forEach((el) => {
+    function handleOmegaSliderInput() {
+      const displayValue = toNumber(els.wSlider.value, radToDisplay(appState.omegaRad));
+      appState.omegaRad = displayToRad(displayValue);
+      redraw();
+    }
+
+    function handleOmegaRangeChange() {
+      syncOmegaRangeFromFields(toNumber(els.wSlider.value, radToDisplay(appState.omegaRad)));
+      redraw();
+    }
+
+    [els.rSlider].forEach((el) => {
       el.addEventListener('input', redraw);
       el.addEventListener('change', redraw);
     });
 
+    [els.rMin, els.rMax, els.rStep].forEach((el) => {
+      el.addEventListener('input', () => {
+        syncRControls();
+        redraw();
+      });
+      el.addEventListener('change', () => {
+        syncRControls();
+        redraw();
+      });
+    });
+
+    els.wSlider.addEventListener('input', handleOmegaSliderInput);
+    els.wSlider.addEventListener('change', handleOmegaSliderInput);
+    [els.wMin, els.wMax, els.wStep].forEach((el) => {
+      el.addEventListener('input', handleOmegaRangeChange);
+      el.addEventListener('change', handleOmegaRangeChange);
+    });
+
+    [els.nMin, els.nMax].forEach((el) => {
+      el.addEventListener('input', () => {
+        syncNControls();
+        redraw();
+      });
+      el.addEventListener('change', () => {
+        syncNControls();
+        redraw();
+      });
+    });
+
+    els.nSlider.addEventListener('input', redraw);
+    els.nSlider.addEventListener('change', redraw);
+
     els.radBtn.addEventListener('click', () => {
       if (appState.omegaUnit !== 'rad') {
         appState.omegaUnit = 'rad';
-        syncUnitUI();
+        syncOmegaUnitUI();
         redraw();
       }
     });
@@ -1254,16 +1309,25 @@
     els.degBtn.addEventListener('click', () => {
       if (appState.omegaUnit !== 'deg') {
         appState.omegaUnit = 'deg';
-        syncUnitUI();
+        syncOmegaUnitUI();
         redraw();
       }
     });
 
     els.animBtn.addEventListener('click', toggleAnimation);
+    els.resetBtn.addEventListener('click', () => {
+      stopAnimation();
+      syncNControls();
+      els.nSlider.value = els.nSlider.min;
+      redraw();
+    });
 
     window.addEventListener('resize', redraw);
     window.addEventListener('beforeunload', stopAnimation);
-    syncUnitUI();
+
+    syncRControls();
+    syncNControls();
+    syncOmegaUnitUI();
     setAnimationUI();
     redraw();
   </script>
