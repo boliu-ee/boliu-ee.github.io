@@ -1219,10 +1219,10 @@
       const data = getSequenceData();
       updateFormulaAndReadout(data);
       drawComplexPlane(els.complexPlaneCanvas, data);
-      drawStemPlot(els.realCanvas, data, 're', 'Re{x[n]}');
-      drawStemPlot(els.imagCanvas, data, 'im', 'Im{x[n]}');
-      drawStemPlot(els.magCanvas, data, 'mag', '|x[n]|');
-      drawStemPlot(els.phaseCanvas, data, 'phase', '∠x[n]');
+      drawStemPlot(els.realCanvas, data, 're', ''); // Re{x[n]} 
+      drawStemPlot(els.imagCanvas, data, 'im', ''); // Im{x[n]}
+      drawStemPlot(els.magCanvas, data, 'mag', ''); // |x[n]|
+      drawStemPlot(els.phaseCanvas, data, 'phase', ''); // ∠x[n]
     }
 
     function applyRRange() {
