@@ -522,6 +522,36 @@
 
           <div class="group">
             <div class="group-head">
+              <h3>n：序列范围与当前点</h3>
+              <span class="tiny">播放时会自动循环</span>
+            </div>
+            <div class="control">
+              <div class="mini-grid two" style="margin-bottom:10px;">
+                <div class="field">
+                  <label for="nMin">n 最小值</label>
+                  <input id="nMin" type="number" step="1" value="-20" />
+                </div>
+                <div class="field">
+                  <label for="nMax">n 最大值</label>
+                  <input id="nMax" type="number" step="1" value="20" />
+                </div>
+              </div>
+
+              <div class="label-row">
+                <span>当前 n</span>
+                <span class="value-badge" id="currentNLabel">0</span>
+              </div>
+              <input id="nSlider" type="range" min="-20" max="20" step="1" value="0" />
+
+              <div class="button-row" style="margin-top:6px;">
+                <button id="playBtn" type="button">播放动画</button>
+                <span class="tiny">步进：每次 +1，至边界后循环</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="group">
+            <div class="group-head">
               <h3>r：包络幅度</h3>
               <span class="tiny">要求 r &gt; 0</span>
             </div>
@@ -581,36 +611,6 @@
                 </div>
               </div>
               <div class="hint" id="wHint">常用参考：π ≈ 3.1416，2π ≈ 6.2832</div>
-            </div>
-          </div>
-
-          <div class="group">
-            <div class="group-head">
-              <h3>n：序列范围与当前点</h3>
-              <span class="tiny">播放时会自动循环</span>
-            </div>
-            <div class="control">
-              <div class="mini-grid two" style="margin-bottom:10px;">
-                <div class="field">
-                  <label for="nMin">n 最小值</label>
-                  <input id="nMin" type="number" step="1" value="-20" />
-                </div>
-                <div class="field">
-                  <label for="nMax">n 最大值</label>
-                  <input id="nMax" type="number" step="1" value="20" />
-                </div>
-              </div>
-
-              <div class="label-row">
-                <span>当前 n</span>
-                <span class="value-badge" id="currentNLabel">0</span>
-              </div>
-              <input id="nSlider" type="range" min="-20" max="20" step="1" value="0" />
-
-              <div class="button-row" style="margin-top:6px;">
-                <button id="playBtn" type="button">播放动画</button>
-                <span class="tiny">步进：每次 +1，至边界后循环</span>
-              </div>
             </div>
           </div>
 
