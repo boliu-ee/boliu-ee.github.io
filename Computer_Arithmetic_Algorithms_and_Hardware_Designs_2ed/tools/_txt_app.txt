@@ -1,0 +1,810 @@
+<<<JP622>>>
+A
+Appendix:
+Past,Present,and Future
+■■■
+“Who controls the past controls the future; who controls the present controls the past.”
+G E O R G E O R W E L L
+■■■
+I
+n this appendix, we trace the history of computer arithmetic, from the earliest
+digitalcomputerstothemodernmachinesthatpermeateourdailylives.Wepresent
+a few turning points along this amazing chain of events, including the development
+of early supercomputers,the role played by vector supercomputers (particularly,their
+contributions to advances in pipelining), the arrival of digital signal processors, and
+the distillation of all these advanced developments into the tiny processors that
+power our desktop and laptop computers.We conclude with a discussion of current
+trends,future outlook,and resources for further study of computer arithmetic.
+A.1 Historical Perspective
+A.2 Early High-Performance Computers
+A.3 Deeply Pipelined Vector Machines
+A.4 The DSP Revolution
+A.5 Supercomputers on Our Laps
+A.6 Trends,Outlook,and Resources
+A.1 HISTORICAL PERSPECTIVE
+The history of computer arithmetic is intertwined with that of digital computers. Much of
+this history can be traced through a collection of key papers [Swar90] in the ﬁeld, some
+of which are not easily accessible in the original form. Certain ideas used in computer
+609
+
+<<<JP623>>>
+610
+Appendix: Past, Present, and Future
+arithmetic have their origins in the age of mechanical calculators. In fact Charles Babbage
+is said to have been aware of ideas such as carry-skip addition, carry-save addition, and
+restoring division [Omon94].
+In the 1940s, machine arithmetic was a crucial element in efforts to prove the feasi-
+bility of computing with stored-program electronic devices. Hardware mechanisms for
+addition, use of complement representation to facilitate subtraction, and implementation
+of multiplication and division through shift/add algorithms were developed and ﬁne-
+tuned early on. A seminal report in the initial development of stored-program electronic
+digital computers by A. W. Burkes, H. H. Goldstein, and J. von Neumann [Burk46]
+contained interesting ideas on arithmetic algorithms and their hardware realizations,
+including choice of number representation radix (binary won over decimal), distribution
+of carry-propagation chains, fast multiplication via carry-save addition, and restoring
+division. The state of computer arithmetic circa 1950 is evident from an overview paper
+by R. F. Shaw [Shaw50].
+Early stored-program digital computers were primarily number-crunching machines
+with limited storage and input/output (I/O) capabilities. Thus, the bulk of design effort
+was necessarily expended on cost-effective realization of the instruction sequencing
+and arithmetic/logic functions. The 1950s brought about many important advances in
+computer arithmetic. With the questions of feasibility already settled, the focus now
+shifted to algorithmic speedup methods and cost-effective hardware realizations. By the
+end of the decade, virtually all important fast adder designs had already been published
+or were in the ﬁnal phases of development. Similarly, the notions of residue arithmetic,
+high-radix multiplication, SRT (named for Sweeny, Robertson, and Tocher) division,
+and coordinate rotation digital computer (CORDIC) algorithms were all proposed and
+implemented in the 1950s. An overview paper by O. L. MacSorley [MacS61] contains
+a snapshot of the state of the art circa 1960.
+Computer arithmetic advances continued in the 1960s with the introduction of tree
+multipliers, array multipliers, high-radix dividers, convergence division, redundant
+signed-digit arithmetic, and implementation of ﬂoating-point (FLP) arithmetic opera-
+tions in hardware or ﬁrmware (in microprogram). A by-product of microprogrammed
+control, which became prevalent for ﬂexibility and economy of hardware implemen-
+tations, was that greater arithmetic functionality could be incorporated into even the
+smallest processors by means of using standardized word widths across a whole range
+of machines with different computing powers.
+Someofthemostinnovativeideasoriginatedfromthedesignofearlysupercomputers
+in the 1960s, when the demand for high performance, along with the still high cost
+of hardware, led designers to novel solutions that made high-speed machine arithmetic
+quite cost-effective. Striking examples of design ingenuity can be found in the arithmetic
+units of the IBM System/360 Model 91 [Ande67] and CDC 6600 [Thor70]. Other digital
+systems of the pre-integrated-circuit era no doubt contained interesting design ideas, but
+the IBM and CDC systems were extensively documented in the open technical literature,
+making them excellent case studies. It is quite regrettable that today’s designs are not
+described in the technical literature with the same degree of openness and detail. We
+brieﬂy discuss the design of the ﬂoating-point execution unit of IBM System/360 Model
+91 in Section A.2. From this case study, we can deduce that the state of computer
+arithmetic was quite advanced in the mid-1960s.
+
+<<<JP624>>>
+Historical Perspective
+611
+As applications of computers expanded in scope and signiﬁcance, faster algorithms
+and more compact implementations were sought to keep up with the demand for higher
+performance and lower cost. The 1970s are distinguished by the advent of micropro-
+cessors and vector supercomputers. Early large-scale integrated circuit chips were quite
+limited in the number of transistors or logic gates they could accommodate; thus micro-
+programmed implementation was a natural choice for single-chip processors, which were
+not yet expected to offer high performance. At the high end of performance spectrum,
+pipelining methods were perfected to allow the throughput of arithmetic units to keep
+up with computational demand in vector supercomputers. In Section A.3, we study the
+design of one such vector supercomputer, the Cray X-MP/Model 24.
+Widespread application of very large-scale integration (VLSI) circuits in the 1980s
+triggered a reconsideration of virtually all arithmetic designs in light of interconnection
+cost and pin limitations. For example, carry-lookahead adders, which appeared to be
+ill-suited to VLSI implementation, were shown to be efﬁciently realizable after suitable
+modiﬁcations. Similar ideas were applied to more efﬁcient VLSI implementation of tree
+and array multipliers. Additionally, bit-serial and on-line arithmetic were advanced to
+deal with severe pin limitations in VLSI packages. This phase of the development of
+computer arithmetic was also guided by the demand to perform arithmetic-intensive sig-
+nal processing functions using low-cost and/or high-performance embedded hardware.
+Examples of ﬁxed- and ﬂoating-point processors for digital signal processing appli-
+cations are provided in Section A.4. Development of the IEEE (Institute of Electrical
+and Electronics Engineers) 754 binary ﬂoating-point standard, issued in 1985, was also
+noteworthy in this decade.
+During the 1990s, computer arithmetic continued to mature. Despite the lack of
+any breakthrough design concept, both theoretical development and reﬁnement of the
+designs continued at a rapid pace. The increasing demand for performance resulted in
+ﬁne-tuning of arithmetic algorithms to take advantage of particular features of imple-
+mentation technologies. Thus, we witnessed the emergence of a wide array of hybrid
+designs that combined features from one or more pure designs into a highly optimized
+arithmetic structure. Other trends included increasing use of table lookup and tight inte-
+gration of arithmetic unit and other parts of the processor for maximum performance.
+As clock speeds reached and surpassed 100, 200, 300, 400, and 500 MHz in rapid
+succession, everything had to be (deeply) pipelined to ensure the smooth ﬂow of data
+through the system. An example of such methods in the design of Intel’s Pentium Pro
+(P6) microprocessor is discussed in Section A.5.
+The 2000s can be characterized by three parallel, and interacting, trends shaping the
+research on computer arithmetic: (1) the availability of many millions of transistors on
+a single microchip, at essentially zero material cost, but with seemingly insurmountable
+design, veriﬁcation, and manufacturing challenges; (2) the extreme energy requirements,
+and the attendant heat dissipation, of the said transistors, if a signiﬁcant fraction of them
+were to be used concurrently to achieve high performance; (3) the shift of focus in
+arithmetic-intensive applications, from the domain of scientiﬁc computations on expen-
+sive mainframes and supercomputers to media processing and geometric rendering on
+desktops, and by the middle of the decade, on pocket-size personal electronic devices.
+These trends intensiﬁed the already severe arithmetic design challenges. By the end
+of the decade, desktop and laptop computers were offering hundreds of times greater
+
+<<<JP625>>>
+612
+Appendix: Past, Present, and Future
+computational power than the early supercomputers of Section A.2. The challenges
+were met through engineering innovations, including greater focus on reconﬁgurable
+arithmetic to counteract the rising development and manufacturing complexities. Work
+leading to the approval of the revised IEEE ﬂoating-point standard (IEEE 754-2008)
+constituted one of the highlights of the decade.
+So, what can we expect for computer arithmetic in its eighth decade, during the
+2010s? We will tackle this question in Section A.6, because our discussion of it will
+be enriched by insights gained from the material in Sections A.2-A.5. We forewarn the
+reader, however, that there will be no slowdown in the pace of innovation, and certainly
+no retirement party!
+A.2 EARLY HIGH-PERFORMANCE COMPUTERS
+In this section, we review key design features of the ﬂoating-point arithmetic hardware
+of IBM System/360 Model 91, a supercomputer of the mid-1960s, which brought forth
+numerous architectural innovations. The technical paper on which this description is
+based [Ande67] is considered one of the key publications in the history of computer
+arithmetic. For an insightful retrospective on the Model 91, see [Flyn98]. The CDC
+6600 [Thor70] is another 1960s vintage supercomputer worth studying. We leave this
+task to the reader (see Problem A.4).
+The IBM System/360 Model 91 had two concurrently operating ﬂoating-point exe-
+cution units (Fig. A.1), each with a two-stage pipelined adder and a 12 × 56 pipelined
+multiplier, to meet the ambitious design goal of executing one ﬂoating-point instruction
+per 20-ns clock cycle on the average. The unit could handle 32-bit or 64-bit ﬂoating-point
+numbers with sign, 7-bit excess-64 base-16 exponent, and 24-bit or 56-bit normalized
+signiﬁcand in [1/16, 1). Floating-point operands were supplied to the execution units
+from a number of buffers or registers. Within the execution units, a number of “reserva-
+tion stations” (RS), each holding two operands, allowed effective utilization of hardware
+by ensuring that the next set of operands always was available when an arithmetic circuit
+was ready to accept it.
+The Model 91 ﬂoating-point adder consisted of standard blocks such as exponent
+adder, preshifter, postshifter, and exponent adjuster, in addition to a 56-bit fraction adder.
+The fraction adder had a three-level carry-lookahead design with 4-bit groups and 8-bit
+sections. Thus, there were two groups per section and seven sections in the adder. Many
+clever design methods were used to speed up and simplify the adder. For example, the
+adder was designed to produce both the true sum and its 2’s complement, one of which
+was then selected as the adder’s output. This feature served to reduce the length of the
+adder’s critical path; only the operand that was not preshifted could be complemented.
+This could force the computation of y −x instead of the desired x −y, thus necessitating
+output complementation. As a result of various optimization and speedup techniques, a
+ﬂoating-add arithmetic operation could be executed in 2 clock cycles (or one add per
+cycle per ﬂoating-point unit with pipelining).
+The Model 91 ﬂoating-point multiplier could multiply a 56-bit multiplicand by a 12-
+bit multiplier in one pass through its hardware tree of carry-save adders (CSAs), keeping
+
+<<<JP626>>>
+Early High-Performance Computers
+613
+Floating-
+point
+instruction
+unit
+RS1
+RS2
+RS3
+RS1
+RS2
+Register bus
+Buffer bus
+Common bus
+Instruction
+buffers and 
+controls
+To storage
+Adder
+stage 1
+Adder
+stage 2
+Result bus
+Result
+Result
+Multiply
+iteration
+unit
+Propagate
+adder
+From storage
+To fixed-point unit
+Add
+unit
+Mul/
+Div
+unit
+Floating-point
+execution unit 1
+Floating
+point
+execution
+unit 2
+Registers
+(4)
+Buffers
+(6)
+Figure A.1 Overall structure of the IBM System/360 Model 91 ﬂoating-point execution unit.
+the partial product in carry-save form, to be subsequently combined with the results from
+other 12-bit segments of the multiplier. Radix-4 Booth’s recoding was used to form six
+multiples of the multiplicand to be added (thus, actually 13 bits of the multiplier were
+required in each step in view of the 1-bit overlap). The six multiples were reduced to
+two in a three-level CSA tree. Another two CSA levels were used to combine these two
+values with the shifted carry-save partial product from earlier steps. Pipelining allowed
+12 multiplier bits to be processed in each clock cycle. The ﬂoating-point multiply took
+6 clock cycles, or 120 ns, overall.
+Floating-point division was performed by the Newton–Raphson convergence method
+using the hardware multiplier and a small amount of extra logic. An initial table lookup
+provided an approximate reciprocal of the divisor that led to 7 bits of convergence with
+a 12-bit multiplier. Three more steps of such short multiplications (requiring a single
+pass through the CSA tree) increased the convergence to 14, 23, and 28 bits. A ﬁnal
+half-multiply, needing three passes through the CSA tree, completed the process. The
+pair of multiplications was pipelined in each step, with the result that ﬂoating-point
+
+<<<JP627>>>
+614
+Appendix: Past, Present, and Future
+divide took only 18 clock cycles. Early versions of the Model 91 ﬂoating-point unit
+sometimes yielded an incorrect least-signiﬁcant bit for the quotient. This problem, which
+had been due to inadequate analysis of the division convergence process, was corrected
+in subsequent versions.
+A.3 DEEPLY PIPELINED VECTOR MACHINES
+Modern supercomputers come in two varieties: vector multiprocessors consisting of a
+small to moderate number of powerful vector processors, and parallel computers using
+very large ensembles of simpler processors.
+Small-scale parallel computers typically use off-the-shelf, high-performance micro-
+processors as their basic building blocks, while some massively parallel computers are
+based on very simple custom processors, perhaps with multiple processors on a single
+microchip. Since we discuss arithmetic in a microprocessor in SectionA.5, and since we
+have already covered an example of arithmetic in the simple bit-serial processors of the
+CM-2 massively parallel computer (Section 24.3), here we focus on the design of the
+Cray X-MP/Model 24 processor as an example of the former category [Robb89]. This
+machine has been superseded by the Y-MP, C-90, and various other Cray supercom-
+puters, but it offers a good example for discussing the principles of high-performance
+vector processing, with the associated highly pipelined implementation of arithmetic
+operations and pipeline chaining.
+The Cray X-MP/Model 24 consists of two identical CPUs sharing a main memory
+and an I/O subsystem. Most instructions can begin execution in a single 9.5-ns machine
+cycle and are capable of producing results on every machine cycle, given suitably long
+vector computations and appropriate data layout in memory to avoid memory bank
+conﬂicts. Each CPU has an address section, a scalar section, and a vector section, each
+with its own registers and functional units.
+The address section is the simplest of the three sections. It uses an integer multi-
+plier and an adder (four- and two-stage pipeline, respectively) for operating on, and
+computing, 24-bit memory addresses.
+The scalar section has functional units for addition (three-stage pipeline), weight/
+parity/leading-zeros determination (three- or four-stage), shifting (two-stage), and
+logical operations (one-stage). With very few exceptions, all arithmetic and logical
+operations deal with 64-bit integer or ﬂoating-point operands. Floating-point numbers
+have a sign bit, 15 exponent bits, and 48 signiﬁcand bits (including an explicit 1 after
+the radix point).
+The vector section is perhaps the most interesting and elaborate part of the processor,
+and we focus on it in the remainder of this section. Figure A.2 is a block diagram of the
+Cray X-MP’s vector section. There are eight sets of 64-element vector registers that are
+used to supply operands to, and accept results from, the functional units. These allow
+the required vectors or vector segments to be prefetched, and the vector results stored
+back in memory, concurrently with arithmetic/logic operations on other vectors or vector
+segments. In fact, intermediate computation results do not need to be stored in a register
+before further processing. Amethod known as pipeline chaining allows the output of one
+
+<<<JP628>>>
+The DSP Revolution
+615
+V0
+V7
+V6
+V5
+V4
+V3
+V2
+V1
+  0
+  1
+  2
+  3
+  .
+  .
+  .
+62
+63
+Vector
+registers
+To/from memory
+Vector
+integer
+units
+Logical 1
+Shift
+ Add
+Logical 2
+Weight/
+Parity
+Stages σ=  5
+4
+2
+3
+3
+Floating-
+point
+units
+Multiply
+ Add
+Reciprocal
+Approx.
+Stages σ = 14
+7
+6
+To/from scalar unit
+Vector length,
+mask, & control
+From
+address
+unit
+Control
+signals
+Figure A.2 The vector section of one of the processors in the Cray X-MP/Model 24
+supercomputer.
+pipeline (e.g., multiplier) to be forwarded to another (say, adder) if a vector computation
+such as (A[i] × B[i]) + C[i] is to be performed.
+Vector computations need 3 clock cycles for their setup, which includes preparing
+the appropriate functional units and establishing paths from/to source and destination
+registers to them. At the end of a vector computation, 3 more clock cycles are needed
+for shutdown before the results in the destination vector register can be used in other
+operations. This type of pipelining overhead, which becomes insigniﬁcant when one
+is dealing with long vectors, is the main reason for vector machines having a “break-
+even” vector length (i.e., a length beyond which vector arithmetic is faster than scalar
+arithmetic performed in a program loop).
+Once a vector computation has been set up, a pair of elements enters the ﬁrst stage of
+the pipeline on every clock cycle and the partial results for the preceding pairs move one
+stage forward in the pipeline. FigureA.2 lists the number σ of pipeline stages for various
+operations. The output of a σ-stage pipelined unit becomes available for chaining after
+σ +5 clock cycles. Such a unit needs λ+σ +5 clock cycles to operate on a λ-element vec-
+tor. However, the functional unit is freed for the next vector operation after λ+4 cycles.
+A.4 THE DSP REVOLUTION
+Many digital signal processing (DSP) applications are arithmetic-intensive and cost-
+sensitive, thus requiring innovative solutions for cost-effective implementation.Adigital
+
+<<<JP629>>>
+616
+Appendix: Past, Present, and Future
+signal processor (also abbreviated as DSP), can be a special-purpose or a general-purpose
+unit. Special-purpose DSPs have been designed in a variety of ways, using conventional
+or unconventional (residue, logarithmic) number representations. It is impossible to
+review all these approaches here [Sode86], [Jull94]. We thus focus on the design of
+typical general-purpose DSP chips.
+General-purpose DSPs are available as standard components from several microchip
+manufacturers. They come in two varieties: ﬁxed point and ﬂoating point. Integer DSP
+chips are simpler and thus both faster and less expensive. They are used whenever the
+application deals with numerical values in limited and well-deﬁned ranges so that scaling
+can be done with acceptable overhead (e.g., in simple voice processing). The payoff then
+is faster processing or higher accuracy. When the range of numerical values is highly
+variable or unpredictable, or the data rate is too high to allow the use of lengthy scaling
+computations, built-in ﬂoating-point arithmetic capability becomes mandatory (e.g., in
+multimedia workstations).
+Motorola’s DSP56002 chip is a 24-bit ﬁxed-point DSP [ElSh96]. It deals with 24-bit
+and 48-bit signed fractions and internally uses a 56-bit format consisting of 9 whole bits,
+including the sign, and 47 fractional bits.As shown in Fig.A.3, there are four 24-bit input
+registers that can also be used as two 48-bit registers. Similarly, the two 56-bit accu-
+mulator registers can be viewed as four 24-bit and two 8-bit registers. Arithmetic/logic
+Figure A.3 Block
+diagram of the data
+ALU in Motorola’s
+DSP56002
+(ﬁxed-point)
+processor.
+B Shifter/Limiter
+X Bus
+Y Bus
+X1
+X0
+Y1
+Y0
+X
+Y
+24
+24
+24
+24
+47
+A1
+A0
+B1
+B0
+A
+B
+A2
+B2
+56
+56
+Shifter
+56
+A Shifter/Limiter
+Accumulator,
+rounding, and
+logical unit
+Multiplier
+Input
+registers
+Accumulator
+registers
+24+
+Overflow
+
+<<<JP630>>>
+The DSP Revolution
+617
+operations are performed on up to three operands, with the 56-bit result always stored
+in an accumulator. Example instructions include the following:
+ADD
+A, B
+{A + B →B}
+SUB
+X, A
+{A −X →A}
+MPY
+±X1, X0, B
+{±X1 × X0 →B}
+MAC
+±Y1, X1, A
+{A ± (Y1 × X1) →A}
+AND
+X1, A
+{A and X1 →A}
+The arithmetic/logic unit (ALU) can round the least-signiﬁcant half (A0 or B0) into the
+most-signiﬁcant half (A1 or B1) of each accumulator. So, for example, an MPY or MAC
+instruction can be executed with or without rounding, leading to a 24- or 48-bit result in
+an accumulator.
+The 56-bit shifter can shift left or right by 1 bit or pass the data through unshifted.
+The two data shifters, associated with the A and B accumulators, take 56-bit inputs and
+produce 24-bit outputs, each with an “overﬂow” bit. One-bit left or right shift is possible
+for scaling purposes. The data limiter causes the largest value of the same sign to be
+output when the (shifted) 56-bit data is not representable in 24 bits.
+There are also a variety of data movement, bit manipulation, and ﬂow control
+instructions, as in any other processor. Details of the instruction set and programming
+considerations for Motorola’s DSP56002 processor, along with example applications in
+ﬁlter implementation and fast Fourier transform, have been published [ElSh96].
+As an example of a ﬂoating-point DSPchip, we brieﬂy review Motorola’s DSP96002,
+which has many features of a 32-bit general-purpose processor along with enhance-
+ment for DSP applications [Sohi88]. Multiple DSP96002 chips can share a bus and
+communicate directly with each other in a parallel conﬁguration with very high
+performance.
+DSP96002 implements the IEEE single-precision (32-bit) and single-extended-
+precision (1 + 11 + 32 = 44 bits, no hidden bit) ﬂoating-point arithmetic. An internal
+96-bit format (sign, 20 bits of special tags, 11-bit exponent, 64-bit signiﬁcand) is used
+to minimize error accumulation.
+The data ALU (Fig. A.4), so named to distinguish it from address computation units,
+supports IEEE ﬂoating-point arithmetic in a single instruction cycle or 2 clock cycles.
+The full instruction actually takes 3 instruction (or 6 clock) cycles to ﬁnish but is executed
+in a three-stage (fetch, decode, execute) pipeline that can accept a new instruction in
+every cycle.
+The ﬂoating-point add/subtract unit calculates both the sum and the difference of
+its two inputs, with one or both results stored in the register ﬁle in the same cycle.
+The add/subtract unit is also used for integer arithmetic, a variety of data type con-
+versions, and multibit shift operations (taking advantage of its barrel shifter). The
+ﬂoating-point multiply unit contains a 32 × 32 hardware multiplier, thus support-
+ing both 32-bit signed/unsigned integer multiplication and single-extended-precision
+ﬂoating-point multiplication (with 32-bit signiﬁcands) in 1 cycle. A full 64-bit product
+is produced.
+
+<<<JP631>>>
+618
+Appendix: Past, Present, and Future
+Figure A.4 Block
+diagram of the data
+ALU in Motorola’s
+DSP96002
+(ﬂoating-point)
+processor.
+I/O format converter
+X Bus
+Y Bus
+32
+32
+Register file
+10   96-bit,
+or 10   64-bit, 
+or 30   32-bit
+Add/
+Subtract
+unit
+Multiply
+unit
+Special
+function
+unit
+Finally, the special function unit implements division, square-rooting, and logical
+operations. Division and square-rooting require multiple instructions, beginning with a
+special instruction to generate a reciprocal (root) seed and continuing with a convergence
+computation.
+DSP96002 accepts, and properly handles, subnormal numbers, but requires 1 addi-
+tional machine cycle to process each subnormal source operand or subnormal result. A
+“ﬂush-to-zero” underﬂow mode can be optionally selected to force subnormal numbers
+to 0, thus avoiding the possible extra cycles and making the execution timing completely
+data-independent.
+A.5 SUPERCOMPUTERS ON OUR LAPS
+In terms of computational power, the lecture-hall-size supercomputers of the 1960s,
+an example of which was described in Section A.2, are mere toys, when compared
+with even the smallest notebook computer in use today. The driving force behind this
+transformation is the microprocessor chip, which was born as a very modest 4-bit CPU
+in 1971 and now is a full-blown 64-bit computer with multiple CPUs, memory, and
+many other processing functions built in. The path from the 4-bit CPU to the modern
+marvel that powers our multigigaﬂops personal computers has gone through numerous
+stages of integrating greater functionality onto the chip: ﬁrst came wider and wider
+integer arithmetic, with several doublings of the word width, and then integration of
+ﬂoating-point arithmetic, cache memory, memory controller, and so on.
+As an example, we describe the design of a member of Intel’s Pentium family of
+microprocessors: the Intel Pentium Pro, also known as Intel P6. Pentium Pro started a
+series of microprocessor products that roughly doubled the pipeline depth of the original
+Pentium processor and in time led to Pentium II, Pentium III, and Celeron processors.
+Pentium 4 again doubled the pipeline depth, thus introducing far greater design innova-
+tions. Nevertheless, we stick with the description of the older P6 processor, because it
+is much easier to understand and it conveys our intended message just as well.
+
+<<<JP632>>>
+Supercomputers on our Laps
+619
+The primary design goal for the Intel P6 was to achieve the highest possible per-
+formance, while keeping the external appearances compatible with the Pentium and
+using the same mass-production technology [Shan98]. Intel’s Pentium II is essentially a
+Pentium Pro, complemented with a set of multimedia instructions.
+The Intel P6 has a 32-bit architecture, internally using a 64-bit data bus, 36-
+bit addresses, and an 80-bit ﬂoating-point format (sign, 15-bit exponent ﬁeld, 64-bit
+signiﬁcand). In the terminology of modern microprocessors, P6 is superscalar and
+superpipelined: superscalar because it can execute multiple independent instructions
+concurrently in its many functional units, as opposed to the Cray machine of Section
+A.3, which has concurrent execution only for vector operations; superpipelined because
+its instruction execution pipeline with 14+ stages is very deep. The design of the Intel
+P6, which was initially based on a 150- to 200-MHz clock, has 21M transistors, roughly
+a quarter of which are for the CPU and the rest for the on-chip cache memory. The Intel
+P6 is also capable of glueless multiprocessing with up to four processors.
+FigureA.5 shows parts of the CPU that are relevant to our discussion. Since high per-
+formance in the Intel P6 is gained by out-of-order and speculative instruction execution,
+a key component in the design is a reservation station that is essentially a hardware-level
+scheduler of micro-operations. Each instruction is converted to one or more micro-
+operations, which are then executed in arbitrary order whenever their required operands
+are available.
+The result of a micro-operation is sent to both the reservation station and a special
+unit called the reorder buffer. This latter unit is responsible for making sure that pro-
+gram execution remains consistent by committing the results of micro-operations to the
+machine’s “retirement” registers only after all pieces of an instruction have terminated
+and the instruction’s “turn” to execute has arrived within the sequential program ﬂow.
+Thus, if an interrupt occurs, all operations that are in progress can be discarded without
+causing inconsistency in the machine’s state. There is a full crossbar between all ﬁve
+Integer
+execution
+unit  0
+80
+80
+80
+Port-0
+units
+Port-1
+units
+Port 0
+Port 1
+Port 2
+Dedicated to
+memory access
+(address
+generation
+units, etc.)
+Port 3
+Port 4
+Reservation
+    station
+Reorder
+buffer and
+retirement
+register
+file
+FLP Add
+Integer Div
+FLP Div
+FLP Mult
+Shift
+Integer
+execution
+unit  1
+Jump
+exec
+unit
+Figure A.5 Key parts of the CPU in the Intel Pentium Pro (P6) microprocessor.
+
+<<<JP633>>>
+620
+Appendix: Past, Present, and Future
+ports of the reservation station so that any returning result can be forwarded directly to
+any other unit for the next clock cycle.
+Fetching, decoding, and setting up the components of an instruction in the reservation
+station takes 8 clock cycles and is performed as an eight-stage pipelined operation. The
+retirement process, takes 3 clock cycles and is also pipelined. Sandwiched between the
+preceding two pipelines is a variable-length pipeline for instruction execution. For this
+middle part of instruction execution, the reservation station needs 2 cycles to ascertain
+that the operands are available and to schedule the micro-operation on an appropriate
+unit. The operation itself takes 1 cycle for register-to-register integer add and longer for
+more complex functions. Because of the multiplicity of functional units with different
+latencies, out-of-order and speculative execution (e.g., branch prediction) are crucial to
+high performance.
+In a sense, the deep pipelining of instruction execution in the Intel P6 and its suc-
+cessors makes the performance less sensitive to the arithmetic algorithms and circuits.
+Indeed, the bulk of hardware in the P6 is devoted to the management of pipelining and
+out-of-order instruction execution rather than to arithmetic circuits. Nevertheless, with
+today’s subnanosecond clock cycles, challenges in the design of fast arithmetic circuits
+for high-end microprocessors continue unabated.
+A.6 TRENDS,OUTLOOK,AND RESOURCES
+Arithmetic designs are evolving as a result of changes in the underlying technology. The
+move from small-scale integration through medium- and large-scale integration to VLSI
+has gradually shifted the emphasis from reducing the number of gates and gate levels
+in arithmetic circuits to considering the overall design in terms of both computational
+elements and interconnections. Increasing densities have also led to concerns about
+adequate I/O bandwidth, clock and power distribution, heat dissipation, and testability.
+Design challenges will no doubt continue to emerge as we deal with even newer tech-
+nologies and application requirements (fully distributed micropipelines, subnanosecond
+arithmetic, low-power design, the quest for petaﬂops, etc.).
+Today, designs for arithmetic circuits are developed not by analyzing an elegant
+algorithm and optimizing its various parameters, but rather by getting down to the
+level of transistors and wires. This explains the proliferation of hybrid designs that use
+two or more distinct paradigms (e.g., fast adders using Manchester carry chains along
+with carry-lookahead and carry-select structures) to obtain the best designs for given
+cost-performance requirements.
+Concurrent with developments in the VLSI technology, changing application char-
+acteristics have dictated a shift of focus in computer arithmetic from high-speed or
+high-throughput designs in mainframe computers to low-cost and low-power designs
+for embedded and mobile applications. These have in turn led to renewed interest in bit-
+and digit-serial arithmetic as mechanisms to reduce the VLSI area and to improve pack-
+ageabilityandtestability. High-performancedesignsrequiringlookaheadandspeculative
+execution are expensive and often at odds with the goal of reducing power consumption
+to extend the battery life and/or simplify heat dissipation. As a result, the goal of high
+
+<<<JP634>>>
+Trends, Outlook, and Resources
+621
+performance in modern systems is more likely to be pursued via the concurrent opera-
+tion of many slow, low-energy units, rather than a single power-hungry processor. Many
+challenging problems are being addressed in these areas.
+The desirability of synchronous versus asynchronous design has also been reex-
+amined. Thus far, synchronous circuits have prevailed in view of their ease of design,
+tractability of analysis, and predictability of performance. A secondary, but still impor-
+tant, drawback of asynchronous design is the overhead in time and area for the required
+handshaking circuits that regulate the ﬂow of data between circuit segments. However,
+the higher speeds and packaging densities of modern digital circuits are stretching the
+limits of our ability to distribute the clock signal to all the required points [Frie99]. Also,
+signal propagation delays over long wires are forcing the designers to modularize the
+design (e.g., via systolic arrays), thus in some cases introducing an overhead that is
+comparable to that of handshaking for asynchronous operation. Novel design paradigms
+and improved tools for the synthesis and analysis of asynchronous systems are slowly
+changing the balance in favor of the latter [Hauc95]. For example, low-level pipelining
+methods (micropipelines), perhaps extending all the way down to the logic gate level,
+are thought to hold promise for the arithmetic circuits of the future.
+Fundamentally new technologies and design paradigms may alter the way in which
+we view or design arithmetic circuits. Just as the availability of cheap, high-density
+memories brought table-lookup methods to the forefront, certain computational elements
+being developed in connection with artiﬁcial neural networks may revolutionize our
+approach to arithmetic algorithms. As an example, imagine the deep changes that would
+ensue if an artiﬁcial neuron capable of summing several weighted inputs and comparing
+the result to a ﬁxed threshold could be built from a few transistors. Such a cell would
+be considerably more powerful than a switch or standard logic gate, thus leading to new
+designs for arithmetic functions [Vass96]. As a second example, researchers in the ﬁeld
+of optical computing, eager to take full advantage of parallel operations made possible
+by the absence of pin limitations, have paid signiﬁcant attention to redundant number
+representations. Yet another example is found in the ﬁeld of multivalued logic, which
+has an inherent bias toward high-radix arithmetic.
+No review of future technological trends, and their impact on the way we perform
+arithmetic, would be complete without a mention of nanotechnology and biotechnology.
+Fundamentally new paradigms are required to allow effective computation in these areas.
+While the power consumption and heat removal problems will be substantially eased or
+eliminated, assembling of components and forging interactions between them require
+much work. Numerous studies in these areas have already been conducted and many
+more are in the planning and execution stages [Bour03], [Brun07], [Coto05], [Walu06].
+On the theoretical front, studies in arithmetic complexity [Pipp87] have been instru-
+mental in broadening our understanding of algorithmic speedup methods.Any n-variable
+Boolean function that is actually dependent on all n variables (say, the most-signiﬁcant
+output bit of an n/2×n/2 unsigned multiplier) requires a gate count or circuit complex-
+ity of at least (n) and a delay or circuit depth of (log n). On the other hand, any
+Boolean function can be realized by a size-(2n −1), depth-n, complete binary tree of
+2-to-1 multiplexers by using the Shannon expansion
+f (x1, x2, · · · , xn) = x1 f (1, x2, · · · , xn) ∨x1 f (0, x2, · · · , xn)
+
+<<<JP635>>>
+622
+Appendix: Past, Present, and Future
+for each variable in turn. Key questions in arithmetic complexity thus deal with the
+determination of where in the wide spectrum of (n) to O(2n) circuit complexity, and
+(log n) to O(n) circuit depth, practical implementations of the various arithmetic
+functions may lie, and what can be achieved in terms of cost (delay) if we restrict the
+design, say, to having logarithmic delay (linear, or polynomial, cost).
+For example, we know in the case of addition/subtraction that the bounds O(n) on
+cost and O(log n) on delay are achievable simultaneously by means of certain carry-
+lookahead adder designs, say. For multiplication, we can achieve O(log n) delay with
+O(n log n log log n) cost in theory, though practical designs for small word widths
+have logarithmic delay with O(n2) cost. [The cost lower bound for multiplication was
+actually somewhat improved by M. Furer in 2007, with the log log n term replaced by
+an asymptotically smaller term, thus bringing us closer to the conjectured O(n log n)
+bound. However, because special notation is needed to understand this bound, we stick
+with the simpler one given above.] Logarithmic-depth circuits for division are now
+known, but they are much more complex than logarithmic-depth multipliers. Note that a
+logarithmic-depth multiplier is capable of performing division in O(log2 n) time when
+a convergence method is used.
+Many innovations have appeared in computer arithmetic since the early days of
+electronic computers [Burk46]. The emergence of new technologies and the unwavering
+quest for higher performance are bound to create new challenges in the coming years.
+These will include completely new challenges, as well as novel or transformed versions
+of the ones discussed in the preceding paragraphs. Computer arithmetic designers, who
+helped make digital computers into indispensable tools in the six-plus decades since
+the introduction of the stored-program concept, will thus have a signiﬁcant role to play
+Decade
+40s
+50s 
+60s 
+70s 
+80s 
+90s 
+00s 
+10s 
+     1940 
+     2020 
+     1960 
+     1980 
+     2000 
+Snapshot
+[Burk46] 
+Key ideas, innovations, advancements, technology traits, and milestones
+Binary format, carry chains, stored carry, carry-save multiplier, restoring divider 
+[Shaw50] 
+Carry-lookahead adder, high-radix multiplier, SRT divider, CORDIC algorithms 
+Tree/array multiplier, high-radix and convergence dividers, signed-digit, floating point 
+Pipelined arithmetic, vector supercomputer, microprocessor, ARITH-2/3/4 symposia 
+VLSI, embedded system, digital signal processor, on-line arithmetic, IEEE 754-1985 
+CMOS dominance, circuit-level optimization, hybrid design, deep pipeline, table lookup 
+Power/energy/heat reduction, media processing, FPGA-based arithmetic, IEEE 754-2008
+Teraflops on laptop (or pocket device?), asynchronous design, nanodevice arithmetic
+[MacS61]
+[Thor70] 
+[Ande67]
+[Swar90] 
+[This book] 
+[Garn76]
+ 
+Figure A.6 Computer arithmetic through the decades.
+
+<<<JP636>>>
+Problems
+623
+in making them even more useful and ubiquitous as digital computing approaches its
+diamond anniversary.
+We summarize our discussions of the history, current status, and future of computer
+arithmetic in the timeline depicted in Fig. A.6. As for resources that would allow the
+reader to gain additional insights in computer arithmetic, we have already listed some
+general references at the end of the Preface and topic-speciﬁc references at the end of each
+chapter (and this appendix). Other resources, which are nowadays quite extensive, thanks
+to electronic information dissemination, can be found through Internet search engines.
+For example, a search for “computer arithmetic” on Google yields some quarter-of-
+a-million items, not counting additional hits for “digital arithmetic,” “arithmetic/logic
+unit,” and other related terms. The author maintains a list of Web resources for computer
+arithmetic on his companion website for this book: it can be reached via the publisher’s
+page for the book and through the author’s faculty Web site at University of California,
+Santa Barbara (UCSB).
+PROBLEMS
+A.1 Historical perspective
+Using the discussion in Section A.1 and Fig. A.6 as a basis, and consulting addi-
+tional references as needed, draw a detailed time line that shows signiﬁcant events
+in the development of digital computer arithmetic. On your time line, identify
+what you consider to be the three most-signiﬁcant ideas or events related to the
+topics discussed in each of the Parts I to IV of this book. Brieﬂy justify your
+choices. Include ﬂoating-point numbers and arithmetic in your discussion (e.g.,
+ﬂoating-point representation in Part I, ﬂoating-point addition in Part II).
+A.2 Arithmetic before electronic digital computers
+a. Study the implementation of arithmetic operations on mechanical calcula-
+tors and other machines that preceded electronic computers. Prepare a report
+(including a time line) discussing the developments of key ideas and various
+implementations.
+b. Repeat part a for electronic analog computers. Compare the ideas and methods
+to those of digital arithmetic and discuss.
+A.3 IBM System/360 Model 91
+a. Based on the description in Section A.2 and what you learned about conver-
+gence division in Chapter 16, determine the size of the lookup table providing
+the initial approximation to the divisor reciprocal in the IBM System/360
+Model 91.
+b. Estimate, using back-of-the-envelope calculations, the MFLOPS computa-
+tional power of the IBM System/360 Model 91 in million ﬂoating-point
+operations per second (MFLOPS). Assume complete overlap between instruc-
+tion preparation and execution. Use an instruction mix of 60% add, 30%
+multiply, and 10% divide.
+c. Study the integer arithmetic capabilities of the IBM System/360 Model 91.

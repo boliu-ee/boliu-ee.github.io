@@ -1,0 +1,31 @@
+# 前言 {.unnumbered}
+
+这是对 **Behrooz Parhami** 所著《Computer Arithmetic: Algorithms and Hardware Designs (2nd Edition)》[@parhami2010] 的中文研读笔记与工程实践记录。
+
+## 本书的定位 {.unnumbered}
+
+原书是计算机算术（Computer Arithmetic）领域的经典教材，共 7 大部分 28 章，系统覆盖：
+
+1. **数的表示**（Number Representation）——进位制、符号数、冗余数系、剩余数系；
+2. **加法/减法**——从行波进位到并行前缀加法器；
+3. **乘法**——Booth 重编码、Wallace/Dadda 树、阵列乘法器；
+4. **除法**——恢复余数、不恢复余数、SRT、收敛法；
+5. **实数运算**——IEEE 754 浮点、误差分析、精确算术；
+6. **函数求值**——开方、CORDIC、查表法；
+7. **实现专题**——流水、低功耗、容错、可重构。
+
+## 本笔记的特色 {.unnumbered}
+
+- **不是逐字翻译**：以中文工程师的视角重新组织与解读，重要术语保留英文原文，以「中文（English）」形式标注；
+- **RTL 可运行**：书中核心算法均配有原创 SystemVerilog RTL 与 testbench，位于 `rtl/` 目录，每个算法一个独立文件夹，命名规则为 `ch<章>_<节>_<算法名>`，内含 `run_iverilog.sh` 与 `run_verilator.sh` 一键验证脚本；
+- **原书插图**：关键插图从原书剪裁收录，便于对照阅读。
+
+## RTL 验证环境 {.unnumbered}
+
+- Windows + Icarus Verilog（iverilog）：直接在各算法文件夹执行 `bash run_iverilog.sh`；
+- Verilator（Linux/WSL 推荐）：执行 `bash run_verilator.sh`；
+- 所有 testbench 均以 `TEST PASSED` / `TEST FAILED` 打印结论，退出码非零即失败。
+
+::: {.callout-note}
+本笔记仅供学习研究使用，版权归原作者所有 [@parhami2010]。
+:::

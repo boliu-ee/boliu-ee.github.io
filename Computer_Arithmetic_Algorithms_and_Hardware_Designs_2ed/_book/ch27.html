@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第27章 容错算术（Fault-Tolerant Arithmetic） – 计算机算术：算法与硬件设计（中文解读版）</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./ch28.html" rel="next">
+<link href="./ch26.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-77d2b90c99eeff80c5837adab8b96ac7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch25.html">第七部分 实现专题 (Implementation Topics)</a></li><li class="breadcrumb-item"><a href="./ch27.html"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">计算机算术：算法与硬件设计（中文解读版）</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第一部分 数的表示 (Number Representation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch01.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第二部分 加法与减法 (Addition/Subtraction)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第7章 快速加法器的变体（Variations in Fast Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第8章 多操作数加法（Multioperand Addition）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部分 乘法 (Multiplication)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第9章 基本乘法方案（Basic Multiplication Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第10章 高基数乘法器（High-Radix Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">第四部分 除法 (Division)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第14章 高基数除法器（High-Radix Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第15章 除法器的变体（Variations in Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第16章 收敛法除法（Division by Convergence）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">第五部分 实数运算 (Real Arithmetic)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第17章 浮点数表示（Floating-Point Representations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">第六部分 函数求值 (Function Evaluation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第23章 函数求值的变体（Variations in Function Evaluation）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第24章 查表算术（Arithmetic by Table Lookup）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">第七部分 实现专题 (Implementation Topics)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch26.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch27.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch28.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第28章 可重构算术（Reconfigurable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">附录 过去、现在与未来（Past, Present, and Future）</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#本章导读" id="toc-本章导读" class="nav-link active" data-scroll-target="#本章导读">本章导读</a></li>
+  <li><a href="#故障错误与纠错码faults-errors-and-error-codes" id="toc-故障错误与纠错码faults-errors-and-error-codes" class="nav-link" data-scroll-target="#故障错误与纠错码faults-errors-and-error-codes">27.1 故障、错误与纠错码（Faults, Errors, and Error Codes）</a></li>
+  <li><a href="#算术检错码arithmetic-error-detecting-codes" id="toc-算术检错码arithmetic-error-detecting-codes" class="nav-link" data-scroll-target="#算术检错码arithmetic-error-detecting-codes">27.2 算术检错码（Arithmetic Error-Detecting Codes）</a>
+  <ul class="collapse">
+  <li><a href="#乘积码an-码与低成本形式" id="toc-乘积码an-码与低成本形式" class="nav-link" data-scroll-target="#乘积码an-码与低成本形式">乘积码（AN 码）与低成本形式</a></li>
+  <li><a href="#剩余码与反向剩余码" id="toc-剩余码与反向剩余码" class="nav-link" data-scroll-target="#剩余码与反向剩余码">剩余码与反向剩余码</a></li>
+  </ul></li>
+  <li><a href="#算术纠错码arithmetic-error-correcting-codes" id="toc-算术纠错码arithmetic-error-correcting-codes" class="nav-link" data-scroll-target="#算术纠错码arithmetic-error-correcting-codes">27.3 算术纠错码（Arithmetic Error-Correcting Codes）</a></li>
+  <li><a href="#自校验功能单元self-checking-function-units" id="toc-自校验功能单元self-checking-function-units" class="nav-link" data-scroll-target="#自校验功能单元self-checking-function-units">27.4 自校验功能单元（Self-Checking Function Units）</a></li>
+  <li><a href="#算法级容错algorithm-based-fault-tolerance-abft" id="toc-算法级容错algorithm-based-fault-tolerance-abft" class="nav-link" data-scroll-target="#算法级容错algorithm-based-fault-tolerance-abft">27.5 算法级容错（Algorithm-Based Fault Tolerance, ABFT）</a></li>
+  <li><a href="#容错-rns-算术fault-tolerant-rns-arithmetic" id="toc-容错-rns-算术fault-tolerant-rns-arithmetic" class="nav-link" data-scroll-target="#容错-rns-算术fault-tolerant-rns-arithmetic">27.6 容错 RNS 算术（Fault-Tolerant RNS Arithmetic）</a></li>
+  <li><a href="#本章小结" id="toc-本章小结" class="nav-link" data-scroll-target="#本章小结">本章小结</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch25.html">第七部分 实现专题 (Implementation Topics)</a></li><li class="breadcrumb-item"><a href="./ch27.html"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="本章导读" class="level2">
+<h2 class="anchored" data-anchor-id="本章导读">本章导读</h2>
+<p>芯片会出错：宇宙射线翻转存储位（软错误）、工艺缺陷、老化、电压扰动。安全关键系统（汽车、航天、医疗）要求算术单元<strong>出错能被检测甚至纠正</strong>。本章讲差错模型、算术编码（利用算术结构保持性的检错码）、自校验单元与算法级容错——第 4 章的冗余 RNS 在这里华丽返场。</p>
+</section>
+<section id="故障错误与纠错码faults-errors-and-error-codes" class="level2">
+<h2 class="anchored" data-anchor-id="故障错误与纠错码faults-errors-and-error-codes">27.1 故障、错误与纠错码（Faults, Errors, and Error Codes）</h2>
+<p>术语链：<strong>故障（fault）→ 错误（error）→ 失效（failure）</strong>。</p>
+<ul>
+<li>故障是物理原因（位翻转、固定 0/1、短路）；错误是故障导致的内部状态异常；失效是错误传播到系统边界造成的服务异常；</li>
+<li><strong>软错误（soft error）</strong>：α 粒子/中子引发的瞬态翻转，随特征尺寸缩小而加剧——存储器早已标配 ECC，逻辑与数据通路的软错误防护是本章主题；</li>
+<li>编码理论基础：汉明距离决定检错/纠错能力——距离 <span class="math inline">\(d\)</span> 的码可检 <span class="math inline">\(d-1\)</span> 错或纠 <span class="math inline">\(\lfloor (d-1)/2 \rfloor\)</span> 错。</li>
+</ul>
+<p><strong>故障模型（fault model）</strong>是一切讨论的起点：永久故障（stuck-at-0/1、桥接短路）、瞬时故障（软错误、电源毛刺）、间歇故障（老化边缘、接触不良）三类的防护难度递增。任何检错/纠错方案的评价都相对于某个故障模型才有意义——“可检全部单比特错”只在单事件翻转（SEU）模型下成立；工艺进入个位数纳米后，一次粒子撞击翻转多个相邻单元的多单元翻转（MCU）比例明显上升，单纯按单比特假设设计的码开始显得单薄。</p>
+<p>量级上，静态 RAM 的软错误率约为每 Gbit 每 <span class="math inline">\(10^9\)</span> 小时数百到数千次（FIT 量级）；逻辑电路没有存储节点的电荷保持问题，错误率低 1-2 个数量级，但随电压下降、节点电荷减小而持续恶化。对一颗集成数十亿晶体管的芯片，“每天若干次瞬态翻转”是设计基线而非危言耸听——这正是把第 27 章从”航天专用话题”变成”通用设计议题”的原因。</p>
+<p>业界的默认做法是<strong>接送受保护、中间裸奔</strong>（图 27.1）：通信链路与存储器由奇偶、校验和、SEC/DED 等码保护，而中间的运算部分没有任何保护——因为普通码<strong>对算术运算不封闭</strong>。两个偶校验数相加，结果未必还是偶校验；改动受校验和保护的数据表中的一个元素，就得重算整个校验和。解码/编码这道门槛正是算术码要解决的痛点。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch27/fig27_01.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 27.1 信息编码技术的常见应用方式：存储与传输环节有编码保护，中间的运算环节裸露</figcaption>
+</figure>
+</div>
+<p>最直接的方案是<strong>复制 + 比较</strong>（检错）或<strong>三模冗余 + 表决</strong>（屏蔽单个错误），如图 27.2。两张图里有几个细节值得咀嚼：</p>
+<ul>
+<li><ol type="a">
+<li>图中<strong>解码器被一起复制</strong>了，否则解码器单点故障会漏检；而编码器是”关键元件”——它的输出是冗余（编码后的）的，因此可以把它设计成<strong>自校验（self-checking）</strong>的：一旦自身出问题就吐出一个非码字。</li>
+</ol></li>
+<li><ol start="2" type="a">
+<li>图中<strong>表决器无法自校验</strong>，因为它的输出是非冗余的。把表决与编码两个功能合并起来，才有可能做出自校验的表决-编码器。</li>
+</ol></li>
+<li>三模之外推广到 <span class="math inline">\(n\)</span> 模可以容忍更多故障，但开销增长很快就不可接受。</li>
+</ul>
+<p>可靠性的账可以用一个公式记住：设单模块可靠度为 <span class="math inline">\(R\)</span>、表决器理想，则三模冗余（TMR）的可靠度为</p>
+<p><span class="math display">\[
+R_{TMR} = 3R^2 - 2R^3
+\]</span></p>
+<p><span class="math inline">\(R = 0.9\)</span> 时 <span class="math inline">\(R_{TMR} = 0.972\)</span>——单点故障被屏蔽的收益真实可见；但 <span class="math inline">\(R\)</span> 较低时 TMR 反而更差（三个不可靠部件加起来的暴露面更大）。这解释了为什么冗余只在”单模块本身已经相当可靠”的系统里有效，也解释了为什么表决器与比较器自身的可靠性必须单独论证——它们不在冗余的保护范围之内。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch27/fig27_02.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 27.2 用复制单元实现算术故障检测（a）与故障屏蔽/容错（b）：前者靠比较两路编码输出，后者靠三模表决</figcaption>
+</figure>
+</div>
+<p><strong>为什么通信码不适合算术</strong>。通信领域习惯按”随机错误”“突发错误”分类，这在算术里没有意义：加法器进位链上一个门的故障可以翻转任意多个输出位。看图 27.3 的例子：</p>
+<pre><code>  0010 0111 0010 0001
++ 0101 1000 1101 0011
+  0111 1111 1111 0100   ← 正确和
+  1000 0000 0000 0100   ← 错误和（某级产生了错误的进位 1）</code></pre>
+<p>两个结果的<strong>汉明距离是 12</strong>——看上去是”十二位错”。但它们的<strong>数值差只有 <span class="math inline">\(2^4 = 16\)</span></strong>！算术处理的是数，不是任意比特串，合适的度量应该是后者。</p>
+<p>由此定义<strong>算术权重（arithmetic weight）</strong>：把一个正确值变成错误值所需相加的最少<strong>带符号 2 的幂</strong>的个数。上面的例子权重为 1；而 <span class="math inline">\(\text{-}32752 = -2^{15} + 2^4\)</span> 这类差值的权重为 2。相应地可以证明：<span class="math inline">\(k\)</span> 比特错误幅度的最小权重 BSD 表示最多有 <span class="math inline">\(\lceil (k+1)/2 \rceil\)</span> 个非零数字，且总能写成没有相邻非零数字的<strong>规范 BSD 形式</strong>——规范形式唯一，与算术权重的概念紧密相连。</p>
+</section>
+<section id="算术检错码arithmetic-error-detecting-codes" class="level2">
+<h2 class="anchored" data-anchor-id="算术检错码arithmetic-error-detecting-codes">27.2 算术检错码（Arithmetic Error-Detecting Codes）</h2>
+<p>普通检错码（奇偶、汉明）为存储/传输设计，但<strong>算术运算不保持码字结构</strong>（两个合法码字相加一般不是合法码字）。<strong>算术码</strong>专为此设计：</p>
+<ul>
+<li><strong>AN 码</strong>：把数 <span class="math inline">\(x\)</span> 编码为 <span class="math inline">\(A \cdot x\)</span>（<span class="math inline">\(A\)</span> 为常数，如 3）。加法保持结构：<span class="math inline">\(Ax + Ay = A(x+y)\)</span>——结果仍是合法码字，能被 <span class="math inline">\(A\)</span> 整除即可检错。可检所有单比特错误（<span class="math inline">\(A\)</span> 选奇数时）；</li>
+<li><strong>剩余码（residue code）</strong>：编码 = 数据 + 其对模 <span class="math inline">\(m\)</span> 的剩余。加法后校验：<span class="math inline">\((x + y) \bmod m \stackrel{?}{=} (x \bmod m + y \bmod m) \bmod m\)</span>。<span class="math inline">\(m = 3\)</span>（低成本剩余码）只需 2 位校验，可检单比特错；</li>
+<li><strong>双剩余/反向剩余</strong>：两份独立的剩余校验提高覆盖率。</li>
+</ul>
+<p>算术码有两条定义性质的要求：(1) 按<strong>可检错误的算术权重</strong>来刻画能力；(2) 允许<strong>直接在编码操作数上做算术</strong>。第二条是省钱的关键——比起全复制或三模冗余，算术码用低得多的冗余把整条数据通路罩住。</p>
+<section id="乘积码an-码与低成本形式" class="level3">
+<h3 class="anchored" data-anchor-id="乘积码an-码与低成本形式">乘积码（AN 码）与低成本形式</h3>
+<p>数 <span class="math inline">\(N\)</span> 编码为 <span class="math inline">\(AN\)</span>，校验就是检查能否被 <span class="math inline">\(A\)</span> 整除。<strong><span class="math inline">\(A\)</span> 取奇数时，所有权 1 的算术错误（含全部单比特错误）都能检出</strong>：因为错误幅度为 <span class="math inline">\(\pm 2^i\)</span>，而奇数 <span class="math inline">\(A\)</span> 不可能整除 <span class="math inline">\(2^i\)</span>。权重 2 及以上的错误不保证可检——例如 <span class="math inline">\(32736 = 2^{15} - 2^{5}\)</span> 能被 3、11、31 同时整除，用这些 <span class="math inline">\(A\)</span> 都漏检。</p>
+<p>让 <span class="math inline">\(A = 2^a - 1\)</span> 就得到<strong>低成本乘积码</strong>：乘 <span class="math inline">\(A\)</span> 只需”移位 + 减”（逐 <span class="math inline">\(a\)</span> 位做的话只要一个 <span class="math inline">\(a\)</span> 位加法器、一个 <span class="math inline">\(a\)</span> 位寄存器和一个进位触发器），除 <span class="math inline">\(A\)</span> 同样简单——由 <span class="math inline">\(y = (2^a - 1)x\)</span> 求 <span class="math inline">\(x\)</span> 等价于算 <span class="math inline">\(2^a x - y\)</span>，而 <span class="math inline">\(2^a x\)</span> 的末 <span class="math inline">\(a\)</span> 位必为 0，于是可以逐段反推出 <span class="math inline">\(x\)</span>。</p>
+<p>以 <span class="math inline">\(A = 7\)</span>（<span class="math inline">\(a = 3\)</span>）为例走一遍校验：<span class="math inline">\(x = 25\)</span> 编码为 <span class="math inline">\(y = 7x = 175\)</span>。校验时把 <span class="math inline">\(y\)</span> 按 3 位分段 <span class="math inline">\(010\,101\,111_{two}\)</span>，逐段做模 7 累加（循环进位）得 <span class="math inline">\(2 + 5 + 7 \equiv 0 \pmod 7\)</span>——能整除，码字合法。若某一位翻转使 <span class="math inline">\(y\)</span> 变为 <span class="math inline">\(183\)</span>，分段和变为 <span class="math inline">\(2 + 5 + 7 + 8 \equiv 1 \pmod 7\)</span>，立刻检出。编码端同样便宜：<span class="math inline">\(7x = 8x - x\)</span>，一次移位减即得。</p>
+<p><strong>定理 27.1</strong>：用 <span class="math inline">\(A = 2^a - 1\)</span> 的低成本乘积码，可检出算术权重不超过 <span class="math inline">\(a-1\)</span> 的<strong>单向错误</strong>（所有出错位的翻转方向一致，在 CMOS 里是很典型的错误形态）。</p>
+<p>举例：<span class="math inline">\(A = 15\)</span>（<span class="math inline">\(a = 4\)</span>）除了所有权 1 错误，还能检出权重 2、3 的单向错误，因为这类错误幅度不会是 15 的倍数：<span class="math inline">\(8 + 4 = 12\)</span>、<span class="math inline">\(128 + 4 = 132\)</span>、<span class="math inline">\(16 + 4 + 2 = 22\)</span>、<span class="math inline">\(256 + 16 + 2 = 274\)</span>，全都不是 15 的倍数。</p>
+<p>编码后的算术也很整洁：</p>
+<p><span class="math display">\[
+Ax \pm Ay = A(x \pm y) \quad \text{（加减直接做）}, \qquad
+Aa \times Ax = A^2 ax \quad \text{（乘完要除以 } A \text{ 才是码字）}
+\]</span></p>
+<p>除法最麻烦。由 <span class="math inline">\(z = qd + s\)</span> 有 <span class="math inline">\(Az = q(Ad) + As\)</span>：<strong>余数是编码形式的，商却是裸的</strong>——算商的过程中出的错一个也查不出来。对策是先把被除数预乘 <span class="math inline">\(A\)</span>，用 <span class="math inline">\(A^2 z\)</span> 除以 <span class="math inline">\(Ad\)</span>，再把末位 radix-<span class="math inline">\(2^a\)</span> 商数字调整到区间 <span class="math inline">\([-2^a + 2,\, 1]\)</span> 内使修正后的商 <span class="math inline">\(q^{**}\)</span> 正好是 <span class="math inline">\(A\)</span> 的倍数。开方有完全类似的问题（<span class="math inline">\(\lfloor\sqrt{A^2 x}\rfloor\)</span> 通常不等于 <span class="math inline">\(A\lfloor\sqrt{x}\rfloor\)</span>），用同一套路解决。</p>
+<p>AN 码属于<strong>非分离码（nonseparable）</strong>：数据和校验信息绞在一起，看一眼 <span class="math inline">\(AN\)</span> 得不出 <span class="math inline">\(N\)</span>。这带来一个常被忽视的工程后果：<strong>每次要把数值送去显示、比较或做格式转换，都得先做一次除 <span class="math inline">\(A\)</span> 解码</strong>——在非分离码保护全系统的方案里，编解码器的速度与自校验能力本身也成了关键路径的一部分。</p>
+<p>不过有些操作在非分离码上依然免费：<span class="math inline">\(A\)</span> 取正数时 <span class="math inline">\(Ax\)</span> 与 <span class="math inline">\(Ay\)</span> 的大小顺序与 <span class="math inline">\(x, y\)</span> 一致，因此<strong>比较与判号可以直接在编码态做</strong>；加减法也免费。真正需要解码的是溢出判断、浮点规格化、与外设交换这类必须解读绝对数值的操作。设计非分离码系统时，把”哪些操作必须解码”列成清单，是避免解码器沦为新单点的前提。</p>
+</section>
+<section id="剩余码与反向剩余码" class="level3">
+<h3 class="anchored" data-anchor-id="剩余码与反向剩余码">剩余码与反向剩余码</h3>
+<p>剩余码把数编成配对 <span class="math inline">\((N, C(N))\)</span>，其中 <span class="math inline">\(C(N) = N \bmod A\)</span>——这是<strong>分离码</strong>，数据部分和校验部分互不混淆，因此”解码”（读出真值）是零成本的。取 <span class="math inline">\(A = 2^a - 1\)</span> 时编码只要把 <span class="math inline">\(N\)</span> 的 <span class="math inline">\(a\)</span> 位分段做模 <span class="math inline">\(2^a - 1\)</span> 加法（<span class="math inline">\(a\)</span> 位加法器 + 循环进位），既可串行也可排成二叉树并行。</p>
+<p>算术运算同样干净：</p>
+<p><span class="math display">\[
+(x, C(x)) \pm (y, C(y)) = \bigl(x \pm y,\ (C(x) \pm C(y)) \bmod A\bigr)
+\]</span></p>
+<p><span class="math display">\[
+(a, C(a)) \times (x, C(x)) = \bigl(a \times x,\ (C(a) \times C(x)) \bmod A\bigr)
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch27/fig27_04.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 27.4 带剩余校验的算术处理器：主通路算数据部分，小的模 A 校验处理器并行算校验部分，两者比对产生错误指示</figcaption>
+</figure>
+</div>
+<p>按图 27.4 搭出来的结构是全章最有价值的一张图：<strong>主算术处理器 + 小的校验处理器 + 比较器</strong>。这正是”弃九法（casting out nines）“的硬件版本——我们手算乘法时习惯用”两边各自的数字和对 9 取余是否一致”来快速验算，本质上是同一个想法。</p>
+<p>举个具体数字，<span class="math inline">\(A = 3\)</span>：<span class="math inline">\(x = 25\)</span> 的剩余 <span class="math inline">\(C(25) = 1\)</span>，<span class="math inline">\(y = 13\)</span> 的剩余 <span class="math inline">\(C(13) = 1\)</span>；和 <span class="math inline">\(38\)</span> 的剩余应为 <span class="math inline">\((1+1) \bmod 3 = 2\)</span>，而 <span class="math inline">\(38 \bmod 3 = 2\)</span>，一致。换成 AN 码：<span class="math inline">\(A=3\)</span> 时 <span class="math inline">\(x \to 75\)</span>、<span class="math inline">\(y \to 39\)</span>，和 <span class="math inline">\(=114 = 3 \times 38\)</span>；若第 3 位（权值 8）翻转得到 <span class="math inline">\(122\)</span>，除以 3 不整除 → 检出。</p>
+<p>开销账也算一下：<span class="math inline">\(k = 32\)</span> 位数据配 <span class="math inline">\(A = 3\)</span>（<span class="math inline">\(a = 2\)</span>）的剩余码，校验位只有 2 位，冗余 6%；校验处理器就是一个 2 位的模 3 加法器（含循环进位修正），面积不到主加法器的 5%。<strong>位宽越大，剩余码的相对开销越小</strong>——这是它在宽数据通路上极具吸引力的原因。</p>
+<p>但剩余码对<strong>单向多位错误</strong>的能力弱于乘积码：<span class="math inline">\(A = 15\)</span> 的剩余码检不出”数据最低位与剩余最低位同时由 0 变 1”这类权重 2 错误——因为这等于给数据和剩余<strong>同时加 1</strong>，结果仍是一个合法码字。</p>
+<p>修法是<strong>反向剩余码（inverse residue code）</strong>：校验部分不再是 <span class="math inline">\(N \bmod A\)</span>，而是 <span class="math inline">\(A - (N \bmod A)\)</span>。当 <span class="math inline">\(A = 2^a - 1\)</span> 时它恰好是 <span class="math inline">\(N \bmod A\)</span> 的<strong>逐位取反</strong>。单向错误现在会使数据部分与校验部分朝<strong>相反方向</strong>变化，于是更容易暴露。这一点可以严格化：把 <span class="math inline">\(a\)</span> 位的反向剩余 <span class="math inline">\(C'(N)\)</span> 拼到 <span class="math inline">\(k\)</span> 位 <span class="math inline">\(N\)</span> 的最低位一侧，所得 <span class="math inline">\((k+a)\)</span> 位数恰好是 <span class="math inline">\(A\)</span> 的倍数，于是有</p>
+<p><strong>定理 27.2</strong>：用 <span class="math inline">\(A = 2^a - 1\)</span> 的低成本反向剩余码，可检出算术权重不超过 <span class="math inline">\(a-1\)</span> 的单向错误。</p>
+<p>三者的代价比较也值得记：位宽开销上，三者都需要 <span class="math inline">\(a\)</span> 个额外位；做加减乘时，剩余码比乘积码<strong>简单</strong>（不需要乘除 <span class="math inline">\(A\)</span>）；做除法时则相反，剩余码更难（校验处理器无法独立工作，必须与主处理器交互才能算出结果的余）。</p>
+<p>把三种码放进应用场景里看：总线与寄存器堆的端到端保护选奇偶或剩余码（分离、解码免费）；运算密集且错误形态以单向多位为主的定制数据通路，选低成本乘积码或反向剩余码；需要在线纠错的场合才会走到双剩余码乃至更多模数。没有一种码通吃，但”<span class="math inline">\(A = 2^a - 1\)</span> 的低成本形式”是所有场景的共同底座。</p>
+<p>另外两条深刻的”不可能”结论值得背下来：</p>
+<ul>
+<li>剩余类码是<strong>唯一</strong>能够校验加法器的分离码（Peterson, 1958）；</li>
+<li>按位逻辑运算（AND/OR/XOR）无法用低于 100% 冗余的任何编码方案来检错（Peterson &amp; Rabin, 1959）——也就是说，<strong>对逻辑运算，除了复制比较别无捷径</strong>。</li>
+</ul>
+<div class="callout callout-style-default callout-note callout-titled" title="设计要点">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>设计要点
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>算术码的精髓：<strong>校验通道与数据通道并行、各自独立运算，结果互相比对</strong>。校验通道位宽小（模 3 只需 2 位），面积开销 10-30%，却能罩住整个数据通路——比全复制（DMR）便宜得多。</p>
+</div>
+</div>
+</section>
+</section>
+<section id="算术纠错码arithmetic-error-correcting-codes" class="level2">
+<h2 class="anchored" data-anchor-id="算术纠错码arithmetic-error-correcting-codes">27.3 算术纠错码（Arithmetic Error-Correcting Codes）</h2>
+<p>把剩余码扩展到<strong>多个模数</strong>：模 <span class="math inline">\(m_1, m_2\)</span> 的两组剩余可提供纠错所需冗余（本质是 RNS 的纠错应用，27.6 节）。乘积码（AN 码的 <span class="math inline">\(A\)</span> 取复合数）也能提供纠错能力。纠错码的代价显著高于检错码——多数安全设计选”<strong>检错 + 重算/重启</strong>”而非在线纠错。</p>
+<p>典型的代表是<strong>双剩余码（biresidue code）</strong>：数 <span class="math inline">\(N\)</span> 编成三元组 <span class="math inline">\((N, C(N), D(N))\)</span>，其中 <span class="math inline">\(C(N) = N \bmod A\)</span>、<span class="math inline">\(D(N) = N \bmod B\)</span>。<span class="math inline">\(k\)</span> 位数据总共需要 <span class="math inline">\(k + \lceil \log_2 A \rceil + \lceil \log_2 B \rceil\)</span> 位。两个校验处理器可以并行工作，<strong>不损失速度</strong>。</p>
+<p>纠错的判据很清晰：</p>
+<ul>
+<li>若只有 <span class="math inline">\(C(N)\)</span> 出错：<span class="math inline">\(C\)</span> 侧的校验失败、<span class="math inline">\(D\)</span> 侧通过 → 重算 <span class="math inline">\(N \bmod A\)</span> 即可纠正；</li>
+<li>若 <span class="math inline">\(N\)</span> 出错（且错误幅度不是 <span class="math inline">\(A\)</span> 或 <span class="math inline">\(B\)</span> 的倍数）：两侧都失败 → 定位到数据部分。此时 <span class="math display">\[
+\bigl[(N_{wrong} \bmod A) - C(N)\bigr] \bmod A, \qquad
+\bigl[(N_{wrong} \bmod B) - D(N)\bigr] \bmod B
+\]</span> 这对差值构成<strong>错误综合征（error syndrome）</strong>；只要不同错误对应的综合征互不相同，就可从综合征表反查出错误值并减掉。</li>
+</ul>
+<p>以 <span class="math inline">\(A = 7\)</span>、<span class="math inline">\(B = 15\)</span> 为例：<span class="math inline">\(|E| \le 2048\)</span> 内的所有权重 1 误差都有独一无二的综合征（例如 <span class="math inline">\(E = 64\)</span> 的模 7/模 15 余量是 <span class="math inline">\((1, 4)\)</span>，<span class="math inline">\(E = -64\)</span> 是 <span class="math inline">\((6, 11)\)</span>），因此可纠；<span class="math inline">\(E = 64 \times 64 = 4096\)</span> 之后综合征开始循环重复（<span class="math inline">\((1,1)\)</span> 与 <span class="math inline">\(E=1\)</span> 相同）。结论：<strong>这套码只能保证数据部分在 12 位以内</strong>。两个剩余共需 7 位表示，于是冗余为 <span class="math inline">\(7/12 \approx 58\%\)</span>。</p>
+<p>综合征表长什么样？把 <span class="math inline">\(E = \pm 2^i\)</span> 逐个代入 <span class="math inline">\((E \bmod 7,\ E \bmod 15)\)</span>：<span class="math inline">\(E = 1 \to (1,1)\)</span>，<span class="math inline">\(2 \to (2,2)\)</span>，<span class="math inline">\(4 \to (4,4)\)</span>，<span class="math inline">\(8 \to (1,8)\)</span>，<span class="math inline">\(16 \to (2,1)\)</span>，<span class="math inline">\(32 \to (4,2)\)</span>，<span class="math inline">\(64 \to (1,4)\)</span>，<span class="math inline">\(128 \to (2,8)\)</span>，<span class="math inline">\(256 \to (4,1)\)</span>，<span class="math inline">\(512 \to (1,2)\)</span>，<span class="math inline">\(1024 \to (2,4)\)</span>，<span class="math inline">\(2048 \to (4,8)\)</span>——12 个值互不相同，负值对称取余也不冲突；而 <span class="math inline">\(E = 2^{12} = 4096\)</span> 回到 <span class="math inline">\((1,1)\)</span>，与 <span class="math inline">\(E = 1\)</span> 相撞。数据部分 12 位的上限，就是这张表”撞车”的位置。</p>
+<p>换成乘积码做同样的事要贵得多：取 <span class="math inline">\(A \times B = 105\)</span>，为了让所有的权重 1 错误都有不同余量，整个码字宽度必须限制在 12 位以内，最大可表示数只有 <span class="math inline">\(4095/105 = 39\)</span>——换算成约 5.3 位有效数据，冗余高达 <span class="math inline">\(127\%\)</span>。<strong>分离与否，代价差了一倍多。</strong></p>
+<p>一般情形：<span class="math inline">\(A = 2^a - 1\)</span>、<span class="math inline">\(B = 2^b - 1\)</span> 且互素时，双剩余码可以支撑 <span class="math inline">\(ab\)</span> 位数据部分做权重 1 纠错，冗余为 <span class="math inline">\((a+b)/(ab) = 1/a + 1/b\)</span>。把 <span class="math inline">\(a, b\)</span> 取大一点，冗余可以压得很低——这是设计中最实用的一条标度律。</p>
+<p>在线纠错真正值得付出的场景是<strong>无法重算</strong>的地方：深空探测器（重传的代价是几十分钟的单程时延）、硬实时控制回路（错过截止期即失效）、以及不可中断的长周期任务。数据中心与多数车载 ECU 的主流选择仍是”检错 + 重算/重启”，因为纠错所需的冗余足以把能效指标拖垮，而重算的成本往往只是几拍流水。</p>
+<p>最后一条很有价值的观察：<strong>既然算术检错/纠错码既罩得住运算也罩得住存储与传输，全系统统一用一种码就可以避免频繁的编解码</strong>，也消除了数据在”裸状态”下被搬运时的风险敞口。</p>
+</section>
+<section id="自校验功能单元self-checking-function-units" class="level2">
+<h2 class="anchored" data-anchor-id="自校验功能单元self-checking-function-units">27.4 自校验功能单元（Self-Checking Function Units）</h2>
+<p>设计目标：单元内部任何单点故障，要么输出正确，要么触发错误指示（<strong>故障安全 fault-secure</strong> 或 <strong>自测试 self-testing</strong> 性质）。手段：</p>
+<ul>
+<li><strong>复制 + 比较（DMR）</strong>：两份硬件 + 比较器——100% 面积开销，但概念最简、覆盖最彻底（含瞬时故障）；</li>
+<li><strong>时间冗余（RESO/RECO）</strong>：同一硬件用变换后的输入算两遍（如取补），比对结果——几乎零面积开销，代价是双倍时间；</li>
+<li><strong>预测逻辑</strong>：进位预测（用输入独立算出 <span class="math inline">\(c_{out}\)</span> 的估计）与实际输出比对——加法器的轻量自检；</li>
+<li><strong>双轨/差分逻辑</strong>：每比特用互补两根线表示，非法组合即错误——异步设计的附带福利。</li>
+</ul>
+<p>自校验单元分为”带编码输入/输出”与”不带编码输入/输出”两种。把图 27.4 中由外部提供的 <span class="math inline">\(x \bmod A\)</span>、<span class="math inline">\(y \bmod A\)</span> 改成在内部自行计算，就得到一个输入输出都无需编码、但内部自校验的算术单元。</p>
+<p>自校验设计的基本契约是：<strong>规定的故障集合内的任何故障，要么被屏蔽（不影响输出正确性），要么把一个非码字推到输出上</strong>——后者要么被输出端的码检验器当场抓到，要么被下一级自校验模块继续传播（要求下一个模块在收到非码字输入时就吐出非码字输出），最终总要露馅。这与浮点里 NaN 的传播方式惊人相似。</p>
+<p>文献里把这套契约拆成两个正式性质：<strong>故障安全（fault-secure）</strong>——规定故障集合内的故障要么不产生错误输出、要么产生非码字；<strong>自测试（self-testing）</strong>——规定故障集合内的每个故障，至少存在一组正常输入能让它暴露为非码字。两者兼备的单元称为<strong>完全自校验（totally self-checking, TSC）</strong>。只有故障安全没有自测试的单元，故障可能永远潜伏；只有自测试没有故障安全的单元，故障可能在被触发暴露之前就已污染输出。</p>
+<p>时间冗余值得再展开一点。<strong>RESO（recomputing with shifted operands，移位操作数重算）</strong>利用算术的位移性质：第一遍正常计算，第二遍把操作数左移 <span class="math inline">\(c\)</span> 位再算，结果应恰好是第一遍的 <span class="math inline">\(2^c\)</span> 倍；两遍不符即报警。它能抓住的故障类型取决于功能单元对位移的”协变性”——加减法、乘法都对左移协变，因此同一硬件、两份时间就能实现接近 DMR 的覆盖率，面积开销几乎为零。这是资源受限场景（小型嵌入式控制器、传感器节点）里性价比最高的容错手段。</p>
+<p><strong>校验器本身必须自校验</strong>，这是最容易被忽略的一环。以反向剩余码 <span class="math inline">\((N, C'(N))\)</span> 为例：算出 <span class="math inline">\(N \bmod A\)</span>，它必须恰好等于 <span class="math inline">\(C'(N)\)</span> 的逐位取反。检验两个 <span class="math inline">\(b\)</span> 位数是否互为取反，等价于要求所有信号对 <span class="math inline">\((x_i, y_i)\)</span> 都取 <span class="math inline">\((1,0)\)</span> 或 <span class="math inline">\((0,1)\)</span>——这是一个把布尔值做 AND 的问题，而这些布尔值本身用双轨编码：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>逻辑值</th>
+<th>编码</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><span class="math inline">\((1, 0)\)</span> 或 <span class="math inline">\((0, 1)\)</span></td>
+</tr>
+<tr class="even">
+<td>0</td>
+<td><span class="math inline">\((0, 0)\)</span> 或 <span class="math inline">\((1, 1)\)</span></td>
+</tr>
+</tbody>
+</table>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch27/fig27_05.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 27.5 自校验码检验器使用的两输入 AND 电路：两个输入 (xi, yi) 与 (xj, yj) 各自为双轨编码的布尔值</figcaption>
+</figure>
+</div>
+<p>用图 27.5 的两输入 AND 电路搭成树，就得到一个自校验校验器：<strong>任何单个门或线的故障都不可能对非码字输入产生有效的 <span class="math inline">\((1,0)/(0,1)\)</span> 输出</strong>。这里有一条通用教训：<strong>只有一根输出线的校验器不可能是自校验的</strong>——输出线上一个固定型故障就能给出误导性结果。</p>
+<p>还有一种风格不同的路子是<strong>结果校验（result checking）</strong>，对应软件容错里的”验收测试（acceptance testing）“。例如验证开方器：把算出的根平方回去与被开方数比较。只要”平方过程的错误”与”开方过程的错误”独立、不太可能相互抵消，通过测试的结果就以极高概率正确。验收测试不要求完美覆盖——如果假设故障是永久性的且极少发生，那么<strong>周期性检查</strong>（而非并发或在线检查）也许就够了：例如隔一段时间拿若干随机操作数跑一遍验证，目的是让”补偿性错误”不至于长期掩盖同一个坏元器件。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch27/fig27_06.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 27.6 带奇偶编码输入/输出的自校验加法器：(a) 奇偶预测，(b) 奇偶保持</figcaption>
+</figure>
+</div>
+<p>奇偶码冗余极低（一位），虽然单次覆盖率不高，但按”长期看能在合理时间内发现故障件”的标准，它往往是最划算的选择。难点在于<strong>奇偶码对算术不封闭</strong>，必须想办法”预测”输出的奇偶。预测的基本恒等式是</p>
+<p><span class="math display">\[
+p(s) = p(x) \oplus p(y) \oplus p(c)
+\]</span></p>
+<p>其中 <span class="math inline">\(p(c)\)</span> 是加法过程中全部内部进位位的奇偶。于是预测器只需从输入独立算出进位链的奇偶——比完整加法便宜得多，但仍需一条精简的进位网络；进位网络本身的故障也被这一比对覆盖。(a) 图用这样一条独立的<strong>奇偶预测器</strong>并联在数据通路旁；(b) 图则换思路：先把奇偶编码的输入转成<strong>偶奇偶的 BSD 数</strong>，用一个<strong>保奇偶的 BSD 加法器</strong>算出偶奇偶的冗余和，再转回奇偶编码的常规输出。(b) 的成立依赖于一个巧妙的事实：可以把两个相邻 BSD 数字编成一个偶奇偶的 4 位码——因为数字 0 同时有 <span class="math inline">\(+0\)</span> 与 <span class="math inline">\(-0\)</span> 两种表示，正好提供奇奇偶、偶奇偶两种编码选择，闭合才得以成立。对 2 的补码操作数还需要的少量调整可见书末文献 [Parh02]。</p>
+</section>
+<section id="算法级容错algorithm-based-fault-tolerance-abft" class="level2">
+<h2 class="anchored" data-anchor-id="算法级容错algorithm-based-fault-tolerance-abft">27.5 算法级容错（Algorithm-Based Fault Tolerance, ABFT）</h2>
+<p>在<strong>算法层</strong>嵌入校验，而非电路层：</p>
+<ul>
+<li>矩阵乘法：给矩阵加一行/列校验和，乘积矩阵的校验行列应与”校验行列的乘积”一致——一个校验向量罩住整个 <span class="math inline">\(O(n^3)\)</span> 计算，开销 <span class="math inline">\(O(n^2)\)</span>；</li>
+<li>FFT、卷积、线性代数内核都有类似的”校验和保持”结构；</li>
+<li>ABFT 是 GPU/加速器容错的主力路线（电路级防护在大阵列上太贵）。</li>
+</ul>
+<p>把这套东西写具体。向量（一行或一列数）的<strong>校验和</strong>是各元素对某个<strong>校验常数</strong> <span class="math inline">\(A\)</span> 的代数和。对 <span class="math inline">\(m \times n\)</span> 矩阵 <span class="math inline">\(M\)</span> 定义：</p>
+<ul>
+<li>行校验和矩阵 <span class="math inline">\(M_r\)</span>：<span class="math inline">\(m \times (n+1)\)</span>，前 <span class="math inline">\(n\)</span> 列同 <span class="math inline">\(M\)</span>，第 <span class="math inline">\(n\)</span> 列是各行校验和；</li>
+<li>列校验和矩阵 <span class="math inline">\(M_c\)</span>：<span class="math inline">\((m+1) \times n\)</span>，前 <span class="math inline">\(m\)</span> 行同 <span class="math inline">\(M\)</span>，第 <span class="math inline">\(m\)</span> 行是各列校验和；</li>
+<li>全校验和矩阵 <span class="math inline">\(M_f = (M_r)_c\)</span>：<span class="math inline">\((m+1) \times (n+1)\)</span>。</li>
+</ul>
+<p>以 <span class="math inline">\(A = 8\)</span> 为例：</p>
+<p><span class="math display">\[
+M = \begin{pmatrix} 2 &amp; 1 &amp; 6 \\ 5 &amp; 3 &amp; 4 \\ 3 &amp; 2 &amp; 7 \end{pmatrix}, \quad
+M_r = \begin{pmatrix} 2 &amp; 1 &amp; 6 &amp; 1 \\ 5 &amp; 3 &amp; 4 &amp; 4 \\ 3 &amp; 2 &amp; 7 &amp; 4 \end{pmatrix}, \quad
+M_c = \begin{pmatrix} 2 &amp; 1 &amp; 6 \\ 5 &amp; 3 &amp; 4 \\ 3 &amp; 2 &amp; 7 \\ 2 &amp; 6 &amp; 1 \end{pmatrix}, \quad
+M_f = \begin{pmatrix} 2 &amp; 1 &amp; 6 &amp; 1 \\ 5 &amp; 3 &amp; 4 &amp; 4 \\ 3 &amp; 2 &amp; 7 &amp; 4 \\ 2 &amp; 6 &amp; 1 &amp; 1 \end{pmatrix}
+\]</span></p>
+<p>逐项核对不难：<span class="math inline">\(2+1+6 = 9 \equiv 1 \pmod 8\)</span>，<span class="math inline">\(2+5+3 = 10 \equiv 2\)</span>，右下角的 <span class="math inline">\(1\)</span> 无论是横向加（<span class="math inline">\(2+6+1 = 9\)</span>）还是纵向加（<span class="math inline">\(1+4+4 = 9\)</span>）都一致。</p>
+<p>有了这些定义，核心结论一句话：</p>
+<p><strong>定理 27.3</strong>：若 <span class="math inline">\(P = X \times Y\)</span>，则 <span class="math inline">\(P_f = X_c \times Y_r\)</span>。</p>
+<p><strong>定理 27.4</strong>：在全校验和矩阵中，<strong>任一个错误元素可被纠正，任意三个错误元素可被检出</strong>。</p>
+<p>纠错的具体操作也值得一说：若 <span class="math inline">\(P_f\)</span> 中第 <span class="math inline">\(i\)</span> 行的行校验和与该行元素重算值不符、且第 <span class="math inline">\(j\)</span> 列的列校验和也不符，则交点 <span class="math inline">\((i, j)\)</span> 就是出错元素，其修正量等于行（或列）校验和的差值——行列交叉定位，一次减法修复。只有当错误恰好落在同一行或同一列的多个元素上时，才退化到”只能检、不能纠”的情形，这正是定理 27.4 中”纠一检三”的来源。</p>
+<p>工程含义非常清楚：把 <span class="math inline">\(X_c\)</span> 与 <span class="math inline">\(Y_r\)</span> 直接喂给标准矩阵乘法硬件，然后检查乘积矩阵的最后一行/最后一列是否与”由其余元素算出的校验和”一致，就能发现任何错误。开销只是矩阵尺寸从 <span class="math inline">\(n \times n\)</span> 变成 <span class="math inline">\((n+1) \times (n+1)\)</span>——相对计算量的 <span class="math inline">\(O(n^3)\)</span>，这几乎免费。对于硬件乘法器上一个瞬时毛刺这种”高度局部化”的错误（最多波及乘积矩阵的若干元素），上述方案既能检出也能纠正。</p>
+<p>同样的”校验和保持”结构存在于 FFT：DFT 是线性变换，输入序列全体求和得到的额外样本经 FFT 后，等于输出频域分量全体求和——把”输入和”作为一个校验通道随主流一起算，输出端一次求和即可验证整个 <span class="math inline">\(O(n\log n)\)</span> 计算。卷积、FIR、各类线性代数内核都有各自的廉价不变量可用。</p>
+<p>校验和还可以<strong>加权</strong>：给第 <span class="math inline">\(i\)</span> 个元素配权重 <span class="math inline">\(w_i\)</span>（最简单的取 <span class="math inline">\(w_i = i\)</span>），则加权和不仅能报告”有错”，还能指出错误的位置——未加权校验和发现”和变了”，加权校验和进一步回答”和在哪里变了”。ABFT 文献中两者常搭配使用，用接近翻倍的校验开销换来错误定位能力。</p>
+<p>要注意的是浮点元素会让等式<strong>近似成立</strong>，于是”怎样才算相等”变成了一个需要阈值的问题；更长篇幅的讨论见书末文献 [Dutt96]。</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="与可靠性的现代交汇">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>与可靠性的现代交汇
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>大模型训练中的”静默数据损坏（SDC）“事件让工业界重新发现 ABFT 的价值：万卡集群跑一个月，硬件瞬态错误不是”会不会发生”而是”发生几次”。算法级校验 + 周期 checkpoint 是当前的事实标准。</p>
+</div>
+</div>
+</section>
+<section id="容错-rns-算术fault-tolerant-rns-arithmetic" class="level2">
+<h2 class="anchored" data-anchor-id="容错-rns-算术fault-tolerant-rns-arithmetic">27.6 容错 RNS 算术（Fault-Tolerant RNS Arithmetic）</h2>
+<p>第 4 章埋的线在这里收拢：<strong>冗余 RNS（RRNS）</strong>——在正常模数之外加冗余模数，余数向量空间的合法子集天然构成纠错码：</p>
+<ul>
+<li>一个通道出错 → 余数向量落在合法空间之外（检错）；</li>
+<li>足够冗余时可通过”逐通道剔除 + CRT 重建”定位并纠正错误通道；</li>
+<li>RNS 的通道独立性使<strong>错误天然隔离</strong>——不会跨通道传播，这是二进制数制给不了的奢侈品。</li>
+</ul>
+<p>做法：选定一组模数，使得<strong>去掉任意一个模数后，剩下的模数仍足以表示所需的动态范围</strong>。此时任何局限于单一剩余的错误都可检出——因为出错的那个剩余会与其余剩余不相容。注意冗余模数必须是<strong>最大的那个</strong>（记为 <span class="math inline">\(m\)</span>）：用其余所有剩余经 <strong>基底扩展（base extension）</strong> 算出该数模 <span class="math inline">\(m\)</span> 的剩余，再与实际表示中的模 <span class="math inline">\(m\)</span> 剩余比较即可。</p>
+<p>基底扩展本身是 RNS 里的常规操作：已知 <span class="math inline">\(x\)</span> 在一组模数下的剩余，求它在另一个模数下的剩余。标准路径是先经中国剩余定理（CRT）把剩余向量转成混合基数表示，再把混合基数数字对目标模数逐项加权取余。它本来就是 RNS 处理器做大小比较、符号判断、除法时的必备构建块，因此把它挪来当检错器用，几乎不需要新增硬件。</p>
+<p>混合基数转换的成本也不妨记下来：<span class="math inline">\(n\)</span> 个通道的基底扩展约需 <span class="math inline">\(n(n-1)/2\)</span> 次模乘加——通道数不多（4-8 个是 RNS 的常见规模）时，这是一块几级流水就能吞下的小电路。把检错逻辑做成可关闭的可选级，还能在非关键模式下把这部分功耗也省掉。</p>
+<p>这个方案最美的地方在于：<strong>算术算法一点都不用改</strong>。<span class="math inline">\(\pm\)</span> 和 <span class="math inline">\(\times\)</span> 照旧逐通道独立进行，检错能力纯粹靠”把动态范围做大”换来的。而基底扩展本来就是 RNS 处理器实现各种运算时的常用构建块，因此<strong>检错的硬件增量几乎为零</strong>——只要多留一个剩余通道。甚至可以在做非关键计算时关掉检错、把全部模数的动态范围都拿来用。</p>
+<p>加多个冗余剩余则可以得到更强的能力——既能检出更多错误，也能纠正某些类别的错误（多剩余码的机理与 27.3 节双剩余码的综合征逻辑完全相同）。同样是只增加校验算法与对应硬件，<strong>算术算法一行都不用改</strong>。</p>
+<p>冗余模数还提供一个有用的视角：<strong>RRNS 把动态范围当成一种可消费的预算</strong>——平时把预算花在表示更大的数上，需要容错时把同一笔预算花在区分合法与非法状态上。两种用途可以随时切换，这是 RRNS 设计独有的灵活性。</p>
+<p>看一个完整的例子。原模数集为 <span class="math inline">\(\{8, 7, 5, 3\}\)</span>，动态范围 <span class="math inline">\(8 \times 7 \times 5 \times 3 = 840\)</span>；添加冗余模数 <span class="math inline">\(13\)</span> 和 <span class="math inline">\(11\)</span> 后成为 6 通道 RRNS。数 <span class="math inline">\(25\)</span> 按模数从大到小排列表示为</p>
+<p><span class="math display">\[
+(12,\, 3,\, 1,\, 4,\, 0,\, 1)
+\]</span></p>
+<p>逐个核对：<span class="math inline">\(25 \bmod 13 = 12\)</span>、<span class="math inline">\(\bmod 11 = 3\)</span>、<span class="math inline">\(\bmod 8 = 1\)</span>、<span class="math inline">\(\bmod 7 = 4\)</span>、<span class="math inline">\(\bmod 5 = 0\)</span>、<span class="math inline">\(\bmod 3 = 1\)</span>。</p>
+<p>假设模 7 通道出错，剩余从 <span class="math inline">\(4\)</span> 变成 <span class="math inline">\(6\)</span>，得到受污染的数 <span class="math inline">\((-,\,-,\,1,\,6,\,0,\,1)\)</span>。用另外四个（非冗余）剩余做基底扩展：由 <span class="math inline">\((-,-,1,6,0,1)\)</span>（即 <span class="math inline">\(x \bmod 8 = 1\)</span>、<span class="math inline">\(x \bmod 7 = 6\)</span>、<span class="math inline">\(x \bmod 5 = 0\)</span>、<span class="math inline">\(x \bmod 3 = 1\)</span>）经 CRT 得 <span class="math inline">\(x = 265\)</span>，其模 13、模 11 剩余分别为 <span class="math inline">\(5\)</span> 和 <span class="math inline">\(1\)</span>，于是重建成</p>
+<p><span class="math display">\[
+(5,\, 1,\, 1,\, 6,\, 0,\, 1)
+\]</span></p>
+<p>受污染的原向量与重建向量的前两个分量之差为 <span class="math inline">\((12 - 5,\ 3 - 1) = (+7,\, +2)\)</span>——这就是<strong>错误综合征</strong>，它唯一地指向”出错的是模 7 通道”，并能给出该通道应有的修正量。整个流程与 27.3 节双剩余码的综合征表完全同构。</p>
+<div class="callout callout-style-default callout-important callout-titled" title="为什么 RNS 天生好容错">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">重要</span>为什么 RNS 天生好容错
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>二进制里一个进位错误能一路传播、翻转任意多位（见 27.1 节的例子）；RNS 里各通道<strong>没有进位联系</strong>，一个通道的错误永远只会污染那一个通道。加上”冗余模数 = 更大的动态范围”这一零成本保护层，RRNS 就成了少数几处<strong>数制本身即防御工事</strong>的设计。代价仍然是老问题：大小比较、符号判断、溢出检测这些全局操作难做（第 4.4 节）。</p>
+</div>
+</div>
+</section>
+<section id="本章小结" class="level2">
+<h2 class="anchored" data-anchor-id="本章小结">本章小结</h2>
+<ul>
+<li>故障→错误→失效；软错误率随工艺上升，数据通路防护从可选变必需。</li>
+<li>算术权值（最少带符号 <span class="math inline">\(2^i\)</span> 之和）而非汉明距离，才是算术错误的正确度量：一次进位错误可有 12 位汉明距离却只有权重 1。</li>
+<li>算术码（AN/乘积码、剩余码、反向剩余码）：校验通道平行于数据通道，10-30% 开销罩全局；<span class="math inline">\(A = 2^a-1\)</span> 让编解码变成移位加/循环进位。</li>
+<li>双剩余码支撑 <span class="math inline">\(ab\)</span> 位数据纠权重 1 错，冗余 <span class="math inline">\(1/a + 1/b\)</span>；乘积码做同样的事冗余高出一倍。</li>
+<li>自校验单元：校验器自身必须自校验且必须有两根输出线；DMR/时间冗余/奇偶预测-保持/验收测试，面积-时间-覆盖率各取所需。</li>
+<li>ABFT 用数据结构的数学不变量做校验，<span class="math inline">\(P_f = X_c \times Y_r\)</span>，开销相对计算量几乎为零。</li>
+<li>RRNS：通道天然隔离 + 冗余模数换来的零算法改动容错。</li>
+</ul>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./ch26.html" class="pagination-link" aria-label="第26章 低功耗算术（Low-Power Arithmetic）">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./ch28.html" class="pagination-link" aria-label="第28章 可重构算术（Reconfigurable Arithmetic）">
+        <span class="nav-page-text"><span class="chapter-title">第28章 可重构算术（Reconfigurable Arithmetic）</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 第27章 容错算术（Fault-Tolerant Arithmetic）</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章导读</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>芯片会出错：宇宙射线翻转存储位（软错误）、工艺缺陷、老化、电压扰动。安全关键系统（汽车、航天、医疗）要求算术单元**出错能被检测甚至纠正**。本章讲差错模型、算术编码（利用算术结构保持性的检错码）、自校验单元与算法级容错——第 4 章的冗余 RNS 在这里华丽返场。</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## 27.1 故障、错误与纠错码（Faults, Errors, and Error Codes）</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>术语链：**故障（fault）→ 错误（error）→ 失效（failure）**。</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>故障是物理原因（位翻转、固定 0/1、短路）；错误是故障导致的内部状态异常；失效是错误传播到系统边界造成的服务异常；</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**软错误（soft error）**：α 粒子/中子引发的瞬态翻转，随特征尺寸缩小而加剧——存储器早已标配 ECC，逻辑与数据通路的软错误防护是本章主题；</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>编码理论基础：汉明距离决定检错/纠错能力——距离 $d$ 的码可检 $d-1$ 错或纠 $\lfloor (d-1)/2 \rfloor$ 错。</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>**故障模型（fault model）**是一切讨论的起点：永久故障（stuck-at-0/1、桥接短路）、瞬时故障（软错误、电源毛刺）、间歇故障（老化边缘、接触不良）三类的防护难度递增。任何检错/纠错方案的评价都相对于某个故障模型才有意义——"可检全部单比特错"只在单事件翻转（SEU）模型下成立；工艺进入个位数纳米后，一次粒子撞击翻转多个相邻单元的多单元翻转（MCU）比例明显上升，单纯按单比特假设设计的码开始显得单薄。</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>量级上，静态 RAM 的软错误率约为每 Gbit 每 $10^9$ 小时数百到数千次（FIT 量级）；逻辑电路没有存储节点的电荷保持问题，错误率低 1-2 个数量级，但随电压下降、节点电荷减小而持续恶化。对一颗集成数十亿晶体管的芯片，"每天若干次瞬态翻转"是设计基线而非危言耸听——这正是把第 27 章从"航天专用话题"变成"通用设计议题"的原因。</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>业界的默认做法是**接送受保护、中间裸奔**（图 27.1）：通信链路与存储器由奇偶、校验和、SEC/DED 等码保护，而中间的运算部分没有任何保护——因为普通码**对算术运算不封闭**。两个偶校验数相加，结果未必还是偶校验；改动受校验和保护的数据表中的一个元素，就得重算整个校验和。解码/编码这道门槛正是算术码要解决的痛点。</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="al">![图 27.1 信息编码技术的常见应用方式：存储与传输环节有编码保护，中间的运算环节裸露](images/ch27/fig27_01.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>最直接的方案是**复制 + 比较**（检错）或**三模冗余 + 表决**（屏蔽单个错误），如图 27.2。两张图里有几个细节值得咀嚼：</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>(a) 图中**解码器被一起复制**了，否则解码器单点故障会漏检；而编码器是"关键元件"——它的输出是冗余（编码后的）的，因此可以把它设计成**自校验（self-checking）**的：一旦自身出问题就吐出一个非码字。</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>(b) 图中**表决器无法自校验**，因为它的输出是非冗余的。把表决与编码两个功能合并起来，才有可能做出自校验的表决-编码器。</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>三模之外推广到 $n$ 模可以容忍更多故障，但开销增长很快就不可接受。</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>可靠性的账可以用一个公式记住：设单模块可靠度为 $R$、表决器理想，则三模冗余（TMR）的可靠度为</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>R_{TMR} = 3R^2 - 2R^3</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>$R = 0.9$ 时 $R_{TMR} = 0.972$——单点故障被屏蔽的收益真实可见；但 $R$ 较低时 TMR 反而更差（三个不可靠部件加起来的暴露面更大）。这解释了为什么冗余只在"单模块本身已经相当可靠"的系统里有效，也解释了为什么表决器与比较器自身的可靠性必须单独论证——它们不在冗余的保护范围之内。</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a><span class="al">![图 27.2 用复制单元实现算术故障检测（a）与故障屏蔽/容错（b）：前者靠比较两路编码输出，后者靠三模表决](images/ch27/fig27_02.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>**为什么通信码不适合算术**。通信领域习惯按"随机错误""突发错误"分类，这在算术里没有意义：加法器进位链上一个门的故障可以翻转任意多个输出位。看图 27.3 的例子：</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a><span class="in">  0010 0111 0010 0001</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a><span class="in">+ 0101 1000 1101 0011</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="in">  0111 1111 1111 0100   ← 正确和</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a><span class="in">  1000 0000 0000 0100   ← 错误和（某级产生了错误的进位 1）</span></span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>两个结果的**汉明距离是 12**——看上去是"十二位错"。但它们的**数值差只有 $2^4 = 16$**！算术处理的是数，不是任意比特串，合适的度量应该是后者。</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>由此定义**算术权重（arithmetic weight）**：把一个正确值变成错误值所需相加的最少**带符号 2 的幂**的个数。上面的例子权重为 1；而 $\text{-}32752 = -2^{15} + 2^4$ 这类差值的权重为 2。相应地可以证明：$k$ 比特错误幅度的最小权重 BSD 表示最多有 $\lceil (k+1)/2 \rceil$ 个非零数字，且总能写成没有相邻非零数字的**规范 BSD 形式**——规范形式唯一，与算术权重的概念紧密相连。</span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a><span class="fu">## 27.2 算术检错码（Arithmetic Error-Detecting Codes）</span></span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>普通检错码（奇偶、汉明）为存储/传输设计，但**算术运算不保持码字结构**（两个合法码字相加一般不是合法码字）。**算术码**专为此设计：</span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**AN 码**：把数 $x$ 编码为 $A \cdot x$（$A$ 为常数，如 3）。加法保持结构：$Ax + Ay = A(x+y)$——结果仍是合法码字，能被 $A$ 整除即可检错。可检所有单比特错误（$A$ 选奇数时）；</span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**剩余码（residue code）**：编码 = 数据 + 其对模 $m$ 的剩余。加法后校验：$(x + y) \bmod m \stackrel{?}{=} (x \bmod m + y \bmod m) \bmod m$。$m = 3$（低成本剩余码）只需 2 位校验，可检单比特错；</span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**双剩余/反向剩余**：两份独立的剩余校验提高覆盖率。</span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>算术码有两条定义性质的要求：(1) 按**可检错误的算术权重**来刻画能力；(2) 允许**直接在编码操作数上做算术**。第二条是省钱的关键——比起全复制或三模冗余，算术码用低得多的冗余把整条数据通路罩住。</span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a><span class="fu">### 乘积码（AN 码）与低成本形式</span></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>数 $N$ 编码为 $AN$，校验就是检查能否被 $A$ 整除。**$A$ 取奇数时，所有权 1 的算术错误（含全部单比特错误）都能检出**：因为错误幅度为 $\pm 2^i$，而奇数 $A$ 不可能整除 $2^i$。权重 2 及以上的错误不保证可检——例如 $32736 = 2^{15} - 2^{5}$ 能被 3、11、31 同时整除，用这些 $A$ 都漏检。</span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>让 $A = 2^a - 1$ 就得到**低成本乘积码**：乘 $A$ 只需"移位 + 减"（逐 $a$ 位做的话只要一个 $a$ 位加法器、一个 $a$ 位寄存器和一个进位触发器），除 $A$ 同样简单——由 $y = (2^a - 1)x$ 求 $x$ 等价于算 $2^a x - y$，而 $2^a x$ 的末 $a$ 位必为 0，于是可以逐段反推出 $x$。</span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>以 $A = 7$（$a = 3$）为例走一遍校验：$x = 25$ 编码为 $y = 7x = 175$。校验时把 $y$ 按 3 位分段 $010\,101\,111_{two}$，逐段做模 7 累加（循环进位）得 $2 + 5 + 7 \equiv 0 \pmod 7$——能整除，码字合法。若某一位翻转使 $y$ 变为 $183$，分段和变为 $2 + 5 + 7 + 8 \equiv 1 \pmod 7$，立刻检出。编码端同样便宜：$7x = 8x - x$，一次移位减即得。</span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>**定理 27.1**：用 $A = 2^a - 1$ 的低成本乘积码，可检出算术权重不超过 $a-1$ 的**单向错误**（所有出错位的翻转方向一致，在 CMOS 里是很典型的错误形态）。</span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>举例：$A = 15$（$a = 4$）除了所有权 1 错误，还能检出权重 2、3 的单向错误，因为这类错误幅度不会是 15 的倍数：$8 + 4 = 12$、$128 + 4 = 132$、$16 + 4 + 2 = 22$、$256 + 16 + 2 = 274$，全都不是 15 的倍数。</span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>编码后的算术也很整洁：</span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>Ax \pm Ay = A(x \pm y) \quad \text{（加减直接做）}, \qquad</span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a>Aa \times Ax = A^2 ax \quad \text{（乘完要除以 } A \text{ 才是码字）}</span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a>除法最麻烦。由 $z = qd + s$ 有 $Az = q(Ad) + As$：**余数是编码形式的，商却是裸的**——算商的过程中出的错一个也查不出来。对策是先把被除数预乘 $A$，用 $A^2 z$ 除以 $Ad$，再把末位 radix-$2^a$ 商数字调整到区间 $[-2^a + 2,\, 1]$ 内使修正后的商 $q^{**}$ 正好是 $A$ 的倍数。开方有完全类似的问题（$\lfloor\sqrt{A^2 x}\rfloor$ 通常不等于 $A\lfloor\sqrt{x}\rfloor$），用同一套路解决。</span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a>AN 码属于**非分离码（nonseparable）**：数据和校验信息绞在一起，看一眼 $AN$ 得不出 $N$。这带来一个常被忽视的工程后果：**每次要把数值送去显示、比较或做格式转换，都得先做一次除 $A$ 解码**——在非分离码保护全系统的方案里，编解码器的速度与自校验能力本身也成了关键路径的一部分。</span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a>不过有些操作在非分离码上依然免费：$A$ 取正数时 $Ax$ 与 $Ay$ 的大小顺序与 $x, y$ 一致，因此**比较与判号可以直接在编码态做**；加减法也免费。真正需要解码的是溢出判断、浮点规格化、与外设交换这类必须解读绝对数值的操作。设计非分离码系统时，把"哪些操作必须解码"列成清单，是避免解码器沦为新单点的前提。</span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a><span class="fu">### 剩余码与反向剩余码</span></span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a>剩余码把数编成配对 $(N, C(N))$，其中 $C(N) = N \bmod A$——这是**分离码**，数据部分和校验部分互不混淆，因此"解码"（读出真值）是零成本的。取 $A = 2^a - 1$ 时编码只要把 $N$ 的 $a$ 位分段做模 $2^a - 1$ 加法（$a$ 位加法器 + 循环进位），既可串行也可排成二叉树并行。</span>
+<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a>算术运算同样干净：</span>
+<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a>(x, C(x)) \pm (y, C(y)) = \bigl(x \pm y,\ (C(x) \pm C(y)) \bmod A\bigr)</span>
+<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a>(a, C(a)) \times (x, C(x)) = \bigl(a \times x,\ (C(a) \times C(x)) \bmod A\bigr)</span>
+<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a><span class="al">![图 27.4 带剩余校验的算术处理器：主通路算数据部分，小的模 A 校验处理器并行算校验部分，两者比对产生错误指示](images/ch27/fig27_04.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a>按图 27.4 搭出来的结构是全章最有价值的一张图：**主算术处理器 + 小的校验处理器 + 比较器**。这正是"弃九法（casting out nines）"的硬件版本——我们手算乘法时习惯用"两边各自的数字和对 9 取余是否一致"来快速验算，本质上是同一个想法。</span>
+<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-105"><a href="#cb2-105" aria-hidden="true" tabindex="-1"></a>举个具体数字，$A = 3$：$x = 25$ 的剩余 $C(25) = 1$，$y = 13$ 的剩余 $C(13) = 1$；和 $38$ 的剩余应为 $(1+1) \bmod 3 = 2$，而 $38 \bmod 3 = 2$，一致。换成 AN 码：$A=3$ 时 $x \to 75$、$y \to 39$，和 $=114 = 3 \times 38$；若第 3 位（权值 8）翻转得到 $122$，除以 3 不整除 → 检出。</span>
+<span id="cb2-106"><a href="#cb2-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-107"><a href="#cb2-107" aria-hidden="true" tabindex="-1"></a>开销账也算一下：$k = 32$ 位数据配 $A = 3$（$a = 2$）的剩余码，校验位只有 2 位，冗余 6%；校验处理器就是一个 2 位的模 3 加法器（含循环进位修正），面积不到主加法器的 5%。**位宽越大，剩余码的相对开销越小**——这是它在宽数据通路上极具吸引力的原因。</span>
+<span id="cb2-108"><a href="#cb2-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-109"><a href="#cb2-109" aria-hidden="true" tabindex="-1"></a>但剩余码对**单向多位错误**的能力弱于乘积码：$A = 15$ 的剩余码检不出"数据最低位与剩余最低位同时由 0 变 1"这类权重 2 错误——因为这等于给数据和剩余**同时加 1**，结果仍是一个合法码字。</span>
+<span id="cb2-110"><a href="#cb2-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-111"><a href="#cb2-111" aria-hidden="true" tabindex="-1"></a>修法是**反向剩余码（inverse residue code）**：校验部分不再是 $N \bmod A$，而是 $A - (N \bmod A)$。当 $A = 2^a - 1$ 时它恰好是 $N \bmod A$ 的**逐位取反**。单向错误现在会使数据部分与校验部分朝**相反方向**变化，于是更容易暴露。这一点可以严格化：把 $a$ 位的反向剩余 $C'(N)$ 拼到 $k$ 位 $N$ 的最低位一侧，所得 $(k+a)$ 位数恰好是 $A$ 的倍数，于是有</span>
+<span id="cb2-112"><a href="#cb2-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-113"><a href="#cb2-113" aria-hidden="true" tabindex="-1"></a>**定理 27.2**：用 $A = 2^a - 1$ 的低成本反向剩余码，可检出算术权重不超过 $a-1$ 的单向错误。</span>
+<span id="cb2-114"><a href="#cb2-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-115"><a href="#cb2-115" aria-hidden="true" tabindex="-1"></a>三者的代价比较也值得记：位宽开销上，三者都需要 $a$ 个额外位；做加减乘时，剩余码比乘积码**简单**（不需要乘除 $A$）；做除法时则相反，剩余码更难（校验处理器无法独立工作，必须与主处理器交互才能算出结果的余）。</span>
+<span id="cb2-116"><a href="#cb2-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-117"><a href="#cb2-117" aria-hidden="true" tabindex="-1"></a>把三种码放进应用场景里看：总线与寄存器堆的端到端保护选奇偶或剩余码（分离、解码免费）；运算密集且错误形态以单向多位为主的定制数据通路，选低成本乘积码或反向剩余码；需要在线纠错的场合才会走到双剩余码乃至更多模数。没有一种码通吃，但"$A = 2^a - 1$ 的低成本形式"是所有场景的共同底座。</span>
+<span id="cb2-118"><a href="#cb2-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-119"><a href="#cb2-119" aria-hidden="true" tabindex="-1"></a>另外两条深刻的"不可能"结论值得背下来：</span>
+<span id="cb2-120"><a href="#cb2-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-121"><a href="#cb2-121" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>剩余类码是**唯一**能够校验加法器的分离码（Peterson, 1958）；</span>
+<span id="cb2-122"><a href="#cb2-122" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>按位逻辑运算（AND/OR/XOR）无法用低于 100% 冗余的任何编码方案来检错（Peterson &amp; Rabin, 1959）——也就是说，**对逻辑运算，除了复制比较别无捷径**。</span>
+<span id="cb2-123"><a href="#cb2-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-124"><a href="#cb2-124" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="设计要点"}</span>
+<span id="cb2-125"><a href="#cb2-125" aria-hidden="true" tabindex="-1"></a>算术码的精髓：**校验通道与数据通道并行、各自独立运算，结果互相比对**。校验通道位宽小（模 3 只需 2 位），面积开销 10-30%，却能罩住整个数据通路——比全复制（DMR）便宜得多。</span>
+<span id="cb2-126"><a href="#cb2-126" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb2-127"><a href="#cb2-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-128"><a href="#cb2-128" aria-hidden="true" tabindex="-1"></a><span class="fu">## 27.3 算术纠错码（Arithmetic Error-Correcting Codes）</span></span>
+<span id="cb2-129"><a href="#cb2-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-130"><a href="#cb2-130" aria-hidden="true" tabindex="-1"></a>把剩余码扩展到**多个模数**：模 $m_1, m_2$ 的两组剩余可提供纠错所需冗余（本质是 RNS 的纠错应用，27.6 节）。乘积码（AN 码的 $A$ 取复合数）也能提供纠错能力。纠错码的代价显著高于检错码——多数安全设计选"**检错 + 重算/重启**"而非在线纠错。</span>
+<span id="cb2-131"><a href="#cb2-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-132"><a href="#cb2-132" aria-hidden="true" tabindex="-1"></a>典型的代表是**双剩余码（biresidue code）**：数 $N$ 编成三元组 $(N, C(N), D(N))$，其中 $C(N) = N \bmod A$、$D(N) = N \bmod B$。$k$ 位数据总共需要 $k + \lceil \log_2 A \rceil + \lceil \log_2 B \rceil$ 位。两个校验处理器可以并行工作，**不损失速度**。</span>
+<span id="cb2-133"><a href="#cb2-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-134"><a href="#cb2-134" aria-hidden="true" tabindex="-1"></a>纠错的判据很清晰：</span>
+<span id="cb2-135"><a href="#cb2-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-136"><a href="#cb2-136" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>若只有 $C(N)$ 出错：$C$ 侧的校验失败、$D$ 侧通过 → 重算 $N \bmod A$ 即可纠正；</span>
+<span id="cb2-137"><a href="#cb2-137" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>若 $N$ 出错（且错误幅度不是 $A$ 或 $B$ 的倍数）：两侧都失败 → 定位到数据部分。此时</span>
+<span id="cb2-138"><a href="#cb2-138" aria-hidden="true" tabindex="-1"></a>  $$</span>
+<span id="cb2-139"><a href="#cb2-139" aria-hidden="true" tabindex="-1"></a>  \bigl<span class="co">[</span><span class="ot">(N_{wrong} \bmod A) - C(N)\bigr</span><span class="co">]</span> \bmod A, \qquad</span>
+<span id="cb2-140"><a href="#cb2-140" aria-hidden="true" tabindex="-1"></a>  \bigl<span class="co">[</span><span class="ot">(N_{wrong} \bmod B) - D(N)\bigr</span><span class="co">]</span> \bmod B</span>
+<span id="cb2-141"><a href="#cb2-141" aria-hidden="true" tabindex="-1"></a>  $$</span>
+<span id="cb2-142"><a href="#cb2-142" aria-hidden="true" tabindex="-1"></a>  这对差值构成**错误综合征（error syndrome）**；只要不同错误对应的综合征互不相同，就可从综合征表反查出错误值并减掉。</span>
+<span id="cb2-143"><a href="#cb2-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-144"><a href="#cb2-144" aria-hidden="true" tabindex="-1"></a>以 $A = 7$、$B = 15$ 为例：$|E| \le 2048$ 内的所有权重 1 误差都有独一无二的综合征（例如 $E = 64$ 的模 7/模 15 余量是 $(1, 4)$，$E = -64$ 是 $(6, 11)$），因此可纠；$E = 64 \times 64 = 4096$ 之后综合征开始循环重复（$(1,1)$ 与 $E=1$ 相同）。结论：**这套码只能保证数据部分在 12 位以内**。两个剩余共需 7 位表示，于是冗余为 $7/12 \approx 58\%$。</span>
+<span id="cb2-145"><a href="#cb2-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-146"><a href="#cb2-146" aria-hidden="true" tabindex="-1"></a>综合征表长什么样？把 $E = \pm 2^i$ 逐个代入 $(E \bmod 7,\ E \bmod 15)$：$E = 1 \to (1,1)$，$2 \to (2,2)$，$4 \to (4,4)$，$8 \to (1,8)$，$16 \to (2,1)$，$32 \to (4,2)$，$64 \to (1,4)$，$128 \to (2,8)$，$256 \to (4,1)$，$512 \to (1,2)$，$1024 \to (2,4)$，$2048 \to (4,8)$——12 个值互不相同，负值对称取余也不冲突；而 $E = 2^{12} = 4096$ 回到 $(1,1)$，与 $E = 1$ 相撞。数据部分 12 位的上限，就是这张表"撞车"的位置。</span>
+<span id="cb2-147"><a href="#cb2-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-148"><a href="#cb2-148" aria-hidden="true" tabindex="-1"></a>换成乘积码做同样的事要贵得多：取 $A \times B = 105$，为了让所有的权重 1 错误都有不同余量，整个码字宽度必须限制在 12 位以内，最大可表示数只有 $4095/105 = 39$——换算成约 5.3 位有效数据，冗余高达 $127\%$。**分离与否，代价差了一倍多。**</span>
+<span id="cb2-149"><a href="#cb2-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-150"><a href="#cb2-150" aria-hidden="true" tabindex="-1"></a>一般情形：$A = 2^a - 1$、$B = 2^b - 1$ 且互素时，双剩余码可以支撑 $ab$ 位数据部分做权重 1 纠错，冗余为 $(a+b)/(ab) = 1/a + 1/b$。把 $a, b$ 取大一点，冗余可以压得很低——这是设计中最实用的一条标度律。</span>
+<span id="cb2-151"><a href="#cb2-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-152"><a href="#cb2-152" aria-hidden="true" tabindex="-1"></a>在线纠错真正值得付出的场景是**无法重算**的地方：深空探测器（重传的代价是几十分钟的单程时延）、硬实时控制回路（错过截止期即失效）、以及不可中断的长周期任务。数据中心与多数车载 ECU 的主流选择仍是"检错 + 重算/重启"，因为纠错所需的冗余足以把能效指标拖垮，而重算的成本往往只是几拍流水。</span>
+<span id="cb2-153"><a href="#cb2-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-154"><a href="#cb2-154" aria-hidden="true" tabindex="-1"></a>最后一条很有价值的观察：**既然算术检错/纠错码既罩得住运算也罩得住存储与传输，全系统统一用一种码就可以避免频繁的编解码**，也消除了数据在"裸状态"下被搬运时的风险敞口。</span>
+<span id="cb2-155"><a href="#cb2-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-156"><a href="#cb2-156" aria-hidden="true" tabindex="-1"></a><span class="fu">## 27.4 自校验功能单元（Self-Checking Function Units）</span></span>
+<span id="cb2-157"><a href="#cb2-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-158"><a href="#cb2-158" aria-hidden="true" tabindex="-1"></a>设计目标：单元内部任何单点故障，要么输出正确，要么触发错误指示（**故障安全 fault-secure** 或 **自测试 self-testing** 性质）。手段：</span>
+<span id="cb2-159"><a href="#cb2-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-160"><a href="#cb2-160" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**复制 + 比较（DMR）**：两份硬件 + 比较器——100% 面积开销，但概念最简、覆盖最彻底（含瞬时故障）；</span>
+<span id="cb2-161"><a href="#cb2-161" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**时间冗余（RESO/RECO）**：同一硬件用变换后的输入算两遍（如取补），比对结果——几乎零面积开销，代价是双倍时间；</span>
+<span id="cb2-162"><a href="#cb2-162" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**预测逻辑**：进位预测（用输入独立算出 $c_{out}$ 的估计）与实际输出比对——加法器的轻量自检；</span>
+<span id="cb2-163"><a href="#cb2-163" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**双轨/差分逻辑**：每比特用互补两根线表示，非法组合即错误——异步设计的附带福利。</span>
+<span id="cb2-164"><a href="#cb2-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-165"><a href="#cb2-165" aria-hidden="true" tabindex="-1"></a>自校验单元分为"带编码输入/输出"与"不带编码输入/输出"两种。把图 27.4 中由外部提供的 $x \bmod A$、$y \bmod A$ 改成在内部自行计算，就得到一个输入输出都无需编码、但内部自校验的算术单元。</span>
+<span id="cb2-166"><a href="#cb2-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-167"><a href="#cb2-167" aria-hidden="true" tabindex="-1"></a>自校验设计的基本契约是：**规定的故障集合内的任何故障，要么被屏蔽（不影响输出正确性），要么把一个非码字推到输出上**——后者要么被输出端的码检验器当场抓到，要么被下一级自校验模块继续传播（要求下一个模块在收到非码字输入时就吐出非码字输出），最终总要露馅。这与浮点里 NaN 的传播方式惊人相似。</span>
+<span id="cb2-168"><a href="#cb2-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-169"><a href="#cb2-169" aria-hidden="true" tabindex="-1"></a>文献里把这套契约拆成两个正式性质：**故障安全（fault-secure）**——规定故障集合内的故障要么不产生错误输出、要么产生非码字；**自测试（self-testing）**——规定故障集合内的每个故障，至少存在一组正常输入能让它暴露为非码字。两者兼备的单元称为**完全自校验（totally self-checking, TSC）**。只有故障安全没有自测试的单元，故障可能永远潜伏；只有自测试没有故障安全的单元，故障可能在被触发暴露之前就已污染输出。</span>
+<span id="cb2-170"><a href="#cb2-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-171"><a href="#cb2-171" aria-hidden="true" tabindex="-1"></a>时间冗余值得再展开一点。**RESO（recomputing with shifted operands，移位操作数重算）**利用算术的位移性质：第一遍正常计算，第二遍把操作数左移 $c$ 位再算，结果应恰好是第一遍的 $2^c$ 倍；两遍不符即报警。它能抓住的故障类型取决于功能单元对位移的"协变性"——加减法、乘法都对左移协变，因此同一硬件、两份时间就能实现接近 DMR 的覆盖率，面积开销几乎为零。这是资源受限场景（小型嵌入式控制器、传感器节点）里性价比最高的容错手段。</span>
+<span id="cb2-172"><a href="#cb2-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-173"><a href="#cb2-173" aria-hidden="true" tabindex="-1"></a>**校验器本身必须自校验**，这是最容易被忽略的一环。以反向剩余码 $(N, C'(N))$ 为例：算出 $N \bmod A$，它必须恰好等于 $C'(N)$ 的逐位取反。检验两个 $b$ 位数是否互为取反，等价于要求所有信号对 $(x_i, y_i)$ 都取 $(1,0)$ 或 $(0,1)$——这是一个把布尔值做 AND 的问题，而这些布尔值本身用双轨编码：</span>
+<span id="cb2-174"><a href="#cb2-174" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-175"><a href="#cb2-175" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 逻辑值 <span class="pp">|</span> 编码 <span class="pp">|</span></span>
+<span id="cb2-176"><a href="#cb2-176" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|</span></span>
+<span id="cb2-177"><a href="#cb2-177" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 1 <span class="pp">|</span> $(1, 0)$ 或 $(0, 1)$ <span class="pp">|</span></span>
+<span id="cb2-178"><a href="#cb2-178" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 0 <span class="pp">|</span> $(0, 0)$ 或 $(1, 1)$ <span class="pp">|</span></span>
+<span id="cb2-179"><a href="#cb2-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-180"><a href="#cb2-180" aria-hidden="true" tabindex="-1"></a><span class="al">![图 27.5 自校验码检验器使用的两输入 AND 电路：两个输入 (xi, yi) 与 (xj, yj) 各自为双轨编码的布尔值](images/ch27/fig27_05.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb2-181"><a href="#cb2-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-182"><a href="#cb2-182" aria-hidden="true" tabindex="-1"></a>用图 27.5 的两输入 AND 电路搭成树，就得到一个自校验校验器：**任何单个门或线的故障都不可能对非码字输入产生有效的 $(1,0)/(0,1)$ 输出**。这里有一条通用教训：**只有一根输出线的校验器不可能是自校验的**——输出线上一个固定型故障就能给出误导性结果。</span>
+<span id="cb2-183"><a href="#cb2-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-184"><a href="#cb2-184" aria-hidden="true" tabindex="-1"></a>还有一种风格不同的路子是**结果校验（result checking）**，对应软件容错里的"验收测试（acceptance testing）"。例如验证开方器：把算出的根平方回去与被开方数比较。只要"平方过程的错误"与"开方过程的错误"独立、不太可能相互抵消，通过测试的结果就以极高概率正确。验收测试不要求完美覆盖——如果假设故障是永久性的且极少发生，那么**周期性检查**（而非并发或在线检查）也许就够了：例如隔一段时间拿若干随机操作数跑一遍验证，目的是让"补偿性错误"不至于长期掩盖同一个坏元器件。</span>
+<span id="cb2-185"><a href="#cb2-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-186"><a href="#cb2-186" aria-hidden="true" tabindex="-1"></a><span class="al">![图 27.6 带奇偶编码输入/输出的自校验加法器：(a) 奇偶预测，(b) 奇偶保持](images/ch27/fig27_06.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb2-187"><a href="#cb2-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-188"><a href="#cb2-188" aria-hidden="true" tabindex="-1"></a>奇偶码冗余极低（一位），虽然单次覆盖率不高，但按"长期看能在合理时间内发现故障件"的标准，它往往是最划算的选择。难点在于**奇偶码对算术不封闭**，必须想办法"预测"输出的奇偶。预测的基本恒等式是</span>
+<span id="cb2-189"><a href="#cb2-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-190"><a href="#cb2-190" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-191"><a href="#cb2-191" aria-hidden="true" tabindex="-1"></a>p(s) = p(x) \oplus p(y) \oplus p(c)</span>
+<span id="cb2-192"><a href="#cb2-192" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-193"><a href="#cb2-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-194"><a href="#cb2-194" aria-hidden="true" tabindex="-1"></a>其中 $p(c)$ 是加法过程中全部内部进位位的奇偶。于是预测器只需从输入独立算出进位链的奇偶——比完整加法便宜得多，但仍需一条精简的进位网络；进位网络本身的故障也被这一比对覆盖。(a) 图用这样一条独立的**奇偶预测器**并联在数据通路旁；(b) 图则换思路：先把奇偶编码的输入转成**偶奇偶的 BSD 数**，用一个**保奇偶的 BSD 加法器**算出偶奇偶的冗余和，再转回奇偶编码的常规输出。(b) 的成立依赖于一个巧妙的事实：可以把两个相邻 BSD 数字编成一个偶奇偶的 4 位码——因为数字 0 同时有 $+0$ 与 $-0$ 两种表示，正好提供奇奇偶、偶奇偶两种编码选择，闭合才得以成立。对 2 的补码操作数还需要的少量调整可见书末文献 <span class="co">[</span><span class="ot">Parh02</span><span class="co">]</span>。</span>
+<span id="cb2-195"><a href="#cb2-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-196"><a href="#cb2-196" aria-hidden="true" tabindex="-1"></a><span class="fu">## 27.5 算法级容错（Algorithm-Based Fault Tolerance, ABFT）</span></span>
+<span id="cb2-197"><a href="#cb2-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-198"><a href="#cb2-198" aria-hidden="true" tabindex="-1"></a>在**算法层**嵌入校验，而非电路层：</span>
+<span id="cb2-199"><a href="#cb2-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-200"><a href="#cb2-200" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>矩阵乘法：给矩阵加一行/列校验和，乘积矩阵的校验行列应与"校验行列的乘积"一致——一个校验向量罩住整个 $O(n^3)$ 计算，开销 $O(n^2)$；</span>
+<span id="cb2-201"><a href="#cb2-201" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>FFT、卷积、线性代数内核都有类似的"校验和保持"结构；</span>
+<span id="cb2-202"><a href="#cb2-202" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>ABFT 是 GPU/加速器容错的主力路线（电路级防护在大阵列上太贵）。</span>
+<span id="cb2-203"><a href="#cb2-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-204"><a href="#cb2-204" aria-hidden="true" tabindex="-1"></a>把这套东西写具体。向量（一行或一列数）的**校验和**是各元素对某个**校验常数** $A$ 的代数和。对 $m \times n$ 矩阵 $M$ 定义：</span>
+<span id="cb2-205"><a href="#cb2-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-206"><a href="#cb2-206" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>行校验和矩阵 $M_r$：$m \times (n+1)$，前 $n$ 列同 $M$，第 $n$ 列是各行校验和；</span>
+<span id="cb2-207"><a href="#cb2-207" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>列校验和矩阵 $M_c$：$(m+1) \times n$，前 $m$ 行同 $M$，第 $m$ 行是各列校验和；</span>
+<span id="cb2-208"><a href="#cb2-208" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>全校验和矩阵 $M_f = (M_r)_c$：$(m+1) \times (n+1)$。</span>
+<span id="cb2-209"><a href="#cb2-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-210"><a href="#cb2-210" aria-hidden="true" tabindex="-1"></a>以 $A = 8$ 为例：</span>
+<span id="cb2-211"><a href="#cb2-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-212"><a href="#cb2-212" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-213"><a href="#cb2-213" aria-hidden="true" tabindex="-1"></a>M = \begin{pmatrix} 2 &amp; 1 &amp; 6 <span class="sc">\\</span> 5 &amp; 3 &amp; 4 <span class="sc">\\</span> 3 &amp; 2 &amp; 7 \end{pmatrix}, \quad</span>
+<span id="cb2-214"><a href="#cb2-214" aria-hidden="true" tabindex="-1"></a>M_r = \begin{pmatrix} 2 &amp; 1 &amp; 6 &amp; 1 <span class="sc">\\</span> 5 &amp; 3 &amp; 4 &amp; 4 <span class="sc">\\</span> 3 &amp; 2 &amp; 7 &amp; 4 \end{pmatrix}, \quad</span>
+<span id="cb2-215"><a href="#cb2-215" aria-hidden="true" tabindex="-1"></a>M_c = \begin{pmatrix} 2 &amp; 1 &amp; 6 <span class="sc">\\</span> 5 &amp; 3 &amp; 4 <span class="sc">\\</span> 3 &amp; 2 &amp; 7 <span class="sc">\\</span> 2 &amp; 6 &amp; 1 \end{pmatrix}, \quad</span>
+<span id="cb2-216"><a href="#cb2-216" aria-hidden="true" tabindex="-1"></a>M_f = \begin{pmatrix} 2 &amp; 1 &amp; 6 &amp; 1 <span class="sc">\\</span> 5 &amp; 3 &amp; 4 &amp; 4 <span class="sc">\\</span> 3 &amp; 2 &amp; 7 &amp; 4 <span class="sc">\\</span> 2 &amp; 6 &amp; 1 &amp; 1 \end{pmatrix}</span>
+<span id="cb2-217"><a href="#cb2-217" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-218"><a href="#cb2-218" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-219"><a href="#cb2-219" aria-hidden="true" tabindex="-1"></a>逐项核对不难：$2+1+6 = 9 \equiv 1 \pmod 8$，$2+5+3 = 10 \equiv 2$，右下角的 $1$ 无论是横向加（$2+6+1 = 9$）还是纵向加（$1+4+4 = 9$）都一致。</span>
+<span id="cb2-220"><a href="#cb2-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-221"><a href="#cb2-221" aria-hidden="true" tabindex="-1"></a>有了这些定义，核心结论一句话：</span>
+<span id="cb2-222"><a href="#cb2-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-223"><a href="#cb2-223" aria-hidden="true" tabindex="-1"></a>**定理 27.3**：若 $P = X \times Y$，则 $P_f = X_c \times Y_r$。</span>
+<span id="cb2-224"><a href="#cb2-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-225"><a href="#cb2-225" aria-hidden="true" tabindex="-1"></a>**定理 27.4**：在全校验和矩阵中，**任一个错误元素可被纠正，任意三个错误元素可被检出**。</span>
+<span id="cb2-226"><a href="#cb2-226" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-227"><a href="#cb2-227" aria-hidden="true" tabindex="-1"></a>纠错的具体操作也值得一说：若 $P_f$ 中第 $i$ 行的行校验和与该行元素重算值不符、且第 $j$ 列的列校验和也不符，则交点 $(i, j)$ 就是出错元素，其修正量等于行（或列）校验和的差值——行列交叉定位，一次减法修复。只有当错误恰好落在同一行或同一列的多个元素上时，才退化到"只能检、不能纠"的情形，这正是定理 27.4 中"纠一检三"的来源。</span>
+<span id="cb2-228"><a href="#cb2-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-229"><a href="#cb2-229" aria-hidden="true" tabindex="-1"></a>工程含义非常清楚：把 $X_c$ 与 $Y_r$ 直接喂给标准矩阵乘法硬件，然后检查乘积矩阵的最后一行/最后一列是否与"由其余元素算出的校验和"一致，就能发现任何错误。开销只是矩阵尺寸从 $n \times n$ 变成 $(n+1) \times (n+1)$——相对计算量的 $O(n^3)$，这几乎免费。对于硬件乘法器上一个瞬时毛刺这种"高度局部化"的错误（最多波及乘积矩阵的若干元素），上述方案既能检出也能纠正。</span>
+<span id="cb2-230"><a href="#cb2-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-231"><a href="#cb2-231" aria-hidden="true" tabindex="-1"></a>同样的"校验和保持"结构存在于 FFT：DFT 是线性变换，输入序列全体求和得到的额外样本经 FFT 后，等于输出频域分量全体求和——把"输入和"作为一个校验通道随主流一起算，输出端一次求和即可验证整个 $O(n\log n)$ 计算。卷积、FIR、各类线性代数内核都有各自的廉价不变量可用。</span>
+<span id="cb2-232"><a href="#cb2-232" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-233"><a href="#cb2-233" aria-hidden="true" tabindex="-1"></a>校验和还可以**加权**：给第 $i$ 个元素配权重 $w_i$（最简单的取 $w_i = i$），则加权和不仅能报告"有错"，还能指出错误的位置——未加权校验和发现"和变了"，加权校验和进一步回答"和在哪里变了"。ABFT 文献中两者常搭配使用，用接近翻倍的校验开销换来错误定位能力。</span>
+<span id="cb2-234"><a href="#cb2-234" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-235"><a href="#cb2-235" aria-hidden="true" tabindex="-1"></a>要注意的是浮点元素会让等式**近似成立**，于是"怎样才算相等"变成了一个需要阈值的问题；更长篇幅的讨论见书末文献 <span class="co">[</span><span class="ot">Dutt96</span><span class="co">]</span>。</span>
+<span id="cb2-236"><a href="#cb2-236" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-237"><a href="#cb2-237" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip title="与可靠性的现代交汇"}</span>
+<span id="cb2-238"><a href="#cb2-238" aria-hidden="true" tabindex="-1"></a>大模型训练中的"静默数据损坏（SDC）"事件让工业界重新发现 ABFT 的价值：万卡集群跑一个月，硬件瞬态错误不是"会不会发生"而是"发生几次"。算法级校验 + 周期 checkpoint 是当前的事实标准。</span>
+<span id="cb2-239"><a href="#cb2-239" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb2-240"><a href="#cb2-240" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-241"><a href="#cb2-241" aria-hidden="true" tabindex="-1"></a><span class="fu">## 27.6 容错 RNS 算术（Fault-Tolerant RNS Arithmetic）</span></span>
+<span id="cb2-242"><a href="#cb2-242" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-243"><a href="#cb2-243" aria-hidden="true" tabindex="-1"></a>第 4 章埋的线在这里收拢：**冗余 RNS（RRNS）**——在正常模数之外加冗余模数，余数向量空间的合法子集天然构成纠错码：</span>
+<span id="cb2-244"><a href="#cb2-244" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-245"><a href="#cb2-245" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>一个通道出错 → 余数向量落在合法空间之外（检错）；</span>
+<span id="cb2-246"><a href="#cb2-246" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>足够冗余时可通过"逐通道剔除 + CRT 重建"定位并纠正错误通道；</span>
+<span id="cb2-247"><a href="#cb2-247" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>RNS 的通道独立性使**错误天然隔离**——不会跨通道传播，这是二进制数制给不了的奢侈品。</span>
+<span id="cb2-248"><a href="#cb2-248" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-249"><a href="#cb2-249" aria-hidden="true" tabindex="-1"></a>做法：选定一组模数，使得**去掉任意一个模数后，剩下的模数仍足以表示所需的动态范围**。此时任何局限于单一剩余的错误都可检出——因为出错的那个剩余会与其余剩余不相容。注意冗余模数必须是**最大的那个**（记为 $m$）：用其余所有剩余经 **基底扩展（base extension）** 算出该数模 $m$ 的剩余，再与实际表示中的模 $m$ 剩余比较即可。</span>
+<span id="cb2-250"><a href="#cb2-250" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-251"><a href="#cb2-251" aria-hidden="true" tabindex="-1"></a>基底扩展本身是 RNS 里的常规操作：已知 $x$ 在一组模数下的剩余，求它在另一个模数下的剩余。标准路径是先经中国剩余定理（CRT）把剩余向量转成混合基数表示，再把混合基数数字对目标模数逐项加权取余。它本来就是 RNS 处理器做大小比较、符号判断、除法时的必备构建块，因此把它挪来当检错器用，几乎不需要新增硬件。</span>
+<span id="cb2-252"><a href="#cb2-252" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-253"><a href="#cb2-253" aria-hidden="true" tabindex="-1"></a>混合基数转换的成本也不妨记下来：$n$ 个通道的基底扩展约需 $n(n-1)/2$ 次模乘加——通道数不多（4-8 个是 RNS 的常见规模）时，这是一块几级流水就能吞下的小电路。把检错逻辑做成可关闭的可选级，还能在非关键模式下把这部分功耗也省掉。</span>
+<span id="cb2-254"><a href="#cb2-254" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-255"><a href="#cb2-255" aria-hidden="true" tabindex="-1"></a>这个方案最美的地方在于：**算术算法一点都不用改**。$\pm$ 和 $\times$ 照旧逐通道独立进行，检错能力纯粹靠"把动态范围做大"换来的。而基底扩展本来就是 RNS 处理器实现各种运算时的常用构建块，因此**检错的硬件增量几乎为零**——只要多留一个剩余通道。甚至可以在做非关键计算时关掉检错、把全部模数的动态范围都拿来用。</span>
+<span id="cb2-256"><a href="#cb2-256" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-257"><a href="#cb2-257" aria-hidden="true" tabindex="-1"></a>加多个冗余剩余则可以得到更强的能力——既能检出更多错误，也能纠正某些类别的错误（多剩余码的机理与 27.3 节双剩余码的综合征逻辑完全相同）。同样是只增加校验算法与对应硬件，**算术算法一行都不用改**。</span>
+<span id="cb2-258"><a href="#cb2-258" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-259"><a href="#cb2-259" aria-hidden="true" tabindex="-1"></a>冗余模数还提供一个有用的视角：**RRNS 把动态范围当成一种可消费的预算**——平时把预算花在表示更大的数上，需要容错时把同一笔预算花在区分合法与非法状态上。两种用途可以随时切换，这是 RRNS 设计独有的灵活性。</span>
+<span id="cb2-260"><a href="#cb2-260" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-261"><a href="#cb2-261" aria-hidden="true" tabindex="-1"></a>看一个完整的例子。原模数集为 $<span class="sc">\{</span>8, 7, 5, 3<span class="sc">\}</span>$，动态范围 $8 \times 7 \times 5 \times 3 = 840$；添加冗余模数 $13$ 和 $11$ 后成为 6 通道 RRNS。数 $25$ 按模数从大到小排列表示为</span>
+<span id="cb2-262"><a href="#cb2-262" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-263"><a href="#cb2-263" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-264"><a href="#cb2-264" aria-hidden="true" tabindex="-1"></a>(12,\, 3,\, 1,\, 4,\, 0,\, 1)</span>
+<span id="cb2-265"><a href="#cb2-265" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-266"><a href="#cb2-266" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-267"><a href="#cb2-267" aria-hidden="true" tabindex="-1"></a>逐个核对：$25 \bmod 13 = 12$、$\bmod 11 = 3$、$\bmod 8 = 1$、$\bmod 7 = 4$、$\bmod 5 = 0$、$\bmod 3 = 1$。</span>
+<span id="cb2-268"><a href="#cb2-268" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-269"><a href="#cb2-269" aria-hidden="true" tabindex="-1"></a>假设模 7 通道出错，剩余从 $4$ 变成 $6$，得到受污染的数 $(-,\,-,\,1,\,6,\,0,\,1)$。用另外四个（非冗余）剩余做基底扩展：由 $(-,-,1,6,0,1)$（即 $x \bmod 8 = 1$、$x \bmod 7 = 6$、$x \bmod 5 = 0$、$x \bmod 3 = 1$）经 CRT 得 $x = 265$，其模 13、模 11 剩余分别为 $5$ 和 $1$，于是重建成</span>
+<span id="cb2-270"><a href="#cb2-270" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-271"><a href="#cb2-271" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-272"><a href="#cb2-272" aria-hidden="true" tabindex="-1"></a>(5,\, 1,\, 1,\, 6,\, 0,\, 1)</span>
+<span id="cb2-273"><a href="#cb2-273" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb2-274"><a href="#cb2-274" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-275"><a href="#cb2-275" aria-hidden="true" tabindex="-1"></a>受污染的原向量与重建向量的前两个分量之差为 $(12 - 5,\ 3 - 1) = (+7,\, +2)$——这就是**错误综合征**，它唯一地指向"出错的是模 7 通道"，并能给出该通道应有的修正量。整个流程与 27.3 节双剩余码的综合征表完全同构。</span>
+<span id="cb2-276"><a href="#cb2-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-277"><a href="#cb2-277" aria-hidden="true" tabindex="-1"></a>::: {.callout-important title="为什么 RNS 天生好容错"}</span>
+<span id="cb2-278"><a href="#cb2-278" aria-hidden="true" tabindex="-1"></a>二进制里一个进位错误能一路传播、翻转任意多位（见 27.1 节的例子）；RNS 里各通道**没有进位联系**，一个通道的错误永远只会污染那一个通道。加上"冗余模数 = 更大的动态范围"这一零成本保护层，RRNS 就成了少数几处**数制本身即防御工事**的设计。代价仍然是老问题：大小比较、符号判断、溢出检测这些全局操作难做（第 4.4 节）。</span>
+<span id="cb2-279"><a href="#cb2-279" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb2-280"><a href="#cb2-280" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-281"><a href="#cb2-281" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章小结</span></span>
+<span id="cb2-282"><a href="#cb2-282" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-283"><a href="#cb2-283" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>故障→错误→失效；软错误率随工艺上升，数据通路防护从可选变必需。</span>
+<span id="cb2-284"><a href="#cb2-284" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>算术权值（最少带符号 $2^i$ 之和）而非汉明距离，才是算术错误的正确度量：一次进位错误可有 12 位汉明距离却只有权重 1。</span>
+<span id="cb2-285"><a href="#cb2-285" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>算术码（AN/乘积码、剩余码、反向剩余码）：校验通道平行于数据通道，10-30% 开销罩全局；$A = 2^a-1$ 让编解码变成移位加/循环进位。</span>
+<span id="cb2-286"><a href="#cb2-286" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>双剩余码支撑 $ab$ 位数据纠权重 1 错，冗余 $1/a + 1/b$；乘积码做同样的事冗余高出一倍。</span>
+<span id="cb2-287"><a href="#cb2-287" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>自校验单元：校验器自身必须自校验且必须有两根输出线；DMR/时间冗余/奇偶预测-保持/验收测试，面积-时间-覆盖率各取所需。</span>
+<span id="cb2-288"><a href="#cb2-288" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>ABFT 用数据结构的数学不变量做校验，$P_f = X_c \times Y_r$，开销相对计算量几乎为零。</span>
+<span id="cb2-289"><a href="#cb2-289" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>RRNS：通道天然隔离 + 冗余模数换来的零算法改动容错。</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

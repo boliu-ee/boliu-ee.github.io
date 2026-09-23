@@ -1,0 +1,1371 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第22章 CORDIC 算法（The CORDIC Algorithms） – 计算机算术：算法与硬件设计（中文解读版）</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./ch23.html" rel="next">
+<link href="./ch21.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-77d2b90c99eeff80c5837adab8b96ac7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch21.html">第六部分 函数求值 (Function Evaluation)</a></li><li class="breadcrumb-item"><a href="./ch22.html"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">计算机算术：算法与硬件设计（中文解读版）</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第一部分 数的表示 (Number Representation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch01.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第二部分 加法与减法 (Addition/Subtraction)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第7章 快速加法器的变体（Variations in Fast Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第8章 多操作数加法（Multioperand Addition）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部分 乘法 (Multiplication)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第9章 基本乘法方案（Basic Multiplication Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第10章 高基数乘法器（High-Radix Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">第四部分 除法 (Division)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第14章 高基数除法器（High-Radix Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第15章 除法器的变体（Variations in Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第16章 收敛法除法（Division by Convergence）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">第五部分 实数运算 (Real Arithmetic)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第17章 浮点数表示（Floating-Point Representations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">第六部分 函数求值 (Function Evaluation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch22.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第23章 函数求值的变体（Variations in Function Evaluation）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第24章 查表算术（Arithmetic by Table Lookup）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">第七部分 实现专题 (Implementation Topics)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch26.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch27.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch28.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第28章 可重构算术（Reconfigurable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">附录 过去、现在与未来（Past, Present, and Future）</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#本章导读" id="toc-本章导读" class="nav-link active" data-scroll-target="#本章导读">本章导读</a></li>
+  <li><a href="#旋转与伪旋转rotations-and-pseudorotations" id="toc-旋转与伪旋转rotations-and-pseudorotations" class="nav-link" data-scroll-target="#旋转与伪旋转rotations-and-pseudorotations">22.1 旋转与伪旋转（Rotations and Pseudorotations)</a></li>
+  <li><a href="#基本-cordic-迭代basic-cordic-iterations" id="toc-基本-cordic-迭代basic-cordic-iterations" class="nav-link" data-scroll-target="#基本-cordic-迭代basic-cordic-iterations">22.2 基本 CORDIC 迭代（Basic CORDIC Iterations)</a></li>
+  <li><a href="#cordic-硬件cordic-hardware" id="toc-cordic-硬件cordic-hardware" class="nav-link" data-scroll-target="#cordic-硬件cordic-hardware">22.3 CORDIC 硬件（CORDIC Hardware)</a></li>
+  <li><a href="#广义-cordicgeneralized-cordic" id="toc-广义-cordicgeneralized-cordic" class="nav-link" data-scroll-target="#广义-cordicgeneralized-cordic">22.4 广义 CORDIC（Generalized CORDIC)</a></li>
+  <li><a href="#cordic-方法的应用using-the-cordic-method" id="toc-cordic-方法的应用using-the-cordic-method" class="nav-link" data-scroll-target="#cordic-方法的应用using-the-cordic-method">22.5 CORDIC 方法的应用（Using the CORDIC Method)</a></li>
+  <li><a href="#代数表述an-algebraic-formulation" id="toc-代数表述an-algebraic-formulation" class="nav-link" data-scroll-target="#代数表述an-algebraic-formulation">22.6 代数表述（An Algebraic Formulation)</a></li>
+  <li><a href="#rtl-实践rtlch22_2_cordic_rotation" id="toc-rtl-实践rtlch22_2_cordic_rotation" class="nav-link" data-scroll-target="#rtl-实践rtlch22_2_cordic_rotation">RTL 实践：<code>rtl/ch22_2_cordic_rotation</code></a></li>
+  <li><a href="#本章小结" id="toc-本章小结" class="nav-link" data-scroll-target="#本章小结">本章小结</a></li>
+  <li><a href="#原书插图" id="toc-原书插图" class="nav-link" data-scroll-target="#原书插图">原书插图</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch21.html">第六部分 函数求值 (Function Evaluation)</a></li><li class="breadcrumb-item"><a href="./ch22.html"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="本章导读" class="level2">
+<h2 class="anchored" data-anchor-id="本章导读">本章导读</h2>
+<p>CORDIC（COordinate Rotation DIgital Computer）<span class="citation" data-cites="volder1959">(<a href="references.html#ref-volder1959" role="doc-biblioref">Volder 1959年</a>)</span> 是硬件算法设计的一颗明珠：<strong>只用移位和加法</strong>，通过一系列预定义角度的”伪旋转”，算出 sin、cos、arctan、sinh、cosh、ln、exp，甚至乘除法——一台没有乘法器的计算器（HP-35，1972）因此能算超越函数。它的”迭代 + 查小表 + 每拍一次移位加”骨架，与除法/开方一脉相承，是函数求值硬件化的第三条路线（前两条：多项式逼近、大查找表）。</p>
+</section>
+<section id="旋转与伪旋转rotations-and-pseudorotations" class="level2">
+<h2 class="anchored" data-anchor-id="旋转与伪旋转rotations-and-pseudorotations">22.1 旋转与伪旋转（Rotations and Pseudorotations)</h2>
+<p>平面旋转 <span class="math inline">\((x, y)\)</span> 转角度 <span class="math inline">\(\theta\)</span>：</p>
+<p><span class="math display">\[
+x' = x\cos\theta - y\sin\theta, \qquad y' = x\sin\theta + y\cos\theta
+\]</span></p>
+<p>提出 <span class="math inline">\(\cos\theta\)</span> 因子并选特殊角度 <span class="math inline">\(\theta_i = \arctan(2^{-i})\)</span>（使 <span class="math inline">\(\tan\theta_i = 2^{-i}\)</span>，乘法变移位）：</p>
+<p><span class="math display">\[
+x_{i+1} = K_i \left( x_i - d_i \cdot 2^{-i} y_i \right), \qquad
+y_{i+1} = K_i \left( y_i + d_i \cdot 2^{-i} x_i \right)
+\]</span></p>
+<p>其中 <span class="math inline">\(d_i = \pm 1\)</span> 为旋转方向，<span class="math inline">\(K_i = \cos(\arctan 2^{-i}) = 1/\sqrt{1 + 2^{-2i}}\)</span> 是<strong>伪旋转</strong>引入的尺度因子。关键洞察：<span class="math inline">\(\prod K_i\)</span> 是<strong>常数</strong>（迭代次数固定时），可预先算好一次性补偿——每拍只剩移位、加/减、方向决策！</p>
+<p>补全推导。真实旋转不改变向量长度，而”提出 <span class="math inline">\(\cos\)</span> 因子”的伪旋转（pseudorotation）会把长度放大</p>
+<p><span class="math display">\[
+R^{(i+1)} = R^{(i)}\left(1 + \tan^2\alpha^{(i)}\right)^{1/2} = \frac{R^{(i)}}{\cos\alpha^{(i)}}
+\]</span></p>
+<p>伪旋转方程因此就是真实旋转方程整体乘上了这个放大因子。<span class="math inline">\(m\)</span> 步累积下来，坐标被放大了</p>
+<p><span class="math display">\[
+K = \prod_{i} \left(1 + \tan^2\alpha^{(i)}\right)^{1/2}
+\]</span></p>
+<p>关键在于：只要每步使用的角度集合固定（正负号任意），<span class="math inline">\(K\)</span> 就与旋转目标无关、可预先算好。这是整个方法成立的基石——<strong>系统性误差一次性预补偿，逐拍不产生新误差</strong>。反之，若角度集合随输入变化，<span class="math inline">\(K\)</span> 就不再是常数，补偿的代价会吞掉伪旋转省下的硬件。</p>
+</section>
+<section id="基本-cordic-迭代basic-cordic-iterations" class="level2">
+<h2 class="anchored" data-anchor-id="基本-cordic-迭代basic-cordic-iterations">22.2 基本 CORDIC 迭代（Basic CORDIC Iterations)</h2>
+<p>三种工作模式的统一形式（<span class="math inline">\(m \in \{1, 0, -1\}\)</span> 对应圆/线/双曲坐标系）：</p>
+<p><span class="math display">\[
+x_{i+1} = x_i - m\, d_i\, 2^{-i} y_i, \quad
+y_{i+1} = y_i + d_i\, 2^{-i} x_i, \quad
+z_{i+1} = z_i - d_i\, e_i
+\]</span></p>
+<p><span class="math inline">\(e_i\)</span> 是查表得到的角度常数（<span class="math inline">\(\arctan 2^{-i}\)</span> 或 <span class="math inline">\(\text{artanh}\, 2^{-i}\)</span>）。两种使用方式：</p>
+<ul>
+<li><strong>旋转模式（rotation）</strong>：驱动 <span class="math inline">\(z \to 0\)</span>，把向量转到目标角度——得 <span class="math inline">\(\sin/\cos\)</span>（令初始 <span class="math inline">\(x = 1/K, y = 0\)</span>）、复数旋转、极坐标转换；</li>
+<li><strong>向量模式（vectoring）</strong>：驱动 <span class="math inline">\(y \to 0\)</span>，把向量转到 x 轴——得 <span class="math inline">\(\arctan(y/x)\)</span>（<span class="math inline">\(z\)</span> 累出角度）、向量模（<span class="math inline">\(x\)</span> 得 <span class="math inline">\(|v| \cdot K\)</span>）、直角转极坐标。</li>
+</ul>
+<p>展开两点工程细节。其一，每步迭代 = 2 次移位 + 1 次查表 + 3 次加减，角度常数 <span class="math inline">\(e^{(i)} = \arctan 2^{-i}\)</span> 预存小表（<span class="math inline">\(i = 0,1,2,3,\dots\)</span> 依次约为 <span class="math inline">\(45.0°, 26.6°, 14.0°, 7.1°, 3.6°,\dots\)</span>，每角约为前一角的一半）。其二，方向决策 <span class="math inline">\(d_i = \mathrm{sign}(z^{(i)})\)</span>（旋转模式）与不恢复除法”试减失败改加法”如出一辙：<span class="math inline">\(z\)</span> 过冲就往回转、欠着就继续转。</p>
+<p>旋转模式跑完 <span class="math inline">\(m\)</span> 步、<span class="math inline">\(z^{(m)} \to 0\)</span> 时：</p>
+<p><span class="math display">\[
+x^{(m)} = K(x\cos z - y\sin z), \qquad y^{(m)} = K(y\cos z + x\sin z)
+\]</span></p>
+<p><span class="math inline">\(K = 1.646\,760\,258\,121\cdots\)</span>。求 <span class="math inline">\(\sin z\)</span> 与 <span class="math inline">\(\cos z\)</span> 只需令 <span class="math inline">\(x = 1/K = 0.607\,252\,935\cdots\)</span>、<span class="math inline">\(y = 0\)</span> 起步，把尺度因子在入口处消化掉。<span class="math inline">\(k\)</span> 位精度需要 <span class="math inline">\(k\)</span> 次迭代：大 <span class="math inline">\(i\)</span> 时 <span class="math inline">\(\arctan 2^{-i} \approx 2^{-i}\)</span>，超过 <span class="math inline">\(k\)</span> 步的旋转对结果的贡献小于 ulp。</p>
+<p>收敛域由角度表的完备性决定：圆周模式下为 <span class="math inline">\(-99.7° \le z \le 99.7°\)</span>（全部角度之和），恰好覆盖 <span class="math inline">\([-\pi/2, \pi/2]\)</span>。收敛的充要条件是每个角度不小于其后所有角度之和的一半——<span class="math inline">\(\arctan 2^{-(i+1)} \ge \frac{1}{2}\arctan 2^{-i}\)</span> 成立；后文会看到双曲模式恰恰在这里翻车。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="一鱼多吃">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>一鱼多吃
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>换 <span class="math inline">\(m\)</span> 与模式组合：<span class="math inline">\(m=-1\)</span> 双曲模式得 sinh/cosh/artanh，进而 <span class="math inline">\(\ln x = 2\,\text{artanh}\left(\frac{x-1}{x+1}\right)\)</span>、<span class="math inline">\(e^x = \sinh x + \cosh x\)</span>；<span class="math inline">\(m=0\)</span> 线性模式退化为乘法（旋转）与除法（向量）——CORDIC 是一台”算法万花筒”。</p>
+</div>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch22/fig22_02.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 22.2</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="数值轨迹：CORDIC 旋转 +30°">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>数值轨迹：CORDIC 旋转 +30°
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>以度为单位跟踪 <span class="math inline">\(z^{(i)}\)</span>（目标：驱动 <span class="math inline">\(z \to 0\)</span>，每步选 <span class="math inline">\(d_i = \mathrm{sign}(z^{(i)})\)</span>）：</p>
+<p><span class="math display">\[
++30.0 \xrightarrow{-45.0} -15.0 \xrightarrow{+26.6} +11.6 \xrightarrow{-14.0} -2.4 \xrightarrow{+7.1} +4.7 \xrightarrow{-3.6} +1.1 \xrightarrow{-1.8} -0.7 \xrightarrow{+0.9} +0.2 \xrightarrow{-0.4} -0.2 \xrightarrow{+0.2} +0.0 \xrightarrow{-0.1} -0.1
+\]</span></p>
+<p>10 步后 <span class="math inline">\(z\)</span> 已压到 <span class="math inline">\(0.1°\)</span> 量级（本例用近似角度值便于心算，实际硬件用弧度全精度表）；向量 <span class="math inline">\((x, y)\)</span> 沿图 22.2 的折线从初始方向逼近 <span class="math inline">\(+30°\)</span> 方向。整个决策序列与不恢复除法的商数字序列在结构上完全同构。</p>
+</div>
+</div>
+<p>向量模式（vectoring）把决策对象换成 <span class="math inline">\(y\)</span>：<span class="math inline">\(d_i = -\mathrm{sign}(x^{(i)}y^{(i)})\)</span> 驱动 <span class="math inline">\(y \to 0\)</span>，<span class="math inline">\(m\)</span> 步后</p>
+<p><span class="math display">\[
+x^{(m)} = K\sqrt{x^2 + y^2}, \qquad z^{(m)} = z + \arctan\frac{y}{x}
+\]</span></p>
+<p>令 <span class="math inline">\(x = 1, z = 0\)</span> 起步即得 <span class="math inline">\(\arctan y\)</span>，<span class="math inline">\(x\)</span> 累出的是向量模。配合恒等式 <span class="math inline">\(\arctan(1/y) = \pi/2 - \arctan y\)</span> 可把定点运算的范围压半。注意：旋转模式有收敛域问题，向量模式对任意输入都收敛——22.5 节选型时这是个重要区别。</p>
+</section>
+<section id="cordic-硬件cordic-hardware" class="level2">
+<h2 class="anchored" data-anchor-id="cordic-硬件cordic-hardware">22.3 CORDIC 硬件（CORDIC Hardware)</h2>
+<p>最简实现：三个寄存器（<span class="math inline">\(x, y, z\)</span>）+ 两个桶形移位器（或时序复用一个）+ 三个加减法器 + 角度 ROM + 符号决策逻辑。每拍一次迭代，<span class="math inline">\(k\)</span> 位精度约 <span class="math inline">\(k\)</span> 拍。</p>
+<p>提速方向：</p>
+<ul>
+<li><strong>展开流水</strong>：<span class="math inline">\(k\)</span> 级全流水，每级固定移位量（移位变<strong>硬连线</strong>，桶形移位器消失！）——吞吐每拍一个结果，这是 FPGA 上 CORDIC 的标准形态（28 章）；</li>
+<li><strong>高基数/冗余 CORDIC</strong>：方向集合扩到 <span class="math inline">\(\{-1, 0, +1\}\)</span> 或更高基数，减少迭代次数，代价是选择逻辑变复杂（与 SRT 的历史重演）。</li>
+</ul>
+<p>成本阶梯从简到繁，可以排成一张选型单：</p>
+<ul>
+<li><strong>最简时序版</strong>：3 个寄存器 + 角度查表 ROM + 2 个移位器 + 3 个加减法器；<span class="math inline">\(d_i\)</span> 通过”选原码还是补码”进入加减法器。面积再省可让 3 路计算分时共享一个加减法器（慢约 3 倍）；</li>
+<li><strong>固件/软件版</strong>：直接在通用处理器的 ALU 上跑迭代循环，角度表放控制 ROM 或内存——早期科学计算器（如 HP-35）正是这么干的；</li>
+<li><strong>位串行版</strong>：加减法器位串行化，<span class="math inline">\(k\)</span> 位精度约 <span class="math inline">\(O(k^2)\)</span> 拍——对手持计算器完全够用（几万拍不过几十毫秒，人眼无感）；</li>
+<li><strong>全展开流水版</strong>：<span class="math inline">\(k\)</span> 级流水、每级移位量固定，桶形移位器退化为硬连线，吞吐每拍一个结果——FPGA 函数计算的标准形态（28 章）。</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch22/fig22_03.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 22.3 CORDIC 所需的硬件：三个寄存器、两个移位器、三个加减法器与一张小角度表</figcaption>
+</figure>
+</div>
+</section>
+<section id="广义-cordicgeneralized-cordic" class="level2">
+<h2 class="anchored" data-anchor-id="广义-cordicgeneralized-cordic">22.4 广义 CORDIC（Generalized CORDIC)</h2>
+<p>把”旋转矩阵”抽象为更一般的迭代映射，可以覆盖更多函数（对数、指数、开方的统一推导）。价值在于提供<strong>统一的收敛性分析框架</strong>：什么条件下迭代收敛、收敛域多大、需要几次补偿迭代。</p>
+<p>三种坐标系的差异全在 <span class="math inline">\(e^{(i)}\)</span> 与尺度因子上：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th><span class="math inline">\(\mu\)</span></th>
+<th>坐标系</th>
+<th><span class="math inline">\(e^{(i)}\)</span></th>
+<th>尺度因子</th>
+<th>向量”长度”</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>圆</td>
+<td><span class="math inline">\(\arctan 2^{-i}\)</span></td>
+<td><span class="math inline">\(K = 1.6468\)</span>（放大）</td>
+<td><span class="math inline">\(\sqrt{x^2+y^2}\)</span></td>
+</tr>
+<tr class="even">
+<td>0</td>
+<td>线</td>
+<td><span class="math inline">\(2^{-i}\)</span></td>
+<td>1（真旋转）</td>
+<td><span class="math inline">\(x\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(-1\)</span></td>
+<td>双曲</td>
+<td><span class="math inline">\(\text{artanh}\, 2^{-i}\)</span></td>
+<td><span class="math inline">\(K' = 0.8282\)</span>（缩小）</td>
+<td><span class="math inline">\(\sqrt{x^2-y^2}\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>线性模式是”伪旋转全变真旋转”的退化情形：旋转模式（<span class="math inline">\(y\)</span> 起步为 0）直接算乘法/乘加 <span class="math inline">\(y + xz\)</span>；向量模式（<span class="math inline">\(z\)</span> 起步为 0）直接算除法/除加 <span class="math inline">\(z + y/x\)</span>。双曲模式下伪旋转使向量长度<strong>收缩</strong>（<span class="math inline">\(\cosh\alpha &gt; 1\)</span>），累积收缩因子 <span class="math inline">\(K' = 0.828\,159\,360\,960\,2\cdots\)</span>。</p>
+<p>双曲模式的收敛有个著名的坑：<span class="math inline">\(\arctan\)</span> 满足”每个角度 ≥ 后续角度之和的一半”，<span class="math inline">\(\text{artanh}\)</span> 却不满足。修补方法简单粗暴——<strong>下标 <span class="math inline">\(i = 4, 13, 40, 121, \dots\)</span>（即 <span class="math inline">\(3j+1\)</span> 序列）的迭代执行两遍</strong>，角度序列重新完备；实际精度需求下 <span class="math inline">\(m &lt; 121\)</span>，重复代价可忽略（已折算进 <span class="math inline">\(K'\)</span>）。修好之后：<span class="math inline">\(\sinh/\cosh\)</span> 的收敛域 <span class="math inline">\(|z| &lt; 1.13\)</span>，<span class="math inline">\(\text{artanh}\)</span> 的收敛域 <span class="math inline">\(|y| &lt; 0.81\)</span>，配合域归约恒等式足以覆盖全值域。</p>
+</section>
+<section id="cordic-方法的应用using-the-cordic-method" class="level2">
+<h2 class="anchored" data-anchor-id="cordic-方法的应用using-the-cordic-method">22.5 CORDIC 方法的应用（Using the CORDIC Method)</h2>
+<ul>
+<li><strong>收敛域扩展</strong>：输入超出收敛范围时先做<strong>域归约（range reduction）</strong>——三角函数用周期性/对称性归到 <span class="math inline">\([0, \pi/4]\)</span>，对数用 <span class="math inline">\(x = m \cdot 2^e\)</span> 拆成 <span class="math inline">\(\ln m + e \ln 2\)</span>；</li>
+<li><strong>尺度因子补偿</strong>：<span class="math inline">\(\prod K_i\)</span> 预乘到初始值，或在最终乘法中吸收；</li>
+<li><strong>典型应用</strong>：DDS（直接数字频率合成）的相位→正弦转换、QR 分解/Givens 旋转（向量模式的硬件实现）、机器人运动学、软件无线电的数字上下变频。</li>
+</ul>
+<p>除直接函数外，“一次预处理 + 一次向量模式”还能拿下一批复合函数：<span class="math inline">\(\ln w = 2\,\text{artanh}\frac{w-1}{w+1}\)</span>（两次加法预备）、<span class="math inline">\(\sqrt{w} = \sqrt{(w+\frac{1}{4})^2 - (w-\frac{1}{4})^2}\)</span>（双曲向量模式算 <span class="math inline">\(\sqrt{x^2-y^2}\)</span>）、<span class="math inline">\(\sin^{-1} w = \arctan\frac{w}{\sqrt{1-w^2}}\)</span>、<span class="math inline">\(e^z = \sinh z + \cosh z\)</span> 等。下表是全书最实用的”坐标系 × 模式 × 初始化 → 函数”对照图之一。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch22/fig22_05.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 22.5 广义 CORDIC 算法总结：三种坐标系 × 两种模式的初始化与输出公式一览</figcaption>
+</figure>
+</div>
+<p>两个工程细节值得展开：</p>
+<ul>
+<li><strong>迭代次数必须固定</strong>。为了让 <span class="math inline">\(K\)</span>（与 <span class="math inline">\(K'\)</span>）保持常数，即使 <span class="math inline">\(z\)</span>（或 <span class="math inline">\(y\)</span>）中途已到 0 也不能提前收工——线性模式除外。想提前停止或跳步，就必须逐拍维护 <span class="math inline">\((K^{(i)})^2 \leftarrow (K^{(i)})^2(1 \pm 2^{-2i})\)</span> 并在结尾做开方/除法修正——变因子 CORDIC 的额外开销通常得不偿失。</li>
+<li><strong>截断 CORDIC（truncated CORDIC）免费省一半</strong>：前 <span class="math inline">\(k/2\)</span> 步照常迭代；对小角度有 <span class="math inline">\(\arctan\varepsilon \approx \varepsilon\)</span>，剩余 <span class="math inline">\(k/2\)</span> 步可合并成<strong>一次乘法</strong>（如 <span class="math inline">\(x^{(k/2+1)} = x^{(k/2)} - y^{(k/2)}z^{(k/2)}\)</span>），<span class="math inline">\(z\)</span> 一步清零。可证被丢弃的角度对 <span class="math inline">\(K\)</span> 的贡献小于 ulp——尺度因子一个字都不用改。此外，高 radix 版本（<span class="math inline">\(d_i \in \{-2,-1,1,2\}\)</span>，移位器后加 2 选 1 多路器）把迭代数再砍半，与 SRT 的高 radix 化完全同构。</li>
+</ul>
+</section>
+<section id="代数表述an-algebraic-formulation" class="level2">
+<h2 class="anchored" data-anchor-id="代数表述an-algebraic-formulation">22.6 代数表述（An Algebraic Formulation)</h2>
+<p>用复数乘法的语言：CORDIC 旋转 = 乘以 <span class="math inline">\((1 + j\, d_i 2^{-i})\)</span>，整个迭代 = 复数连乘。这个视角把 CORDIC 与 FFT 的旋转因子、复数乘法器设计联系起来，也给出收敛性（角度级数的完备性：<span class="math inline">\(\sum \arctan 2^{-i}\)</span> 能逼近范围内任意角）的严格证明路径。</p>
+<p>完整的代数推导其实不长。从乘性归一化迭代 <span class="math inline">\(u^{(i+1)} = u^{(i)} - \ln c^{(i)}\)</span>、<span class="math inline">\(v^{(i+1)} = v^{(i)}c^{(i)}\)</span> 出发（<span class="math inline">\(u \to 0\)</span> 时 <span class="math inline">\(v \to v\,e^{u(0)}\)</span>，23.3 节证明），取</p>
+<p><span class="math display">\[
+c^{(i)} = \frac{1 + j\,d_i 2^{-i}}{\sqrt{1 + 2^{-2i}}} = e^{j g^{(i)}}, \qquad g^{(i)} = \arctan(d_i 2^{-i})
+\]</span></p>
+<p>则 <span class="math inline">\(u\)</span> 中被消去的是纯虚数 <span class="math inline">\(j\arctan(d_i 2^{-i})\)</span>，与 CORDIC 的角度累减逐字对应。令 <span class="math inline">\(u^{(0)} = jz\)</span>、<span class="math inline">\(v^{(0)} = 1\)</span>，复数乘法 <span class="math inline">\(v^{(i+1)} = v^{(i)}(1 + j d_i 2^{-i})\)</span> 按实虚部展开正是圆周 CORDIC 的两条坐标递推；分母 <span class="math inline">\(\sqrt{1+2^{-2i}}\)</span> 的连乘累积出尺度因子 <span class="math inline">\(K\)</span>，取 <span class="math inline">\(v^{(0)} = 1/K\)</span> 即完成预补偿。复数视角还顺手把收敛性说清：角度表 <span class="math inline">\(\{\arctan 2^{-i}\}\)</span> 的完备性（每角 ≥ 后续和的一半）等价于二进制选择能覆盖 <span class="math inline">\([-99.7°, 99.7°]\)</span> 中的每个角。</p>
+</section>
+<section id="rtl-实践rtlch22_2_cordic_rotation" class="level2">
+<h2 class="anchored" data-anchor-id="rtl-实践rtlch22_2_cordic_rotation">RTL 实践：<code>rtl/ch22_2_cordic_rotation</code></h2>
+<p>12 级迭代 CORDIC（旋转模式），定点 Q2.14 格式，输入角度输出 sin/cos：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">wire</span>        dir = (z &gt;= <span class="dv">0</span>);   <span class="co">// 旋转方向由剩余角度符号决定</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">wire</span> <span class="kw">signed</span> [<span class="dv">15</span>:<span class="dv">0</span>] x_next = dir ? x - (y &gt;&gt;&gt; i) : x + (y &gt;&gt;&gt; i);</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">wire</span> <span class="kw">signed</span> [<span class="dv">15</span>:<span class="dv">0</span>] y_next = dir ? y + (x &gt;&gt;&gt; i) : y - (x &gt;&gt;&gt; i);</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">wire</span> <span class="kw">signed</span> [<span class="dv">15</span>:<span class="dv">0</span>] z_next = dir ? z - atan_tab[i] : z + atan_tab[i];</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>设计要点：</p>
+<ul>
+<li><strong>无乘法器</strong>：每拍只有移位（<code>&gt;&gt;&gt;</code> 算术右移）与加减——CORDIC 的全部本钱；</li>
+<li><strong>增益预偿</strong>：初始 <span class="math inline">\(x = K \cdot 2^{14}\)</span>（<span class="math inline">\(K \approx 0.6073\)</span>），把 12 级旋转的尺度因子一次性预付，输出直接就是真值比例；</li>
+<li><strong>角度表</strong>：<span class="math inline">\(\arctan(2^{-i})\)</span> 常数表是唯一的”存储”，12 项足够 Q2.14 精度（末项 <span class="math inline">\(\approx 2^{-11}\)</span>）；</li>
+<li>testbench 对 <span class="math inline">\(0\)</span>、<span class="math inline">\(\pm\pi/4\)</span>、<span class="math inline">\(\pm 0.5\)</span>、<span class="math inline">\(1.0\)</span> 等角度做定向校验，容差 <span class="math inline">\(\pm 150\)</span>（约 0.009 rad），实测误差仅几个 LSB。</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> rtl/ch22_2_cordic_rotation</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> run_iverilog.sh    <span class="co"># 或 bash run_verilator.sh</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="本章小结" class="level2">
+<h2 class="anchored" data-anchor-id="本章小结">本章小结</h2>
+<ul>
+<li>CORDIC = 移位 + 加 + 小角度表，算尽常见超越函数。</li>
+<li>伪旋转的尺度因子是常数，可集中补偿；每拍只做方向决策与移位加。</li>
+<li>旋转/向量两模式 × 圆/线/双曲三坐标系 = 函数全家桶。</li>
+<li>全流水展开后移位器消失，FPGA 上是函数求值的常客。</li>
+</ul>
+</section>
+<section id="原书插图" class="level2">
+<h2 class="anchored" data-anchor-id="原书插图">原书插图</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch22/fig22_01.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 22.1</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch22/fig22_04.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 22.4</figcaption>
+</figure>
+</div>
+
+
+<!-- -->
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-volder1959" class="csl-entry" role="listitem">
+Volder, Jack E. 1959年. <span>《The <span>CORDIC</span> Trigonometric Computing Technique》</span>. <em>IRE Transactions on Electronic Computers</em> EC-8 (3): 330～34.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./ch21.html" class="pagination-link" aria-label="第21章 开平方方法（Square-Rooting Methods）">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./ch23.html" class="pagination-link" aria-label="第23章 函数求值的变体（Variations in Function Evaluation）">
+        <span class="nav-page-text"><span class="chapter-title">第23章 函数求值的变体（Variations in Function Evaluation）</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 第22章 CORDIC 算法（The CORDIC Algorithms）</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章导读</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>CORDIC（COordinate Rotation DIgital Computer）<span class="co">[</span><span class="ot">@volder1959</span><span class="co">]</span> 是硬件算法设计的一颗明珠：**只用移位和加法**，通过一系列预定义角度的"伪旋转"，算出 sin、cos、arctan、sinh、cosh、ln、exp，甚至乘除法——一台没有乘法器的计算器（HP-35，1972）因此能算超越函数。它的"迭代 + 查小表 + 每拍一次移位加"骨架，与除法/开方一脉相承，是函数求值硬件化的第三条路线（前两条：多项式逼近、大查找表）。</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## 22.1 旋转与伪旋转（Rotations and Pseudorotations)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>平面旋转 $(x, y)$ 转角度 $\theta$：</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>x' = x\cos\theta - y\sin\theta, \qquad y' = x\sin\theta + y\cos\theta</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>提出 $\cos\theta$ 因子并选特殊角度 $\theta_i = \arctan(2^{-i})$（使 $\tan\theta_i = 2^{-i}$，乘法变移位）：</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>x_{i+1} = K_i \left( x_i - d_i \cdot 2^{-i} y_i \right), \qquad</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>y_{i+1} = K_i \left( y_i + d_i \cdot 2^{-i} x_i \right)</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>其中 $d_i = \pm 1$ 为旋转方向，$K_i = \cos(\arctan 2^{-i}) = 1/\sqrt{1 + 2^{-2i}}$ 是**伪旋转**引入的尺度因子。关键洞察：$\prod K_i$ 是**常数**（迭代次数固定时），可预先算好一次性补偿——每拍只剩移位、加/减、方向决策！</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>补全推导。真实旋转不改变向量长度，而"提出 $\cos$ 因子"的伪旋转（pseudorotation）会把长度放大</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>R^{(i+1)} = R^{(i)}\left(1 + \tan^2\alpha^{(i)}\right)^{1/2} = \frac{R^{(i)}}{\cos\alpha^{(i)}}</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>伪旋转方程因此就是真实旋转方程整体乘上了这个放大因子。$m$ 步累积下来，坐标被放大了</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>K = \prod_{i} \left(1 + \tan^2\alpha^{(i)}\right)^{1/2}</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>关键在于：只要每步使用的角度集合固定（正负号任意），$K$ 就与旋转目标无关、可预先算好。这是整个方法成立的基石——**系统性误差一次性预补偿，逐拍不产生新误差**。反之，若角度集合随输入变化，$K$ 就不再是常数，补偿的代价会吞掉伪旋转省下的硬件。</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="fu">## 22.2 基本 CORDIC 迭代（Basic CORDIC Iterations)</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>三种工作模式的统一形式（$m \in <span class="sc">\{</span>1, 0, -1<span class="sc">\}</span>$ 对应圆/线/双曲坐标系）：</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>x_{i+1} = x_i - m\, d_i\, 2^{-i} y_i, \quad</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>y_{i+1} = y_i + d_i\, 2^{-i} x_i, \quad</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>z_{i+1} = z_i - d_i\, e_i</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>$e_i$ 是查表得到的角度常数（$\arctan 2^{-i}$ 或 $\text{artanh}\, 2^{-i}$）。两种使用方式：</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**旋转模式（rotation）**：驱动 $z \to 0$，把向量转到目标角度——得 $\sin/\cos$（令初始 $x = 1/K, y = 0$）、复数旋转、极坐标转换；</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**向量模式（vectoring）**：驱动 $y \to 0$，把向量转到 x 轴——得 $\arctan(y/x)$（$z$ 累出角度）、向量模（$x$ 得 $|v| \cdot K$）、直角转极坐标。</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>展开两点工程细节。其一，每步迭代 = 2 次移位 + 1 次查表 + 3 次加减，角度常数 $e^{(i)} = \arctan 2^{-i}$ 预存小表（$i = 0,1,2,3,\dots$ 依次约为 $45.0°, 26.6°, 14.0°, 7.1°, 3.6°,\dots$，每角约为前一角的一半）。其二，方向决策 $d_i = \mathrm{sign}(z^{(i)})$（旋转模式）与不恢复除法"试减失败改加法"如出一辙：$z$ 过冲就往回转、欠着就继续转。</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>旋转模式跑完 $m$ 步、$z^{(m)} \to 0$ 时：</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>x^{(m)} = K(x\cos z - y\sin z), \qquad y^{(m)} = K(y\cos z + x\sin z)</span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>$K = 1.646\,760\,258\,121\cdots$。求 $\sin z$ 与 $\cos z$ 只需令 $x = 1/K = 0.607\,252\,935\cdots$、$y = 0$ 起步，把尺度因子在入口处消化掉。$k$ 位精度需要 $k$ 次迭代：大 $i$ 时 $\arctan 2^{-i} \approx 2^{-i}$，超过 $k$ 步的旋转对结果的贡献小于 ulp。</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>收敛域由角度表的完备性决定：圆周模式下为 $-99.7° \le z \le 99.7°$（全部角度之和），恰好覆盖 $<span class="co">[</span><span class="ot">-\pi/2, \pi/2</span><span class="co">]</span>$。收敛的充要条件是每个角度不小于其后所有角度之和的一半——$\arctan 2^{-(i+1)} \ge \frac{1}{2}\arctan 2^{-i}$ 成立；后文会看到双曲模式恰恰在这里翻车。</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="一鱼多吃"}</span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>换 $m$ 与模式组合：$m=-1$ 双曲模式得 sinh/cosh/artanh，进而 $\ln x = 2\,\text{artanh}\left(\frac{x-1}{x+1}\right)$、$e^x = \sinh x + \cosh x$；$m=0$ 线性模式退化为乘法（旋转）与除法（向量）——CORDIC 是一台"算法万花筒"。</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 22.2](images/ch22/fig22_02.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="数值轨迹：CORDIC 旋转 +30°"}</span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>以度为单位跟踪 $z^{(i)}$（目标：驱动 $z \to 0$，每步选 $d_i = \mathrm{sign}(z^{(i)})$）：</span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>+30.0 \xrightarrow{-45.0} -15.0 \xrightarrow{+26.6} +11.6 \xrightarrow{-14.0} -2.4 \xrightarrow{+7.1} +4.7 \xrightarrow{-3.6} +1.1 \xrightarrow{-1.8} -0.7 \xrightarrow{+0.9} +0.2 \xrightarrow{-0.4} -0.2 \xrightarrow{+0.2} +0.0 \xrightarrow{-0.1} -0.1</span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>10 步后 $z$ 已压到 $0.1°$ 量级（本例用近似角度值便于心算，实际硬件用弧度全精度表）；向量 $(x, y)$ 沿图 22.2 的折线从初始方向逼近 $+30°$ 方向。整个决策序列与不恢复除法的商数字序列在结构上完全同构。</span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>向量模式（vectoring）把决策对象换成 $y$：$d_i = -\mathrm{sign}(x^{(i)}y^{(i)})$ 驱动 $y \to 0$，$m$ 步后</span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>x^{(m)} = K\sqrt{x^2 + y^2}, \qquad z^{(m)} = z + \arctan\frac{y}{x}</span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>令 $x = 1, z = 0$ 起步即得 $\arctan y$，$x$ 累出的是向量模。配合恒等式 $\arctan(1/y) = \pi/2 - \arctan y$ 可把定点运算的范围压半。注意：旋转模式有收敛域问题，向量模式对任意输入都收敛——22.5 节选型时这是个重要区别。</span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a><span class="fu">## 22.3 CORDIC 硬件（CORDIC Hardware)</span></span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>最简实现：三个寄存器（$x, y, z$）+ 两个桶形移位器（或时序复用一个）+ 三个加减法器 + 角度 ROM + 符号决策逻辑。每拍一次迭代，$k$ 位精度约 $k$ 拍。</span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>提速方向：</span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**展开流水**：$k$ 级全流水，每级固定移位量（移位变**硬连线**，桶形移位器消失！）——吞吐每拍一个结果，这是 FPGA 上 CORDIC 的标准形态（28 章）；</span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**高基数/冗余 CORDIC**：方向集合扩到 $<span class="sc">\{</span>-1, 0, +1<span class="sc">\}</span>$ 或更高基数，减少迭代次数，代价是选择逻辑变复杂（与 SRT 的历史重演）。</span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a>成本阶梯从简到繁，可以排成一张选型单：</span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**最简时序版**：3 个寄存器 + 角度查表 ROM + 2 个移位器 + 3 个加减法器；$d_i$ 通过"选原码还是补码"进入加减法器。面积再省可让 3 路计算分时共享一个加减法器（慢约 3 倍）；</span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**固件/软件版**：直接在通用处理器的 ALU 上跑迭代循环，角度表放控制 ROM 或内存——早期科学计算器（如 HP-35）正是这么干的；</span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**位串行版**：加减法器位串行化，$k$ 位精度约 $O(k^2)$ 拍——对手持计算器完全够用（几万拍不过几十毫秒，人眼无感）；</span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**全展开流水版**：$k$ 级流水、每级移位量固定，桶形移位器退化为硬连线，吞吐每拍一个结果——FPGA 函数计算的标准形态（28 章）。</span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a><span class="al">![图 22.3 CORDIC 所需的硬件：三个寄存器、两个移位器、三个加减法器与一张小角度表](images/ch22/fig22_03.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a><span class="fu">## 22.4 广义 CORDIC（Generalized CORDIC)</span></span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a>把"旋转矩阵"抽象为更一般的迭代映射，可以覆盖更多函数（对数、指数、开方的统一推导）。价值在于提供**统一的收敛性分析框架**：什么条件下迭代收敛、收敛域多大、需要几次补偿迭代。</span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a>三种坐标系的差异全在 $e^{(i)}$ 与尺度因子上：</span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> $\mu$ <span class="pp">|</span> 坐标系 <span class="pp">|</span> $e^{(i)}$ <span class="pp">|</span> 尺度因子 <span class="pp">|</span> 向量"长度" <span class="pp">|</span></span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|---|---|</span></span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 1 <span class="pp">|</span> 圆 <span class="pp">|</span> $\arctan 2^{-i}$ <span class="pp">|</span> $K = 1.6468$（放大） <span class="pp">|</span> $\sqrt{x^2+y^2}$ <span class="pp">|</span></span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 0 <span class="pp">|</span> 线 <span class="pp">|</span> $2^{-i}$ <span class="pp">|</span> 1（真旋转） <span class="pp">|</span> $x$ <span class="pp">|</span></span>
+<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> $-1$ <span class="pp">|</span> 双曲 <span class="pp">|</span> $\text{artanh}\, 2^{-i}$ <span class="pp">|</span> $K' = 0.8282$（缩小） <span class="pp">|</span> $\sqrt{x^2-y^2}$ <span class="pp">|</span></span>
+<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a>线性模式是"伪旋转全变真旋转"的退化情形：旋转模式（$y$ 起步为 0）直接算乘法/乘加 $y + xz$；向量模式（$z$ 起步为 0）直接算除法/除加 $z + y/x$。双曲模式下伪旋转使向量长度**收缩**（$\cosh\alpha &gt; 1$），累积收缩因子 $K' = 0.828\,159\,360\,960\,2\cdots$。</span>
+<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a>双曲模式的收敛有个著名的坑：$\arctan$ 满足"每个角度 ≥ 后续角度之和的一半"，$\text{artanh}$ 却不满足。修补方法简单粗暴——**下标 $i = 4, 13, 40, 121, \dots$（即 $3j+1$ 序列）的迭代执行两遍**，角度序列重新完备；实际精度需求下 $m &lt; 121$，重复代价可忽略（已折算进 $K'$）。修好之后：$\sinh/\cosh$ 的收敛域 $|z| &lt; 1.13$，$\text{artanh}$ 的收敛域 $|y| &lt; 0.81$，配合域归约恒等式足以覆盖全值域。</span>
+<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a><span class="fu">## 22.5 CORDIC 方法的应用（Using the CORDIC Method)</span></span>
+<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**收敛域扩展**：输入超出收敛范围时先做**域归约（range reduction）**——三角函数用周期性/对称性归到 $<span class="co">[</span><span class="ot">0, \pi/4</span><span class="co">]</span>$，对数用 $x = m \cdot 2^e$ 拆成 $\ln m + e \ln 2$；</span>
+<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**尺度因子补偿**：$\prod K_i$ 预乘到初始值，或在最终乘法中吸收；</span>
+<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**典型应用**：DDS（直接数字频率合成）的相位→正弦转换、QR 分解/Givens 旋转（向量模式的硬件实现）、机器人运动学、软件无线电的数字上下变频。</span>
+<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a>除直接函数外，"一次预处理 + 一次向量模式"还能拿下一批复合函数：$\ln w = 2\,\text{artanh}\frac{w-1}{w+1}$（两次加法预备）、$\sqrt{w} = \sqrt{(w+\frac{1}{4})^2 - (w-\frac{1}{4})^2}$（双曲向量模式算 $\sqrt{x^2-y^2}$）、$\sin^{-1} w = \arctan\frac{w}{\sqrt{1-w^2}}$、$e^z = \sinh z + \cosh z$ 等。下表是全书最实用的"坐标系 × 模式 × 初始化 → 函数"对照图之一。</span>
+<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a><span class="al">![图 22.5 广义 CORDIC 算法总结：三种坐标系 × 两种模式的初始化与输出公式一览](images/ch22/fig22_05.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a>两个工程细节值得展开：</span>
+<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**迭代次数必须固定**。为了让 $K$（与 $K'$）保持常数，即使 $z$（或 $y$）中途已到 0 也不能提前收工——线性模式除外。想提前停止或跳步，就必须逐拍维护 $(K^{(i)})^2 \leftarrow (K^{(i)})^2(1 \pm 2^{-2i})$ 并在结尾做开方/除法修正——变因子 CORDIC 的额外开销通常得不偿失。</span>
+<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**截断 CORDIC（truncated CORDIC）免费省一半**：前 $k/2$ 步照常迭代；对小角度有 $\arctan\varepsilon \approx \varepsilon$，剩余 $k/2$ 步可合并成**一次乘法**（如 $x^{(k/2+1)} = x^{(k/2)} - y^{(k/2)}z^{(k/2)}$），$z$ 一步清零。可证被丢弃的角度对 $K$ 的贡献小于 ulp——尺度因子一个字都不用改。此外，高 radix 版本（$d_i \in <span class="sc">\{</span>-2,-1,1,2<span class="sc">\}</span>$，移位器后加 2 选 1 多路器）把迭代数再砍半，与 SRT 的高 radix 化完全同构。</span>
+<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a><span class="fu">## 22.6 代数表述（An Algebraic Formulation)</span></span>
+<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>用复数乘法的语言：CORDIC 旋转 = 乘以 $(1 + j\, d_i 2^{-i})$，整个迭代 = 复数连乘。这个视角把 CORDIC 与 FFT 的旋转因子、复数乘法器设计联系起来，也给出收敛性（角度级数的完备性：$\sum \arctan 2^{-i}$ 能逼近范围内任意角）的严格证明路径。</span>
+<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a>完整的代数推导其实不长。从乘性归一化迭代 $u^{(i+1)} = u^{(i)} - \ln c^{(i)}$、$v^{(i+1)} = v^{(i)}c^{(i)}$ 出发（$u \to 0$ 时 $v \to v\,e^{u(0)}$，23.3 节证明），取</span>
+<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a>c^{(i)} = \frac{1 + j\,d_i 2^{-i}}{\sqrt{1 + 2^{-2i}}} = e^{j g^{(i)}}, \qquad g^{(i)} = \arctan(d_i 2^{-i})</span>
+<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a>则 $u$ 中被消去的是纯虚数 $j\arctan(d_i 2^{-i})$，与 CORDIC 的角度累减逐字对应。令 $u^{(0)} = jz$、$v^{(0)} = 1$，复数乘法 $v^{(i+1)} = v^{(i)}(1 + j d_i 2^{-i})$ 按实虚部展开正是圆周 CORDIC 的两条坐标递推；分母 $\sqrt{1+2^{-2i}}$ 的连乘累积出尺度因子 $K$，取 $v^{(0)} = 1/K$ 即完成预补偿。复数视角还顺手把收敛性说清：角度表 $<span class="sc">\{</span>\arctan 2^{-i}<span class="sc">\}</span>$ 的完备性（每角 ≥ 后续和的一半）等价于二进制选择能覆盖 $<span class="co">[</span><span class="ot">-99.7°, 99.7°</span><span class="co">]</span>$ 中的每个角。</span>
+<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a><span class="fu">## RTL 实践：`rtl/ch22_2_cordic_rotation`</span></span>
+<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a>12 级迭代 CORDIC（旋转模式），定点 Q2.14 格式，输入角度输出 sin/cos：</span>
+<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a><span class="in">```systemverilog</span></span>
+<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a><span class="in">wire        dir = (z &gt;= 0);   // 旋转方向由剩余角度符号决定</span></span>
+<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a><span class="in">wire signed [15:0] x_next = dir ? x - (y &gt;&gt;&gt; i) : x + (y &gt;&gt;&gt; i);</span></span>
+<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a><span class="in">wire signed [15:0] y_next = dir ? y + (x &gt;&gt;&gt; i) : y - (x &gt;&gt;&gt; i);</span></span>
+<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a><span class="in">wire signed [15:0] z_next = dir ? z - atan_tab[i] : z + atan_tab[i];</span></span>
+<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a>设计要点：</span>
+<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**无乘法器**：每拍只有移位（<span class="in">`&gt;&gt;&gt;`</span> 算术右移）与加减——CORDIC 的全部本钱；</span>
+<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**增益预偿**：初始 $x = K \cdot 2^{14}$（$K \approx 0.6073$），把 12 级旋转的尺度因子一次性预付，输出直接就是真值比例；</span>
+<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**角度表**：$\arctan(2^{-i})$ 常数表是唯一的"存储"，12 项足够 Q2.14 精度（末项 $\approx 2^{-11}$）；</span>
+<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>testbench 对 $0$、$\pm\pi/4$、$\pm 0.5$、$1.0$ 等角度做定向校验，容差 $\pm 150$（约 0.009 rad），实测误差仅几个 LSB。</span>
+<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> rtl/ch22_2_cordic_rotation</span>
+<span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> run_iverilog.sh    <span class="co"># 或 bash run_verilator.sh</span></span>
+<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章小结</span></span>
+<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>CORDIC = 移位 + 加 + 小角度表，算尽常见超越函数。</span>
+<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>伪旋转的尺度因子是常数，可集中补偿；每拍只做方向决策与移位加。</span>
+<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>旋转/向量两模式 × 圆/线/双曲三坐标系 = 函数全家桶。</span>
+<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>全流水展开后移位器消失，FPGA 上是函数求值的常客。</span>
+<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a><span class="fu">## 原书插图</span></span>
+<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 22.1](images/ch22/fig22_01.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 22.4](images/ch22/fig22_04.png)</span>{fig-align="center" width="85%"}</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第11章 树形与阵列乘法器（Tree and Array Multipliers） – 计算机算术：算法与硬件设计（中文解读版）</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./ch12.html" rel="next">
+<link href="./ch10.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-77d2b90c99eeff80c5837adab8b96ac7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch09.html">第三部分 乘法 (Multiplication)</a></li><li class="breadcrumb-item"><a href="./ch11.html"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">计算机算术：算法与硬件设计（中文解读版）</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第一部分 数的表示 (Number Representation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch01.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第二部分 加法与减法 (Addition/Subtraction)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第7章 快速加法器的变体（Variations in Fast Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第8章 多操作数加法（Multioperand Addition）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部分 乘法 (Multiplication)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第9章 基本乘法方案（Basic Multiplication Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第10章 高基数乘法器（High-Radix Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch11.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">第四部分 除法 (Division)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第14章 高基数除法器（High-Radix Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第15章 除法器的变体（Variations in Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第16章 收敛法除法（Division by Convergence）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">第五部分 实数运算 (Real Arithmetic)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第17章 浮点数表示（Floating-Point Representations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">第六部分 函数求值 (Function Evaluation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第23章 函数求值的变体（Variations in Function Evaluation）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第24章 查表算术（Arithmetic by Table Lookup）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">第七部分 实现专题 (Implementation Topics)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch26.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch27.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch28.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第28章 可重构算术（Reconfigurable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">附录 过去、现在与未来（Past, Present, and Future）</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#本章导读" id="toc-本章导读" class="nav-link active" data-scroll-target="#本章导读">本章导读</a></li>
+  <li><a href="#全树乘法器full-tree-multipliers" id="toc-全树乘法器full-tree-multipliers" class="nav-link" data-scroll-target="#全树乘法器full-tree-multipliers">11.1 全树乘法器（Full-Tree Multipliers）</a></li>
+  <li><a href="#其他归约树alternative-reduction-trees" id="toc-其他归约树alternative-reduction-trees" class="nav-link" data-scroll-target="#其他归约树alternative-reduction-trees">11.2 其他归约树（Alternative Reduction Trees）</a></li>
+  <li><a href="#有符号数的树形乘法器tree-multipliers-for-signed-numbers" id="toc-有符号数的树形乘法器tree-multipliers-for-signed-numbers" class="nav-link" data-scroll-target="#有符号数的树形乘法器tree-multipliers-for-signed-numbers">11.3 有符号数的树形乘法器（Tree Multipliers for Signed Numbers)</a></li>
+  <li><a href="#部分树与截断乘法器partial-tree-and-truncated-multipliers" id="toc-部分树与截断乘法器partial-tree-and-truncated-multipliers" class="nav-link" data-scroll-target="#部分树与截断乘法器partial-tree-and-truncated-multipliers">11.4 部分树与截断乘法器（Partial-Tree and Truncated Multipliers)</a></li>
+  <li><a href="#阵列乘法器array-multipliers" id="toc-阵列乘法器array-multipliers" class="nav-link" data-scroll-target="#阵列乘法器array-multipliers">11.5 阵列乘法器（Array Multipliers）</a></li>
+  <li><a href="#流水化树形与阵列乘法器pipelined-tree-and-array-multipliers" id="toc-流水化树形与阵列乘法器pipelined-tree-and-array-multipliers" class="nav-link" data-scroll-target="#流水化树形与阵列乘法器pipelined-tree-and-array-multipliers">11.6 流水化树形与阵列乘法器（Pipelined Tree and Array Multipliers)</a></li>
+  <li><a href="#rtl-实践rtlch11_5_array_multiplier" id="toc-rtl-实践rtlch11_5_array_multiplier" class="nav-link" data-scroll-target="#rtl-实践rtlch11_5_array_multiplier">RTL 实践：<code>rtl/ch11_5_array_multiplier</code></a></li>
+  <li><a href="#本章小结" id="toc-本章小结" class="nav-link" data-scroll-target="#本章小结">本章小结</a></li>
+  <li><a href="#原书插图" id="toc-原书插图" class="nav-link" data-scroll-target="#原书插图">原书插图</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch09.html">第三部分 乘法 (Multiplication)</a></li><li class="breadcrumb-item"><a href="./ch11.html"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="本章导读" class="level2">
+<h2 class="anchored" data-anchor-id="本章导读">本章导读</h2>
+<p>把第 9、10 章的部分积生成与第 8 章的压缩树合体，就得到现代组合乘法器的完整形态：<strong>部分积生成（Booth）→ 压缩树（CSA/4:2）→ 最终加法器（CPA）</strong>。本章讨论全树、阵列、有符号处理、截断与流水化——这是 CPU/GPU/AI 芯片里每天都在流片的结构。</p>
+<p>三段式之外，本章还要回答两个纯粹的工程问题：<strong>为什么”规整”常常比”理论延迟更短”更值钱</strong>（阵列乘法器的生态位），以及<strong>为什么”少算几位”能换来近一半的面积</strong>（截断乘法器）。这两个问题看起来古老，却在今天的 AI 加速器里换了件马甲重新出现。</p>
+</section>
+<section id="全树乘法器full-tree-multipliers" class="level2">
+<h2 class="anchored" data-anchor-id="全树乘法器full-tree-multipliers">11.1 全树乘法器（Full-Tree Multipliers）</h2>
+<p>全树（full-tree）：所有部分积一次性生成，一棵树压到底，一次 CPA 收尾。<span class="math inline">\(k\)</span> 位无符号乘法：<span class="math inline">\(k\)</span> 个部分积（或 Booth 后 <span class="math inline">\(k/2\)</span> 个），树高 <span class="math inline">\(O(\log k)\)</span>，CPA <span class="math inline">\(O(\log k)\)</span>——总延迟 <span class="math inline">\(O(\log k)\)</span>，面积 <span class="math inline">\(O(k^2)\)</span>。</p>
+<p>全树的硬件账本可以直接数出来：第一步用 <span class="math inline">\(k^2\)</span> 个与门生成 <span class="math inline">\(a_jx_i\)</span> 位点，它们在 <span class="math inline">\(2k-1\)</span> 列里排成 <span class="math inline">\(1,2,\dots,k,\dots,2,1\)</span> 的三角分布；第二步用压缩器把这些位点归约到每列不超过 2 个；第三步交给 <span class="math inline">\(2k\)</span> 位 CPA 收尾。压缩器总数与阵列乘法器同阶（都是 <span class="math inline">\(\Theta(k^2)\)</span>），真正的差别不在”用了多少加法器”，而在<strong>连线的组织方式</strong>。</p>
+<p>延迟则要从”剩余行数”看：一个 3:2 计数器把 3 行合成 2 行，要拿到对数级树高，每级就必须尽量”吃满”——这是 Wallace 的思想；反之每级只做最低限度压缩，树高略增但模式更规律、CPA 更宽——这是 Dadda 的思想。而最终加法器的权重常被低估：压缩树把 <span class="math inline">\(O(k)\)</span> 行压到 2 行，但这两行仍是冗余形式，必须由 CPA 归约；用前缀结构时延迟 <span class="math inline">\(O(\log k)\)</span> 尚可，一旦偷懒用行波加法器，整条路径立刻退回 <span class="math inline">\(O(k)\)</span>——这正是阵列乘法器延迟劣化的根源。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="解读">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>解读
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><span class="math inline">\(O(k^2)\)</span> 面积听着吓人，但现代工艺里 64×64 乘法器只占零点几平方毫米，瓶颈早已不是”造不造得起”，而是<strong>功耗与时序收敛</strong>——压缩树的连线不规则性让高频下的物理设计很考验功力。</p>
+</div>
+</div>
+</section>
+<section id="其他归约树alternative-reduction-trees" class="level2">
+<h2 class="anchored" data-anchor-id="其他归约树alternative-reduction-trees">11.2 其他归约树（Alternative Reduction Trees）</h2>
+<ul>
+<li><strong>Dadda 策略</strong>：压缩器最少；</li>
+<li><strong>Wallace 策略</strong>：尽早压缩；</li>
+<li><strong>4:2 压缩器树</strong>：现代主流。4:2 压缩器摄入 4 个同权重比特 + 级联进位 <span class="math inline">\(c_{in}\)</span>，输出 2 比特 + 级联进位 <span class="math inline">\(c_{out}\)</span>，关键性质是 <strong><span class="math inline">\(c_{out}\)</span> 不依赖于 <span class="math inline">\(c_{in}\)</span></strong>——横向级联只走一级 mux 延迟，压缩树各列独立，时序极易收敛；</li>
+<li><strong>平衡延迟树</strong>：考虑不同路径经过压缩器数量的均衡，避免某些列”级数特别深”。</li>
+</ul>
+<p>两种经典策略的差别可以用 4×4 的玩具例子算清楚。16 个位点按 <span class="math inline">\(1,2,3,4,3,2,1\)</span> 分布在 7 列中：<strong>Wallace</strong> 第一级立刻压缩，用 3 FA + 1 HA 把分布变成 <span class="math inline">\(1,3,2,3,2,1,1\)</span>，第二级再用 2 FA + 2 HA 压到 <span class="math inline">\(2,2,2,2,1,1,1\)</span>，末尾只需一个 4 位 CPA（合计 5 FA + 3 HA）；<strong>Dadda</strong> 第一级只把高度从 4 降到 3（2 个 FA，得 <span class="math inline">\(1,3,2,2,3,2,1\)</span>），第二级用 2 FA + 2 HA 压到高度 2（得 <span class="math inline">\(2,2,2,2,1,2,1\)</span>），代价是 CPA 变成 6 位（合计 4 FA + 2 HA）。结论很工程化：<strong>Dadda 用更少的加法器换更宽的 CPA</strong>——当 CPA 已是快速前缀结构时，多 2 位几乎不影响延迟，Dadda 往往更划算。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_03.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 11.3 一个 7×7 树形乘法器可能的 CSA 压缩树：输入因逐行左移而错位，导致树底部的压缩器宽度逐级增加</figcaption>
+</figure>
+</div>
+<p>规整性问题在 7×7 例子上一览无遗：7 个待加数依次左移 0~6 位，每行有效区间从 <span class="math inline">\([0,6]\)</span> 撑到 <span class="math inline">\([6,12]\)</span>，压缩器宽度从 7 位一路变到 10 位，树底还出现大量只做”位点搬家”的半加器。与第 8 章图 8.12 对照可知：<strong>同样的 CSA 压缩理论，一旦加上”操作数互相移位”这个约束，结构与代价就全变了</strong>。</p>
+<p>一种更规整的替代方案是把基本单元换成 <strong>4:2 压缩器</strong>。用 4:2 模块搭出的树是严格二叉树：顶层每个模块吃掉乘数的 4 个倍数（两上两下），吐出 2 个数给下一层；每加深一层只需复制已有树、中间插一个 4:2 模块。这种递归结构对版图极其友好。若用两级 CSA 拼出 4:2 模块，二叉树级数可能比 Wallace/Dadda 还多，但规整性带来的版图效率通常能补回延迟；而直接从 I/O 规范设计的实现（图 11.5c）延迟只有 3 级 XOR（两级 CSA 拼法是 4 级）。还有一个漂亮的理论视角——二进制 4:2 压缩器本质是数字集 <span class="math inline">\([0,2]\)</span> 的<strong>广义有符号数字加法器</strong>，2 比特编码为：零 = <span class="math inline">\((0,0)\)</span>、一 = <span class="math inline">\((0,1)\)</span> 或 <span class="math inline">\((1,0)\)</span>、二 = <span class="math inline">\((1,1)\)</span>，据此可直接延伸到 BSD 部分积与 <span class="math inline">\([0,3]\)</span> 数字集等变体。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_05.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 11.5 基于 4:2 归约模块、结构更规整的树形乘法器</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_06.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 11.6 由 4:2 归约模块构成的部分积压缩树版图：每条实线箭头代表一对数（sum 与 carry）</figcaption>
+</figure>
+</div>
+<p><strong>平衡延迟树（balanced-delay tree）</strong> 走的是另一条路：不求”级数最少”，而求”所有输出同时到达”。基于第 8 章表 8.1，11:2 归约至少需要 5 级 FA；图 11.4 给出了一种 5 级布局，其关键特征是第 <span class="math inline">\(i\)</span> 级的进位全部送入第 <span class="math inline">\(i+1\)</span> 级 FA，路径完全均衡。该电路由三列组成（从左到右含 1、3、5 个 FA），占一个很窄的垂直切片，横向复制即可拼出任意宽度的归约树；在右侧追加一列 7 个 FA，输入数就从 11 提升到 18，相邻列之间只有一根连线，互连开销极小。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_04.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 11.4 11 输入平衡延迟压缩树的一个切片：所有输出经过相同级数的 FA 后同时到达</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="选型经验">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>选型经验
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>四类归约树的适用面可以粗略总结为：<strong>追极限延迟</strong>选 Wallace，<strong>追器件数</strong>选 Dadda，<strong>追版图规整与高主频</strong>选 4:2 二叉树，<strong>追延迟确定性</strong>选平衡延迟树。而在引入 Booth 之后还有一层反问：radix-2 Booth 把行数减半，省下的压缩器是否抵得上编码逻辑本身的面积与时延？现代 VLSI 下的实证结论并不总偏向 Booth——<strong>布线开销与不规则性会把账面优势吃掉</strong>。</p>
+</div>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_08.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 11.8</figcaption>
+</figure>
+</div>
+</section>
+<section id="有符号数的树形乘法器tree-multipliers-for-signed-numbers" class="level2">
+<h2 class="anchored" data-anchor-id="有符号数的树形乘法器tree-multipliers-for-signed-numbers">11.3 有符号数的树形乘法器（Tree Multipliers for Signed Numbers)</h2>
+<p>Booth 部分积天然带符号，进压缩树时的三板斧（第 8.5、10.3 节已铺垫）：</p>
+<ol type="1">
+<li>负倍数部分积取补（取反 + 最低位加 1）；</li>
+<li>符号扩展的”翻转 + 常数补偿”技巧消除高位符号串；</li>
+<li>最终 CPA 输出真正的 2 的补码乘积。</li>
+</ol>
+<p>直接对 2 的补码操作数做乘法时，每个部分积都是有符号数，<strong>必须符号扩展到最终乘积的宽度</strong>。真正的代价不在”扩展”本身，而在扩展产生的冗余位串：一个负的部分积，其高位会拖出一长串 1。这里有一个可复用的恒等式——若 <span class="math inline">\(m\)</span> 个相同符号位 <span class="math inline">\(s\)</span> 占据权重 <span class="math inline">\(2^i\)</span> 到 <span class="math inline">\(2^{i+m-1}\)</span>，则</p>
+<p><span class="math display">\[
+s\cdot\sum_{j=i}^{i+m-1}2^j = s\left(2^{i+m} - 2^i\right)
+\]</span></p>
+<p>即这 <span class="math inline">\(m\)</span> 个位点可以压缩成”高位一个 <span class="math inline">\(2^{i+m}\)</span>、低位一个 <span class="math inline">\(-2^i\)</span>“两项。把矩阵中所有行的符号串、以及取补时各行最低位需要的那个 <span class="math inline">\(+1\)</span> 统一归并，就得到一个<strong>可预计算的常数</strong>——它只有很少几个有效位，直接作为额外一行注入压缩树即可，符号扩展串就此消失。</p>
+<p>符号扩展位串还有一个可利用的特性：<strong>不同列可以共用同一个 FA</strong>。图 11.7 画了三个带符号扩展的部分积，某些列的位点模式完全重复，一个 FA 的进位输出可以同时服务好几列，于是”5 份冗余副本被直接删掉”。不过由于各行之间存在移位，这里可复用的模式比第 8 章图 8.19（无移位情形）要少，因此用于容纳符号位的宽度扩张反而略大一些。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_07.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 11.7 有符号树形乘法器中通过共享 FA 来压缩 CSA 宽度：多个列的符号扩展位点模式重复，可由同一个 FA 一并处理</figcaption>
+</figure>
+</div>
+<p>Baugh-Wooley 阵列（9.4 节）与 Booth+压缩树是有符号乘法的两大流派，后者因部分积减半而完胜主流市场。</p>
+</section>
+<section id="部分树与截断乘法器partial-tree-and-truncated-multipliers" class="level2">
+<h2 class="anchored" data-anchor-id="部分树与截断乘法器partial-tree-and-truncated-multipliers">11.4 部分树与截断乘法器（Partial-Tree and Truncated Multipliers)</h2>
+<ul>
+<li><strong>部分树（partial-tree）</strong>：只用较小的压缩树，迭代几拍完成（与多拍思想汇合）；</li>
+<li><strong>截断乘法器（truncated multiplier）</strong>：只要乘积高 <span class="math inline">\(k\)</span> 位时（定点 DSP 的日常），低位部分积整列扔掉，保留列加”舍入补偿常数”控制误差。面积/功耗省近一半，误差有严格上界可分析——FIR、FFT 数据通路的标准优化。</li>
+</ul>
+<p>部分树的设计参数只有一个 <span class="math inline">\(h\)</span>（<span class="math inline">\(h&lt;k\)</span>）：把 <span class="math inline">\(k\)</span> 个操作数的加法拆成 <span class="math inline">\(\lceil k/h\rceil\)</span> 趟，每趟用一个 <span class="math inline">\((h+2)\)</span> 输入的 CSA 树，把”累积部分积（存储进位形式的两行）“与”新的 <span class="math inline">\(h\)</span> 个操作数”一起压缩。每趟结束后，下一批 <span class="math inline">\(h\)</span> 个操作数相对本批左移 <span class="math inline">\(h\)</span> 位，因此和的后 <span class="math inline">\(h\)</span> 位、进位部分的 <span class="math inline">\(h-1\)</span> 位可以”放松”出去，用一个小型 <span class="math inline">\(h\)</span> 位加法器换算成最终乘积的 <span class="math inline">\(h\)</span> 位，进位出送至触发器与下一批输入合并。图 11.9 中浅灰画出的就是这条可放松的低位通路。本质上图 11.9 就是 <strong>radix-<span class="math inline">\(2^h\)</span> 乘法</strong>，与第 10 章的高基数乘法器只有定量差别：<span class="math inline">\(h\)</span> 较小（不超过 8 位）时叫高基数乘法器，<span class="math inline">\(h\)</span> 占到 <span class="math inline">\(k/2\)</span>、<span class="math inline">\(k/4\)</span> 量级时叫部分树乘法器。若前置 radix-<span class="math inline">\(2^b\)</span> Booth 编码，趟数减少 <span class="math inline">\(b\)</span> 倍，每趟可放松 <span class="math inline">\(bh\)</span> 位。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_09.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 11.9 部分树乘法器的总体结构：一个 <span class="math inline">\((h+2)\)</span> 输入 CSA 树反复迭代，每趟放松 <span class="math inline">\(h\)</span> 位结果</figcaption>
+</figure>
+</div>
+<p>截断乘法器的动机来自一个观察：定点小数乘法中，部分积矩阵右半边（图 11.10 虚线右侧）对最终结果影响极小，我们却为它付了与左半边相同的与门数和压缩器数。与其”算完再舍”，不如根本不生成这些位点。若把虚线右侧全部丢弃，最坏情况（丢弃位全是 1）的误差为</p>
+<p><span class="math display">\[
+\frac{8}{2}+\frac{7}{4}+\frac{6}{8}+\frac{5}{16}+\frac{4}{32}+\frac{3}{64}+\frac{2}{128}+\frac{1}{256}\approx 7.004\ \text{ulp}
+\]</span></p>
+<p><span class="math inline">\(O(7\ \text{ulp})\)</span> 在多数 DSP 场合太大，但同样的分析框架给出三条改进路线：<strong>多留一列</strong>（保留虚线右侧第一列，误差降到 3.5 ulp，代价是多生成并压缩 8 个位点）；<strong>常数补偿</strong>（仍丢第 <span class="math inline">\(-9\)</span> 列及之后，但在第 <span class="math inline">\(-6\)</span> 列插一个常数 1，误差落在 <span class="math inline">\(-3\)</span> 至 <span class="math inline">\(+4\)</span> ulp，量级相当而硬件成本低得多——三个方案里性价比最高）；<strong>可变补偿</strong>（在第 <span class="math inline">\(-7\)</span> 列插入 <span class="math inline">\(a_{-1}\)</span> 与 <span class="math inline">\(x_{-1}\)</span> 两个位点，被丢弃位更可能为 1 时给更大补偿，误差分析需按输入分布做）。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_10.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 11.10 8 位小数操作数的截断乘法器：虚线右侧的位点可按不同策略丢弃或补偿</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled" title="工程经验">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>工程经验
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>AI 芯片的 MAC 阵列里，“截断 + 补偿”思想以<strong>量化（quantization）</strong>的形式出现：INT8 乘加后截断到 INT8/INT16。误差上界的分析方法和截断乘法器一脉相承——第 19 章的误差分析是这些优化的理论底气。</p>
+</div>
+</div>
+</section>
+<section id="阵列乘法器array-multipliers" class="level2">
+<h2 class="anchored" data-anchor-id="阵列乘法器array-multipliers">11.5 阵列乘法器（Array Multipliers）</h2>
+<p>阵列（array）乘法器：部分积生成与累加织成一张规则的二维 FA 阵列——每行一个部分积，行内行波、行间斜传进位。延迟 <span class="math inline">\(O(k)\)</span>（与行波加法器同阶），但<strong>结构极度规整</strong>：一个 FA 单元平铺 <span class="math inline">\(k^2\)</span> 次，版图就是复制粘贴。</p>
+<p>更准确的定义是：阵列乘法器 = <strong>单侧（one-sided）压缩树 + 行波进位加法器</strong>，即”最慢的 CSA 树配最慢的 CPA”。既然两头都用最慢实现，为什么还要用它？答案是<strong>规整性本身就是价值</strong>：所有连线只连接水平、垂直或对角相邻的 FA，线短、局部，版图简单高效，且极易流水化。阵列结构还带来一个免费红利——图 11.11 中最上方 CSA 有一个空闲输入，把它接上一路数据 <span class="math inline">\(y\)</span>，阵列就直接算出 <span class="math inline">\(p=ax+y\)</span>，卷积与内积运算依赖的正是这个功能；若只想要 <span class="math inline">\(ax\)</span>，把这个 CSA 去掉、让 <span class="math inline">\(x_0a\)</span> 与 <span class="math inline">\(x_1a\)</span> 直接进第二个 CSA 即可。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_11.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 11.11 基本阵列乘法器：一个单侧 CSA 树加一个行波进位加法器</figcaption>
+</figure>
+</div>
+<ul>
+<li>优点：设计简单、布线全局部、无需任何树形规划；</li>
+<li>缺点：延迟高，<span class="math inline">\(k\)</span> 大时不敌树形；</li>
+<li>生态位：小位宽、低成本、或作为更大结构的子模块；历史上也常被教学采用（“看得见的乘法”）。</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_15.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 11.15</figcaption>
+</figure>
+</div>
+<p>把 FA 与一个与门封装成单元，<span class="math inline">\(x_i\)</span> 与 <span class="math inline">\(a_j\)</span> 分别以行、列广播，第 <span class="math inline">\(i\)</span> 行第 <span class="math inline">\(j\)</span> 列的单元自行生成 <span class="math inline">\(a_jx_i\)</span> 并送入本单元 FA——这就是图 11.14 的”带与门的 FA 阵列”；若想再省面积，可只把第一行（或前两行）的单元退化成单个与门。把它改成 2 的补码阵列，用 Baugh-Wooley 方法只需三处改动：在行波加法器右端加一个 FA 接收 <span class="math inline">\(a_4\)</span>、<span class="math inline">\(x_4\)</span>，在左下边缘加两个 FA 容纳 <span class="math inline">\(a_4\)</span>、<span class="math inline">\(x_4\)</span> 与常数 1（图 11.13）。改动如此局部，Pezaris 等需要多种带负权输入/输出 FA 变体的早期方案今天已基本不用。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_14.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 11.14 5×5 阵列乘法器（含两路加法输入）的设计：每个 FA 单元内部已包含生成 <span class="math inline">\(a_jx_i\)</span> 的与门</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_13.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 11.13 用 Baugh-Wooley 方法处理 2 的补码输入的 5×5 阵列乘法器（新增三个阴影 FA），以及为缩短关键路径而改的对角连线</figcaption>
+</figure>
+</div>
+<p>阵列的关键路径还有一个结构性事实：当 FA 的求和逻辑比进位逻辑慢时，路径沿主对角线前进、最后在末行水平走到 <span class="math inline">\(p_9\)</span>，而末行占了将近一半延迟。一个诱人的想法是让某些和信号”跳行”（从第 <span class="math inline">\(i\)</span> 行直接送到第 <span class="math inline">\(i+h\)</span> 行）——图 11.13 中弯曲的连线就是 <span class="math inline">\(h=2\)</span> 的改法。但跳行会破坏规整性、拉长连线，<strong>实测收益常常抵不上代价</strong>。更彻底的方向是<strong>干脆不要最终 CPA</strong>：把 <span class="math inline">\(k^2\)</span> 个位点按 <span class="math inline">\(1,2,3,\dots,k,\dots,3,2,1\)</span> 排成三角形，最低位直接输出，其余位由若干行 FA/HA 逐步归约；在第 <span class="math inline">\(i\)</span> 级只产生”边界 <span class="math inline">\(B_i\)</span> 上方有条件的两份结果”（一份假设后续进位跨过 <span class="math inline">\(B_i\)</span>，一份假设不跨），每下降一级条件位部分延长 1 位，最后一组 mux 给出末尾 <span class="math inline">\(k\)</span> 位的非冗余结果（图 11.16）。这套”条件求和”思想与进位选择加法器一脉相承，把进位传播彻底移出关键路径。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_16.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 11.16 第 <span class="math inline">\(i\)</span> 级执行的进位保存加法把最终乘积的条件计算位向右扩展一位：第 <span class="math inline">\(i+1\)</span> 行相对第 <span class="math inline">\(i\)</span> 行多出一位条件位</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-warning callout-titled" title="注意">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">警告</span>注意
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>无最终 CPA 的阵列乘法器虽然省掉了进位传播延迟，但代价是 mux 与条件逻辑的面积开销，且设计复杂度明显上升。工程上更常见的折中是<strong>用部分条件逻辑只处理末若干行</strong>，其余仍走常规压缩。</p>
+</div>
+</div>
+</section>
+<section id="流水化树形与阵列乘法器pipelined-tree-and-array-multipliers" class="level2">
+<h2 class="anchored" data-anchor-id="流水化树形与阵列乘法器pipelined-tree-and-array-multipliers">11.6 流水化树形与阵列乘法器（Pipelined Tree and Array Multipliers)</h2>
+<p>压缩树的各级之间插入寄存器 → 流水乘法器，吞吐提升到每拍一条乘法：</p>
+<ul>
+<li>典型切分：部分积生成+Booth（1 级）→ 压缩树（1-2 级）→ CPA（1 级），共 3-4 级流水；</li>
+<li>流水寄存器开销约占总面积 20-40%，但频率与吞吐翻倍；</li>
+<li><strong>延迟（latency）与吞吐（throughput）解耦</strong>是流水线的根本红利（第 25 章系统展开）。</li>
+</ul>
+<p>全树乘法器的流水化很直接：压缩树本身是纯组合电路，按级切段、段间插锁存器即可。麻烦出在部分树（图 11.9）上——如果仍把树输出反馈回树输入，那么在新一批输入进来之前必须等前一批的 sum/carry 被锁存，流水节奏被<strong>整棵树深</strong>而非单级延迟决定；<span class="math inline">\(h\)</span> 一大这个限制就很致命。解法是把反馈点从”树的输入端”移到”树的中间”：让压缩树输出的 sum/carry 直接灌进 <span class="math inline">\((h+2)\)</span> 输入树的<strong>中间层</strong>（图 11.17）。这样每一拍的组合延迟只由两级 CSA 决定，乘法速度大幅提升——这是一个经典手法：<strong>把长反馈环切断并下沉到流水级内部</strong>。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_17.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 11.17 高效流水的部分树乘法器：反馈信号注入 <span class="math inline">\((h+2)\)</span> 输入 CSA 树的中间层，使流水节拍只受两级 CSA 延迟约束</figcaption>
+</figure>
+</div>
+<p>阵列乘法器的流水化更自然——行间本来就有规律的斜传结构，切斜线插入流水寄存器即可（称为”斜切流水”）。图 11.18 是 5×5 阵列乘法器的流水实现：输入从上方进入、乘积从下方输出，共需 9 拍（一般情形为 <span class="math inline">\(2k-1\)</span> 拍）；所有 FA 单元的 sum 与 carry 输出都带锁存器，各行需要的 <span class="math inline">\(x_i\)</span> 通过在其路径上插入锁存器来对齐延迟，最后一行原本的 4 位行波加法器也被拆成流水形式。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_18.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 11.18 使用带锁存 FA 单元的流水化 5×5 阵列乘法器：小阴影矩形为锁存器，输入到输出共 9 拍</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="时序要点">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>时序要点
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>流水化的真正难点是<strong>末行的加数</strong>：行波加法器的延迟远大于单个 FA 行，若按其他行的节拍切分，末行会成为”瓶颈级”。图 11.18 的处理办法是<strong>把末行也细分成多级流水</strong>，让每级的组合延迟尽量接近。做这类设计时，务必按”最长单级延迟”而不是”平均延迟”确定时钟周期。</p>
+</div>
+</div>
+</section>
+<section id="rtl-实践rtlch11_5_array_multiplier" class="level2">
+<h2 class="anchored" data-anchor-id="rtl-实践rtlch11_5_array_multiplier">RTL 实践：<code>rtl/ch11_5_array_multiplier</code></h2>
+<p>8×8 无符号阵列乘法器：部分积按行斜向对齐，行间用全加器链逐级累加——同一个 FA 结构平铺 <span class="math inline">\(N \times 2N\)</span> 次：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">// 第 i 个部分积：a * b[i]，左移 i 位</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">assign</span> pp[i] = ({{N{<span class="bn">1'b0</span>}}, a} &amp; {<span class="dv">2</span>*N{b[i]}}) &lt;&lt; i;</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">// 第 i 行：rowsum[i+1] = rowsum[i] + pp[i]（2N 个 FA 组成的行）</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">for</span> (j = <span class="dv">0</span>; j &lt; <span class="dv">2</span>*N; j = j + <span class="dv">1</span>) <span class="kw">begin :</span><span class="dt"> </span><span class="kw">g_fa</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> rowsum[i+<span class="dv">1</span>][j] = rowsum[i][j] ^ pp[i][j] ^ c[j];</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> c[j+<span class="dv">1</span>] = (rowsum[i][j] &amp; pp[i][j]) |</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>                    ((rowsum[i][j] ^ pp[i][j]) &amp; c[j]);</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="kw">end</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>设计要点：</p>
+<ul>
+<li><strong>规整性的代价</strong>：延迟 <span class="math inline">\(O(N)\)</span>（每行进位行波），换取版图上的完美平铺与全局部布线；</li>
+<li>与 <code>ch8_3_wallace_tree</code> 对照阅读：同样 <span class="math inline">\(N\)</span> 个部分积，树形压缩把延迟降到 <span class="math inline">\(O(\log N)\)</span>，但布线不再规则；</li>
+<li>testbench 与黄金模型 <code>a*b</code> 做 2000 组随机比对。</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> rtl/ch11_5_array_multiplier</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> run_iverilog.sh    <span class="co"># 或 bash run_verilator.sh</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="本章小结" class="level2">
+<h2 class="anchored" data-anchor-id="本章小结">本章小结</h2>
+<ul>
+<li>现代乘法器三段式：Booth 生成 → 4:2/CSA 压缩树 → 前缀 CPA。</li>
+<li>Wallace 求快、Dadda 求省、4:2 二叉树求规整、平衡延迟树求时序确定。</li>
+<li>有符号处理靠 Booth + 符号修正技巧，Baugh-Wooley 为备选。</li>
+<li>截断乘法器：要高位就扔低位，省一半面积，误差可控（常数补偿最划算）。</li>
+<li>阵列胜在规整，树形胜在速度；流水化让吞吐起飞，反馈环要下沉到级内。</li>
+</ul>
+</section>
+<section id="原书插图" class="level2">
+<h2 class="anchored" data-anchor-id="原书插图">原书插图</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_01.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 11.1</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch11/fig11_12.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 11.12</figcaption>
+</figure>
+</div>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./ch10.html" class="pagination-link" aria-label="第10章 高基数乘法器（High-Radix Multipliers）">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第10章 高基数乘法器（High-Radix Multipliers）</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./ch12.html" class="pagination-link" aria-label="第12章 乘法器的变体（Variations in Multipliers）">
+        <span class="nav-page-text"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章导读</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>把第 9、10 章的部分积生成与第 8 章的压缩树合体，就得到现代组合乘法器的完整形态：**部分积生成（Booth）→ 压缩树（CSA/4:2）→ 最终加法器（CPA）**。本章讨论全树、阵列、有符号处理、截断与流水化——这是 CPU/GPU/AI 芯片里每天都在流片的结构。</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>三段式之外，本章还要回答两个纯粹的工程问题：**为什么"规整"常常比"理论延迟更短"更值钱**（阵列乘法器的生态位），以及**为什么"少算几位"能换来近一半的面积**（截断乘法器）。这两个问题看起来古老，却在今天的 AI 加速器里换了件马甲重新出现。</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="fu">## 11.1 全树乘法器（Full-Tree Multipliers）</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>全树（full-tree）：所有部分积一次性生成，一棵树压到底，一次 CPA 收尾。$k$ 位无符号乘法：$k$ 个部分积（或 Booth 后 $k/2$ 个），树高 $O(\log k)$，CPA $O(\log k)$——总延迟 $O(\log k)$，面积 $O(k^2)$。</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>全树的硬件账本可以直接数出来：第一步用 $k^2$ 个与门生成 $a_jx_i$ 位点，它们在 $2k-1$ 列里排成 $1,2,\dots,k,\dots,2,1$ 的三角分布；第二步用压缩器把这些位点归约到每列不超过 2 个；第三步交给 $2k$ 位 CPA 收尾。压缩器总数与阵列乘法器同阶（都是 $\Theta(k^2)$），真正的差别不在"用了多少加法器"，而在**连线的组织方式**。</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>延迟则要从"剩余行数"看：一个 3:2 计数器把 3 行合成 2 行，要拿到对数级树高，每级就必须尽量"吃满"——这是 Wallace 的思想；反之每级只做最低限度压缩，树高略增但模式更规律、CPA 更宽——这是 Dadda 的思想。而最终加法器的权重常被低估：压缩树把 $O(k)$ 行压到 2 行，但这两行仍是冗余形式，必须由 CPA 归约；用前缀结构时延迟 $O(\log k)$ 尚可，一旦偷懒用行波加法器，整条路径立刻退回 $O(k)$——这正是阵列乘法器延迟劣化的根源。</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="解读"}</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>$O(k^2)$ 面积听着吓人，但现代工艺里 64×64 乘法器只占零点几平方毫米，瓶颈早已不是"造不造得起"，而是**功耗与时序收敛**——压缩树的连线不规则性让高频下的物理设计很考验功力。</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="fu">## 11.2 其他归约树（Alternative Reduction Trees）</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Dadda 策略**：压缩器最少；</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Wallace 策略**：尽早压缩；</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**4:2 压缩器树**：现代主流。4:2 压缩器摄入 4 个同权重比特 + 级联进位 $c_{in}$，输出 2 比特 + 级联进位 $c_{out}$，关键性质是 **$c_{out}$ 不依赖于 $c_{in}$**——横向级联只走一级 mux 延迟，压缩树各列独立，时序极易收敛；</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**平衡延迟树**：考虑不同路径经过压缩器数量的均衡，避免某些列"级数特别深"。</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>两种经典策略的差别可以用 4×4 的玩具例子算清楚。16 个位点按 $1,2,3,4,3,2,1$ 分布在 7 列中：**Wallace** 第一级立刻压缩，用 3 FA + 1 HA 把分布变成 $1,3,2,3,2,1,1$，第二级再用 2 FA + 2 HA 压到 $2,2,2,2,1,1,1$，末尾只需一个 4 位 CPA（合计 5 FA + 3 HA）；**Dadda** 第一级只把高度从 4 降到 3（2 个 FA，得 $1,3,2,2,3,2,1$），第二级用 2 FA + 2 HA 压到高度 2（得 $2,2,2,2,1,2,1$），代价是 CPA 变成 6 位（合计 4 FA + 2 HA）。结论很工程化：**Dadda 用更少的加法器换更宽的 CPA**——当 CPA 已是快速前缀结构时，多 2 位几乎不影响延迟，Dadda 往往更划算。</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a><span class="al">![图 11.3 一个 7×7 树形乘法器可能的 CSA 压缩树：输入因逐行左移而错位，导致树底部的压缩器宽度逐级增加](images/ch11/fig11_03.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>规整性问题在 7×7 例子上一览无遗：7 个待加数依次左移 0~6 位，每行有效区间从 $<span class="co">[</span><span class="ot">0,6</span><span class="co">]</span>$ 撑到 $<span class="co">[</span><span class="ot">6,12</span><span class="co">]</span>$，压缩器宽度从 7 位一路变到 10 位，树底还出现大量只做"位点搬家"的半加器。与第 8 章图 8.12 对照可知：**同样的 CSA 压缩理论，一旦加上"操作数互相移位"这个约束，结构与代价就全变了**。</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>一种更规整的替代方案是把基本单元换成 **4:2 压缩器**。用 4:2 模块搭出的树是严格二叉树：顶层每个模块吃掉乘数的 4 个倍数（两上两下），吐出 2 个数给下一层；每加深一层只需复制已有树、中间插一个 4:2 模块。这种递归结构对版图极其友好。若用两级 CSA 拼出 4:2 模块，二叉树级数可能比 Wallace/Dadda 还多，但规整性带来的版图效率通常能补回延迟；而直接从 I/O 规范设计的实现（图 11.5c）延迟只有 3 级 XOR（两级 CSA 拼法是 4 级）。还有一个漂亮的理论视角——二进制 4:2 压缩器本质是数字集 $[0,2]$ 的**广义有符号数字加法器**，2 比特编码为：零 = $(0,0)$、一 = $(0,1)$ 或 $(1,0)$、二 = $(1,1)$，据此可直接延伸到 BSD 部分积与 $<span class="co">[</span><span class="ot">0,3</span><span class="co">]</span>$ 数字集等变体。</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="al">![图 11.5 基于 4:2 归约模块、结构更规整的树形乘法器](images/ch11/fig11_05.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="al">![图 11.6 由 4:2 归约模块构成的部分积压缩树版图：每条实线箭头代表一对数（sum 与 carry）](images/ch11/fig11_06.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>**平衡延迟树（balanced-delay tree）** 走的是另一条路：不求"级数最少"，而求"所有输出同时到达"。基于第 8 章表 8.1，11:2 归约至少需要 5 级 FA；图 11.4 给出了一种 5 级布局，其关键特征是第 $i$ 级的进位全部送入第 $i+1$ 级 FA，路径完全均衡。该电路由三列组成（从左到右含 1、3、5 个 FA），占一个很窄的垂直切片，横向复制即可拼出任意宽度的归约树；在右侧追加一列 7 个 FA，输入数就从 11 提升到 18，相邻列之间只有一根连线，互连开销极小。</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="al">![图 11.4 11 输入平衡延迟压缩树的一个切片：所有输出经过相同级数的 FA 后同时到达](images/ch11/fig11_04.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip title="选型经验"}</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>四类归约树的适用面可以粗略总结为：**追极限延迟**选 Wallace，**追器件数**选 Dadda，**追版图规整与高主频**选 4:2 二叉树，**追延迟确定性**选平衡延迟树。而在引入 Booth 之后还有一层反问：radix-2 Booth 把行数减半，省下的压缩器是否抵得上编码逻辑本身的面积与时延？现代 VLSI 下的实证结论并不总偏向 Booth——**布线开销与不规则性会把账面优势吃掉**。</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 11.8](images/ch11/fig11_08.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="fu">## 11.3 有符号数的树形乘法器（Tree Multipliers for Signed Numbers)</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>Booth 部分积天然带符号，进压缩树时的三板斧（第 8.5、10.3 节已铺垫）：</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>负倍数部分积取补（取反 + 最低位加 1）；</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>符号扩展的"翻转 + 常数补偿"技巧消除高位符号串；</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>最终 CPA 输出真正的 2 的补码乘积。</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>直接对 2 的补码操作数做乘法时，每个部分积都是有符号数，**必须符号扩展到最终乘积的宽度**。真正的代价不在"扩展"本身，而在扩展产生的冗余位串：一个负的部分积，其高位会拖出一长串 1。这里有一个可复用的恒等式——若 $m$ 个相同符号位 $s$ 占据权重 $2^i$ 到 $2^{i+m-1}$，则</span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>s\cdot\sum_{j=i}^{i+m-1}2^j = s\left(2^{i+m} - 2^i\right)</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>即这 $m$ 个位点可以压缩成"高位一个 $2^{i+m}$、低位一个 $-2^i$"两项。把矩阵中所有行的符号串、以及取补时各行最低位需要的那个 $+1$ 统一归并，就得到一个**可预计算的常数**——它只有很少几个有效位，直接作为额外一行注入压缩树即可，符号扩展串就此消失。</span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>符号扩展位串还有一个可利用的特性：**不同列可以共用同一个 FA**。图 11.7 画了三个带符号扩展的部分积，某些列的位点模式完全重复，一个 FA 的进位输出可以同时服务好几列，于是"5 份冗余副本被直接删掉"。不过由于各行之间存在移位，这里可复用的模式比第 8 章图 8.19（无移位情形）要少，因此用于容纳符号位的宽度扩张反而略大一些。</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="al">![图 11.7 有符号树形乘法器中通过共享 FA 来压缩 CSA 宽度：多个列的符号扩展位点模式重复，可由同一个 FA 一并处理](images/ch11/fig11_07.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>Baugh-Wooley 阵列（9.4 节）与 Booth+压缩树是有符号乘法的两大流派，后者因部分积减半而完胜主流市场。</span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a><span class="fu">## 11.4 部分树与截断乘法器（Partial-Tree and Truncated Multipliers)</span></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**部分树（partial-tree）**：只用较小的压缩树，迭代几拍完成（与多拍思想汇合）；</span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**截断乘法器（truncated multiplier）**：只要乘积高 $k$ 位时（定点 DSP 的日常），低位部分积整列扔掉，保留列加"舍入补偿常数"控制误差。面积/功耗省近一半，误差有严格上界可分析——FIR、FFT 数据通路的标准优化。</span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>部分树的设计参数只有一个 $h$（$h&lt;k$）：把 $k$ 个操作数的加法拆成 $\lceil k/h\rceil$ 趟，每趟用一个 $(h+2)$ 输入的 CSA 树，把"累积部分积（存储进位形式的两行）"与"新的 $h$ 个操作数"一起压缩。每趟结束后，下一批 $h$ 个操作数相对本批左移 $h$ 位，因此和的后 $h$ 位、进位部分的 $h-1$ 位可以"放松"出去，用一个小型 $h$ 位加法器换算成最终乘积的 $h$ 位，进位出送至触发器与下一批输入合并。图 11.9 中浅灰画出的就是这条可放松的低位通路。本质上图 11.9 就是 **radix-$2^h$ 乘法**，与第 10 章的高基数乘法器只有定量差别：$h$ 较小（不超过 8 位）时叫高基数乘法器，$h$ 占到 $k/2$、$k/4$ 量级时叫部分树乘法器。若前置 radix-$2^b$ Booth 编码，趟数减少 $b$ 倍，每趟可放松 $bh$ 位。</span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a><span class="al">![图 11.9 部分树乘法器的总体结构：一个 $(h+2)$ 输入 CSA 树反复迭代，每趟放松 $h$ 位结果](images/ch11/fig11_09.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>截断乘法器的动机来自一个观察：定点小数乘法中，部分积矩阵右半边（图 11.10 虚线右侧）对最终结果影响极小，我们却为它付了与左半边相同的与门数和压缩器数。与其"算完再舍"，不如根本不生成这些位点。若把虚线右侧全部丢弃，最坏情况（丢弃位全是 1）的误差为</span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>\frac{8}{2}+\frac{7}{4}+\frac{6}{8}+\frac{5}{16}+\frac{4}{32}+\frac{3}{64}+\frac{2}{128}+\frac{1}{256}\approx 7.004\ \text{ulp}</span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>$O(7\ \text{ulp})$ 在多数 DSP 场合太大，但同样的分析框架给出三条改进路线：**多留一列**（保留虚线右侧第一列，误差降到 3.5 ulp，代价是多生成并压缩 8 个位点）；**常数补偿**（仍丢第 $-9$ 列及之后，但在第 $-6$ 列插一个常数 1，误差落在 $-3$ 至 $+4$ ulp，量级相当而硬件成本低得多——三个方案里性价比最高）；**可变补偿**（在第 $-7$ 列插入 $a_{-1}$ 与 $x_{-1}$ 两个位点，被丢弃位更可能为 1 时给更大补偿，误差分析需按输入分布做）。</span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a><span class="al">![图 11.10 8 位小数操作数的截断乘法器：虚线右侧的位点可按不同策略丢弃或补偿](images/ch11/fig11_10.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip title="工程经验"}</span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>AI 芯片的 MAC 阵列里，"截断 + 补偿"思想以**量化（quantization）**的形式出现：INT8 乘加后截断到 INT8/INT16。误差上界的分析方法和截断乘法器一脉相承——第 19 章的误差分析是这些优化的理论底气。</span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a><span class="fu">## 11.5 阵列乘法器（Array Multipliers）</span></span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a>阵列（array）乘法器：部分积生成与累加织成一张规则的二维 FA 阵列——每行一个部分积，行内行波、行间斜传进位。延迟 $O(k)$（与行波加法器同阶），但**结构极度规整**：一个 FA 单元平铺 $k^2$ 次，版图就是复制粘贴。</span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a>更准确的定义是：阵列乘法器 = **单侧（one-sided）压缩树 + 行波进位加法器**，即"最慢的 CSA 树配最慢的 CPA"。既然两头都用最慢实现，为什么还要用它？答案是**规整性本身就是价值**：所有连线只连接水平、垂直或对角相邻的 FA，线短、局部，版图简单高效，且极易流水化。阵列结构还带来一个免费红利——图 11.11 中最上方 CSA 有一个空闲输入，把它接上一路数据 $y$，阵列就直接算出 $p=ax+y$，卷积与内积运算依赖的正是这个功能；若只想要 $ax$，把这个 CSA 去掉、让 $x_0a$ 与 $x_1a$ 直接进第二个 CSA 即可。</span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a><span class="al">![图 11.11 基本阵列乘法器：一个单侧 CSA 树加一个行波进位加法器](images/ch11/fig11_11.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>优点：设计简单、布线全局部、无需任何树形规划；</span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>缺点：延迟高，$k$ 大时不敌树形；</span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>生态位：小位宽、低成本、或作为更大结构的子模块；历史上也常被教学采用（"看得见的乘法"）。</span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 11.15](images/ch11/fig11_15.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a>把 FA 与一个与门封装成单元，$x_i$ 与 $a_j$ 分别以行、列广播，第 $i$ 行第 $j$ 列的单元自行生成 $a_jx_i$ 并送入本单元 FA——这就是图 11.14 的"带与门的 FA 阵列"；若想再省面积，可只把第一行（或前两行）的单元退化成单个与门。把它改成 2 的补码阵列，用 Baugh-Wooley 方法只需三处改动：在行波加法器右端加一个 FA 接收 $a_4$、$x_4$，在左下边缘加两个 FA 容纳 $a_4$、$x_4$ 与常数 1（图 11.13）。改动如此局部，Pezaris 等需要多种带负权输入/输出 FA 变体的早期方案今天已基本不用。</span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a><span class="al">![图 11.14 5×5 阵列乘法器（含两路加法输入）的设计：每个 FA 单元内部已包含生成 $a_jx_i$ 的与门](images/ch11/fig11_14.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a><span class="al">![图 11.13 用 Baugh-Wooley 方法处理 2 的补码输入的 5×5 阵列乘法器（新增三个阴影 FA），以及为缩短关键路径而改的对角连线](images/ch11/fig11_13.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a>阵列的关键路径还有一个结构性事实：当 FA 的求和逻辑比进位逻辑慢时，路径沿主对角线前进、最后在末行水平走到 $p_9$，而末行占了将近一半延迟。一个诱人的想法是让某些和信号"跳行"（从第 $i$ 行直接送到第 $i+h$ 行）——图 11.13 中弯曲的连线就是 $h=2$ 的改法。但跳行会破坏规整性、拉长连线，**实测收益常常抵不上代价**。更彻底的方向是**干脆不要最终 CPA**：把 $k^2$ 个位点按 $1,2,3,\dots,k,\dots,3,2,1$ 排成三角形，最低位直接输出，其余位由若干行 FA/HA 逐步归约；在第 $i$ 级只产生"边界 $B_i$ 上方有条件的两份结果"（一份假设后续进位跨过 $B_i$，一份假设不跨），每下降一级条件位部分延长 1 位，最后一组 mux 给出末尾 $k$ 位的非冗余结果（图 11.16）。这套"条件求和"思想与进位选择加法器一脉相承，把进位传播彻底移出关键路径。</span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a><span class="al">![图 11.16 第 $i$ 级执行的进位保存加法把最终乘积的条件计算位向右扩展一位：第 $i+1$ 行相对第 $i$ 行多出一位条件位](images/ch11/fig11_16.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a>::: {.callout-warning title="注意"}</span>
+<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a>无最终 CPA 的阵列乘法器虽然省掉了进位传播延迟，但代价是 mux 与条件逻辑的面积开销，且设计复杂度明显上升。工程上更常见的折中是**用部分条件逻辑只处理末若干行**，其余仍走常规压缩。</span>
+<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a><span class="fu">## 11.6 流水化树形与阵列乘法器（Pipelined Tree and Array Multipliers)</span></span>
+<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a>压缩树的各级之间插入寄存器 → 流水乘法器，吞吐提升到每拍一条乘法：</span>
+<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>典型切分：部分积生成+Booth（1 级）→ 压缩树（1-2 级）→ CPA（1 级），共 3-4 级流水；</span>
+<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>流水寄存器开销约占总面积 20-40%，但频率与吞吐翻倍；</span>
+<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**延迟（latency）与吞吐（throughput）解耦**是流水线的根本红利（第 25 章系统展开）。</span>
+<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a>全树乘法器的流水化很直接：压缩树本身是纯组合电路，按级切段、段间插锁存器即可。麻烦出在部分树（图 11.9）上——如果仍把树输出反馈回树输入，那么在新一批输入进来之前必须等前一批的 sum/carry 被锁存，流水节奏被**整棵树深**而非单级延迟决定；$h$ 一大这个限制就很致命。解法是把反馈点从"树的输入端"移到"树的中间"：让压缩树输出的 sum/carry 直接灌进 $(h+2)$ 输入树的**中间层**（图 11.17）。这样每一拍的组合延迟只由两级 CSA 决定，乘法速度大幅提升——这是一个经典手法：**把长反馈环切断并下沉到流水级内部**。</span>
+<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a><span class="al">![图 11.17 高效流水的部分树乘法器：反馈信号注入 $(h+2)$ 输入 CSA 树的中间层，使流水节拍只受两级 CSA 延迟约束](images/ch11/fig11_17.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a>阵列乘法器的流水化更自然——行间本来就有规律的斜传结构，切斜线插入流水寄存器即可（称为"斜切流水"）。图 11.18 是 5×5 阵列乘法器的流水实现：输入从上方进入、乘积从下方输出，共需 9 拍（一般情形为 $2k-1$ 拍）；所有 FA 单元的 sum 与 carry 输出都带锁存器，各行需要的 $x_i$ 通过在其路径上插入锁存器来对齐延迟，最后一行原本的 4 位行波加法器也被拆成流水形式。</span>
+<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a><span class="al">![图 11.18 使用带锁存 FA 单元的流水化 5×5 阵列乘法器：小阴影矩形为锁存器，输入到输出共 9 拍](images/ch11/fig11_18.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="时序要点"}</span>
+<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>流水化的真正难点是**末行的加数**：行波加法器的延迟远大于单个 FA 行，若按其他行的节拍切分，末行会成为"瓶颈级"。图 11.18 的处理办法是**把末行也细分成多级流水**，让每级的组合延迟尽量接近。做这类设计时，务必按"最长单级延迟"而不是"平均延迟"确定时钟周期。</span>
+<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a><span class="fu">## RTL 实践：`rtl/ch11_5_array_multiplier`</span></span>
+<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a>8×8 无符号阵列乘法器：部分积按行斜向对齐，行间用全加器链逐级累加——同一个 FA 结构平铺 $N \times 2N$ 次：</span>
+<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a><span class="in">```systemverilog</span></span>
+<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a><span class="in">// 第 i 个部分积：a * b[i]，左移 i 位</span></span>
+<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a><span class="in">assign pp[i] = ({{N{1'b0}}, a} &amp; {2*N{b[i]}}) &lt;&lt; i;</span></span>
+<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a><span class="in">// 第 i 行：rowsum[i+1] = rowsum[i] + pp[i]（2N 个 FA 组成的行）</span></span>
+<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a><span class="in">for (j = 0; j &lt; 2*N; j = j + 1) begin : g_fa</span></span>
+<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a><span class="in">    assign rowsum[i+1][j] = rowsum[i][j] ^ pp[i][j] ^ c[j];</span></span>
+<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a><span class="in">    assign c[j+1] = (rowsum[i][j] &amp; pp[i][j]) |</span></span>
+<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a><span class="in">                    ((rowsum[i][j] ^ pp[i][j]) &amp; c[j]);</span></span>
+<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a><span class="in">end</span></span>
+<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a>设计要点：</span>
+<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**规整性的代价**：延迟 $O(N)$（每行进位行波），换取版图上的完美平铺与全局部布线；</span>
+<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>与 <span class="in">`ch8_3_wallace_tree`</span> 对照阅读：同样 $N$ 个部分积，树形压缩把延迟降到 $O(\log N)$，但布线不再规则；</span>
+<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>testbench 与黄金模型 <span class="in">`a*b`</span> 做 2000 组随机比对。</span>
+<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> rtl/ch11_5_array_multiplier</span>
+<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> run_iverilog.sh    <span class="co"># 或 bash run_verilator.sh</span></span>
+<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章小结</span></span>
+<span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>现代乘法器三段式：Booth 生成 → 4:2/CSA 压缩树 → 前缀 CPA。</span>
+<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Wallace 求快、Dadda 求省、4:2 二叉树求规整、平衡延迟树求时序确定。</span>
+<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>有符号处理靠 Booth + 符号修正技巧，Baugh-Wooley 为备选。</span>
+<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>截断乘法器：要高位就扔低位，省一半面积，误差可控（常数补偿最划算）。</span>
+<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>阵列胜在规整，树形胜在速度；流水化让吞吐起飞，反馈环要下沉到级内。</span>
+<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a><span class="fu">## 原书插图</span></span>
+<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 11.1](images/ch11/fig11_01.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 11.12](images/ch11/fig11_12.png)</span>{fig-align="center" width="85%"}</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

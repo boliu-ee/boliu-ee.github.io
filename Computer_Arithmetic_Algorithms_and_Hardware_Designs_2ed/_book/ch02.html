@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第2章 有符号数的表示（Representing Signed Numbers） – 计算机算术：算法与硬件设计（中文解读版）</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./ch03.html" rel="next">
+<link href="./ch01.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-77d2b90c99eeff80c5837adab8b96ac7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch01.html">第一部分 数的表示 (Number Representation)</a></li><li class="breadcrumb-item"><a href="./ch02.html"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">计算机算术：算法与硬件设计（中文解读版）</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第一部分 数的表示 (Number Representation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch01.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch02.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第二部分 加法与减法 (Addition/Subtraction)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第7章 快速加法器的变体（Variations in Fast Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第8章 多操作数加法（Multioperand Addition）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部分 乘法 (Multiplication)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第9章 基本乘法方案（Basic Multiplication Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第10章 高基数乘法器（High-Radix Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">第四部分 除法 (Division)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第14章 高基数除法器（High-Radix Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第15章 除法器的变体（Variations in Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第16章 收敛法除法（Division by Convergence）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">第五部分 实数运算 (Real Arithmetic)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第17章 浮点数表示（Floating-Point Representations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">第六部分 函数求值 (Function Evaluation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第23章 函数求值的变体（Variations in Function Evaluation）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第24章 查表算术（Arithmetic by Table Lookup）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">第七部分 实现专题 (Implementation Topics)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch26.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch27.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch28.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第28章 可重构算术（Reconfigurable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">附录 过去、现在与未来（Past, Present, and Future）</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#本章导读" id="toc-本章导读" class="nav-link active" data-scroll-target="#本章导读">本章导读</a></li>
+  <li><a href="#原码表示signed-magnitude-representation" id="toc-原码表示signed-magnitude-representation" class="nav-link" data-scroll-target="#原码表示signed-magnitude-representation">2.1 原码表示（Signed-Magnitude Representation）</a></li>
+  <li><a href="#偏置表示biased-representations" id="toc-偏置表示biased-representations" class="nav-link" data-scroll-target="#偏置表示biased-representations">2.2 偏置表示（Biased Representations）</a></li>
+  <li><a href="#补码表示complement-representations" id="toc-补码表示complement-representations" class="nav-link" data-scroll-target="#补码表示complement-representations">2.3 补码表示（Complement Representations）</a></li>
+  <li><a href="#的补码与-1-的补码2s--and-1s-complement-numbers" id="toc-的补码与-1-的补码2s--and-1s-complement-numbers" class="nav-link" data-scroll-target="#的补码与-1-的补码2s--and-1s-complement-numbers">2.4 2 的补码与 1 的补码（2’s- and 1’s-Complement Numbers）</a></li>
+  <li><a href="#直接与间接有符号运算direct-and-indirect-signed-arithmetic" id="toc-直接与间接有符号运算direct-and-indirect-signed-arithmetic" class="nav-link" data-scroll-target="#直接与间接有符号运算direct-and-indirect-signed-arithmetic">2.5 直接与间接有符号运算（Direct and Indirect Signed Arithmetic）</a></li>
+  <li><a href="#带符号位与带符号数字using-signed-positions-or-signed-digits" id="toc-带符号位与带符号数字using-signed-positions-or-signed-digits" class="nav-link" data-scroll-target="#带符号位与带符号数字using-signed-positions-or-signed-digits">2.6 带符号位与带符号数字（Using Signed Positions or Signed Digits）</a></li>
+  <li><a href="#本章小结" id="toc-本章小结" class="nav-link" data-scroll-target="#本章小结">本章小结</a></li>
+  <li><a href="#原书插图" id="toc-原书插图" class="nav-link" data-scroll-target="#原书插图">原书插图</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch01.html">第一部分 数的表示 (Number Representation)</a></li><li class="breadcrumb-item"><a href="./ch02.html"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="本章导读" class="level2">
+<h2 class="anchored" data-anchor-id="本章导读">本章导读</h2>
+<p>无符号数是”天然”的——比特串就是数值。但一旦要表示负数，就必须做一个<strong>编码约定</strong>。本章对比四种约定：原码、偏置码、补码（1’s/2’s complement），并引出”带符号数位”的思想（这是第 3 章冗余数系的入口）。<strong>2 的补码（2’s complement）之所以一统天下，靠的不是数学美感，而是它让减法器彻底消失</strong>：加法器一套硬件通吃加减。</p>
+</section>
+<section id="原码表示signed-magnitude-representation" class="level2">
+<h2 class="anchored" data-anchor-id="原码表示signed-magnitude-representation">2.1 原码表示（Signed-Magnitude Representation）</h2>
+<p>最高位做符号位（0 正 1 负），其余位表示绝对值。<span class="math inline">\(k\)</span> 位原码的表示范围是 <span class="math inline">\([-(2^{k-1}-1),\ +(2^{k-1}-1)]\)</span>。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch02/fig02_01.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 2.1 4 位原码整数表示系统</figcaption>
+</figure>
+</div>
+<p>优点：取负只需翻转符号位；乘法/除法的符号处理是天然的”同号得正”。</p>
+<p>缺点（硬件工程师的噩梦）：</p>
+<ul>
+<li><strong>存在两个零</strong>：<span class="math inline">\(+0\)</span> 与 <span class="math inline">\(-0\)</span> 是不同编码，比较逻辑要特判；</li>
+<li><strong>加减法不统一</strong>：<code>a + b</code> 的实际操作取决于两数符号的组合，硬件上要先比较绝对值大小、决定做加还是做减、再定结果符号——一套控制状态机换来一堆关键路径延迟。</li>
+</ul>
+<p>原码加法的完整流程通常写成”<strong>预补码 → 无符号运算 → 后补码</strong>”三步（图 2.2）：先把负数操作数按模 <span class="math inline">\(2^{k-1}\)</span> 取补，变成”补码化的幅值”；然后当作无符号数相加；最后根据两数符号决定结果是否要再取补、符号位取什么。这三步看着绕，本质上是<strong>把符号信息从数据通路里剥离出来，交给一条独立的符号逻辑处理</strong>——而这条符号逻辑要在加法结果出来之后才能定夺，正好压在关键路径末端。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="工程视角">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>工程视角
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>原码并没有被淘汰——<strong>IEEE 754 浮点数的有效数（significand）部分就是原码表示</strong>。浮点加减法里那套”对阶→比较→加减→规格化”的复杂流程，很大程度上就是在为原码表示还债（见第 18 章）。</p>
+</div>
+</div>
+<p>一个常被忽略的细节：原码的 <span class="math inline">\(\pm 0\)</span> 不只是”浪费一个码字”。在浮点里，<span class="math inline">\(+0\)</span> 与 <span class="math inline">\(-0\)</span> 是<strong>语义不同</strong>的两个值（<span class="math inline">\(1/0^+ = +\infty\)</span>，<span class="math inline">\(1/0^- = -\infty\)</span>），IEEE 754 特意规定了它们 equality 成立但符号位不同。所以”两个零”在某些场景下是特性而非缺陷——判断它到底是开销还是收益，要看上层语义。</p>
+</section>
+<section id="偏置表示biased-representations" class="level2">
+<h2 class="anchored" data-anchor-id="偏置表示biased-representations">2.2 偏置表示（Biased Representations）</h2>
+<p>给所有数统一加上一个偏置常数（bias）<span class="math inline">\(B\)</span>，把有符号区间平移到无符号区间：</p>
+<p><span class="math display">\[
+x_{\text{code}} = x + B
+\]</span></p>
+<p>典型取 <span class="math inline">\(B = 2^{k-1}\)</span>（称为 excess-<span class="math inline">\(2^{k-1}\)</span> 码）。偏置码的一个漂亮性质：<strong>按无符号数比较编码的大小，就等价于比较有符号真值的大小</strong>——比较器免费用无符号的。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch02/fig02_03.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 2.3 用偏置 8 把区间 <span class="math inline">\([-8,+7]\)</span> 内的有符号整数编码为 <span class="math inline">\(0\sim15\)</span> 的无符号值</figcaption>
+</figure>
+</div>
+<p>以 <span class="math inline">\(k=4\)</span>、<span class="math inline">\(B=8\)</span> 为例，编码表是 <span class="math inline">\(-8\!\to\!0000\)</span>、<span class="math inline">\(-1\!\to\!0111\)</span>、<span class="math inline">\(0\!\to\!1000\)</span>、<span class="math inline">\(+7\!\to\!1111\)</span>。注意这里的符号约定与直觉<strong>相反</strong>：最高位为 0 表示负、为 1 表示非负。这不影响比较器（平移不改变序关系），但会让”看最高位判正负”的直觉失效，读 RTL 时容易踩坑。</p>
+<p><span class="math inline">\(B\)</span> 取 <span class="math inline">\(2^{k-1}\)</span> 还是 <span class="math inline">\(2^{k-1}-1\)</span>，是一个小但真实的取舍：</p>
+<ul>
+<li><span class="math inline">\(B = 2^{k-1}\)</span>：最小值对应全 0 码，最大值对应全 1 码，<strong>范围严格不对称</strong>（负数比正数多一个）；</li>
+<li><span class="math inline">\(B = 2^{k-1}-1\)</span>：范围<strong>几乎对称</strong>，且”最高位为 0 表示负”的边界正好落在 0 附近。</li>
+</ul>
+<div class="callout callout-style-default callout-tip callout-titled" title="在哪见过它">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>在哪见过它
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>IEEE 754 的<strong>阶码（exponent）字段就是偏置码</strong>：单精度 bias = 127，双精度 bias = 1023。这样阶码比较可以用普通无符号比较器完成，浮点排序电路因此大大简化。</p>
+</div>
+</div>
+<p>IEEE 754 还额外规定：阶码全 0 与全 1 被保留给<strong>非规格化数（subnormal）</strong>与 <span class="math inline">\(\pm\infty\)</span>/NaN，不参与正常偏置解释。也就是说，实际可用的阶码区间是 <span class="math inline">\([1, 254]\)</span>（单精度），对应真值 <span class="math inline">\([-126, 127]\)</span>。这是”用码字换特殊语义”的典型手法——<strong>每保留一个特殊码字，就少一个可表示的正常值</strong>，规格设计时必须算清楚这笔账。</p>
+</section>
+<section id="补码表示complement-representations" class="level2">
+<h2 class="anchored" data-anchor-id="补码表示complement-representations">2.3 补码表示（Complement Representations）</h2>
+<p>补码的核心思想：在模 <span class="math inline">\(M\)</span> 的算术系统里，用 <span class="math inline">\(M - x\)</span> 扮演 <span class="math inline">\(-x\)</span> 的角色。因为</p>
+<p><span class="math display">\[
+a - b \equiv a + (M - b) \pmod{M}
+\]</span></p>
+<p>减法就变成了加法。对 <span class="math inline">\(k\)</span> 位硬件，模 <span class="math inline">\(M = 2^k\)</span> 是”免费”的——寄存器溢出自然丢弃高位，等价于自动取模。这就是<strong>2 的补码（2’s complement）</strong>。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch02/fig02_04.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 2.4 有符号整数的补码表示：在模 <span class="math inline">\(M\)</span> 的环形数轴上，<span class="math inline">\(-x\)</span> 的位置由 <span class="math inline">\(M-x\)</span> 占据</figcaption>
+</figure>
+</div>
+<p>这个思想对任意基数都成立。基数 <span class="math inline">\(r\)</span>、<span class="math inline">\(k\)</span> 位时有两种补码：</p>
+<ul>
+<li><strong>基补（radix complement，<span class="math inline">\(r\)</span>’s complement）</strong>：<span class="math inline">\(x^\ast = r^k - x\)</span>；</li>
+<li><strong>减基补（diminished radix complement，<span class="math inline">\((r-1)\)</span>’s complement）</strong>：<span class="math inline">\(x^\ast = (r^k - 1) - x\)</span>。</li>
+</ul>
+<p>二者的关系是 <span class="math inline">\(r\text{'s} = (r-1)\text{'s} + 1\)</span>。放到二进制上：1 的补码就是按位取反（因为 <span class="math inline">\(2^k-1\)</span> 是全 1，减去 <span class="math inline">\(x\)</span> 等价于逐位取反），2 的补码则是”取反加 1”。放到十进制上：4 位数的 9 的补码是逐位用 <span class="math inline">\(9\)</span> 减，10 的补码再加 1，例如 <span class="math inline">\(-1234\)</span> 的 10 的补码是 <span class="math inline">\(10000-1234 = 8766\)</span>。</p>
+<p>若取 <span class="math inline">\(M = 2^k - 1\)</span>，得到<strong>1 的补码（1’s complement）</strong>：按位取反即可取负，实现更简单，但同样有两个零，且加法后要”循环进位（end-around carry）“修正——把最高位的进位加回到最低位。这个修正让进位链形成一个环，时序上很尴尬，现代整数 ALU 基本不用它。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="为什么循环进位这么讨厌">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>为什么循环进位这么讨厌
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>循环进位把进位链首尾相接，意味着<strong>没有任何一个时刻可以说”进位传播已经结束”</strong>：最高位产生的进位还要绕回最低位再算一遍。对同步设计，这等于把最坏路径从 <span class="math inline">\(k\)</span> 级变成 <span class="math inline">\(k+1\)</span> 级还要加一级反馈；对异步的进位完成检测（5.4 节），环形结构更是直接破坏”单调收敛”的前提。1 的补码换来的是”取负少一个加 1”，代价却是整条进位链的时序可控性——这笔交易不划算。</p>
+</div>
+</div>
+</section>
+<section id="的补码与-1-的补码2s--and-1s-complement-numbers" class="level2">
+<h2 class="anchored" data-anchor-id="的补码与-1-的补码2s--and-1s-complement-numbers">2.4 2 的补码与 1 的补码（2’s- and 1’s-Complement Numbers）</h2>
+<p>2 的补码的关键性质（<span class="math inline">\(k\)</span> 位，最高位权重为 <span class="math inline">\(-2^{k-1}\)</span>）：</p>
+<p><span class="math display">\[
+x = -x_{k-1}\cdot 2^{k-1} + \sum_{i=0}^{k-2} x_i \cdot 2^i
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch02/fig02_05.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 2.5 4 位 2 的补码整数表示系统</figcaption>
+</figure>
+</div>
+<p><strong>取负规则</strong>：按位取反再加 1。硬件上是”反相器 + 加法器进位置 1”，而一个加法器本来就有 <span class="math inline">\(c_{in}\)</span> 端口——所以 <strong>加减法器可以共享同一个加法器</strong>：做减法时把 <span class="math inline">\(b\)</span> 取反、<span class="math inline">\(c_{in}\)</span> 置 1。这就是 2 的补码统一天下的直接原因。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch02/fig02_07.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 2.7 2 的补码加/减法器结构：同一套加法器，减法时把操作数取反并置进位输入为 1</figcaption>
+</figure>
+</div>
+<p>对应的 RTL 几乎不需要额外资源，只是一排 XOR 门加一个把 <code>sub</code> 接到 <span class="math inline">\(c_{in}\)</span> 的连线：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> add_sub #(<span class="kw">parameter</span> <span class="kw">int</span> N = <span class="dv">8</span>) (</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span>  <span class="kw">logic</span> [N<span class="dv">-1</span>:<span class="dv">0</span>] a, b,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span>  <span class="kw">logic</span>         sub,   <span class="co">// 1 = 减法</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span> [N<span class="dv">-1</span>:<span class="dv">0</span>] <span class="kw">s</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span>         cout</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">logic</span> [N<span class="dv">-1</span>:<span class="dv">0</span>] b_eff = b ^ {N{sub}};   <span class="co">// sub=1 时取反</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> {cout, <span class="kw">s</span>} = a + b_eff + sub;   <span class="co">// sub=1 时等价于 +1</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>符号扩展（sign extension）</strong>：位宽扩展时把符号位向左复制即可，数值不变。这个性质在 RTL 里每天都在用：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">logic</span> [<span class="dv">7</span>:<span class="dv">0</span>]  a;</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="kw">logic</span> [<span class="dv">15</span>:<span class="dv">0</span>] b;</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="kw">assign</span> b = {{<span class="dv">8</span>{a[<span class="dv">7</span>]}}, a};   <span class="co">// 有符号扩展</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">// 或更稳妥地：b = 16'(signed'(a));</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>范围不对称</strong>：<span class="math inline">\(k\)</span> 位 2 的补码范围 <span class="math inline">\([-2^{k-1},\ 2^{k-1}-1]\)</span>。最小值没有对应的正数——对 <span class="math inline">\(-2^{k-1}\)</span> 取负会<strong>溢出（overflow）</strong>。这是定点软件里经典的 corner case（<code>abs(INT_MIN)</code> 未定义行为的硬件根源）。以 <span class="math inline">\(k=4\)</span> 为例，<span class="math inline">\((-8)_{10} = 1000_2\)</span>，取反加 1 后仍是 <span class="math inline">\(1000_2\)</span>，即 <span class="math inline">\(-(-8) = -8\)</span>。<strong>取负运算在最小值处不是对合的</strong>，这在写 RTL 时必须显式处理（饱和取负、加宽一位、或在上层禁止该输入）。</p>
+<p><strong>溢出判据</strong>（第 5 章会再次用到）：</p>
+<p><span class="math display">\[
+\text{Overflow} = c_k \oplus c_{k-1} = \overline{x_{k-1}}\,\overline{y_{k-1}}\,s_{k-1} + x_{k-1} y_{k-1} \overline{s_{k-1}}
+\]</span></p>
+<p>即：两个同号数相加得到异号结果，才是溢出；异号相加永不溢出。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch02/fig02_06.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 2.6 4 位 1 的补码整数表示系统：全 1 码表示 <span class="math inline">\(-0\)</span>，范围退化为 <span class="math inline">\([-7,+7]\)</span></figcaption>
+</figure>
+</div>
+<p>1 的补码在同一张 4 位编码表上的差别只有一处：全 1 码 <span class="math inline">\(1111\)</span> 表示 <span class="math inline">\(-0\)</span> 而不是 <span class="math inline">\(-1\)</span>，因此范围退化为 <span class="math inline">\([-7, +7]\)</span> 且有两个零。除此之外，它的取负（纯取反）比 2 的补码少一次加 1，但代价是 2.3 节说的循环进位。</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="快速自检">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>快速自检
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>判断补码溢出最快的心算法：<strong>看两个操作数的符号与结果的符号</strong>。<span class="math inline">\(+7 + +1\)</span> 在 4 位下得到 <span class="math inline">\(1000 = -8\)</span>，两个正数加出负数，溢出；而 <span class="math inline">\(-8 + +7 = -1\)</span> 无论从哪个角度看都没问题。所谓 <span class="math inline">\(c_k \oplus c_{k-1}\)</span>，只是这个直观判据在电路上的等价写法。</p>
+</div>
+</div>
+</section>
+<section id="直接与间接有符号运算direct-and-indirect-signed-arithmetic" class="level2">
+<h2 class="anchored" data-anchor-id="直接与间接有符号运算direct-and-indirect-signed-arithmetic">2.5 直接与间接有符号运算（Direct and Indirect Signed Arithmetic）</h2>
+<ul>
+<li><strong>直接法（direct）</strong>：运算电路直接消化符号编码——2 的补码加法器就是典型，符号位与其余位一视同仁地进位。</li>
+<li><strong>间接法（indirect）</strong>：先把操作数转成无符号（或分离符号），做完幅值运算，再按规则拼回符号——原码运算属于此类。</li>
+</ul>
+<p>间接法看着麻烦，但在乘除法里反而常见：先把符号异或出来，幅值用无符号阵列算，最后再根据符号决定是否取补。<strong>Booth 重编码（第 10 章）之前的朴素有符号乘法就是这么干的</strong>。</p>
+<p>三种编码下”符号移除（sign removal）“与”结果调整（adjustment）“两步的代价并不相同：原码只需拆出符号位，几乎零成本；偏置码两步都要做加法/减法；补码两步都是<strong>选择性取补</strong>（根据符号位决定是否取反加 1）。所以”间接法”的开销与所选编码强相关——这也是评价一个表示法时要连带着看”配套运算贵不贵”的原因。</p>
+<p>更进一步说，间接法的思想不止于处理符号，它是<strong>操作数预处理</strong>这一通用手法的特例。计算 <span class="math inline">\(\sin x\)</span> 时，先用 <span class="math inline">\(\sin(-x) = -\sin x\)</span>、<span class="math inline">\(\sin(\pi - x) = \sin x\)</span> 把自变量折进 <span class="math inline">\([0, \pi/2]\)</span>（第 22 章 CORDIC 正是这么做的）；做除法时，先把除数和被除数同乘一个比例因子把除数拉到接近 1 的区间（第 15、16 章）。共同套路是：<strong>花一点预处理，把运算核心放进一个更好算、更好收敛的区间</strong>。</p>
+</section>
+<section id="带符号位与带符号数字using-signed-positions-or-signed-digits" class="level2">
+<h2 class="anchored" data-anchor-id="带符号位与带符号数字using-signed-positions-or-signed-digits">2.6 带符号位与带符号数字（Using Signed Positions or Signed Digits）</h2>
+<p>2 的补码可以理解为”最高位权重为负”的位置数制——这是<strong>带符号位置（signed position）</strong>。顺着这个思路再进一步：如果允许<strong>每一位数字</strong>都带符号呢？例如数位集合取 <span class="math inline">\(\{-1, 0, +1\}\)</span>（常记作 <span class="math inline">\(\{\bar{1}, 0, 1\}\)</span>），一个数就有了无穷多种合法编码（<span class="math inline">\(1 = 1 = 1\bar{1} = \bar{1}11\cdots\)</span> 风格的不同写法）。</p>
+<p>形式化地，用一个符号向量 <span class="math inline">\(\lambda = (\lambda_{k-1}, \dots, \lambda_0)\)</span>、<span class="math inline">\(\lambda_i \in \{-1, +1\}\)</span> 指定每个位置的权重符号：</p>
+<p><span class="math display">\[
+(x_{k-1}\dots x_0)_{r,\lambda} = \sum_{i=0}^{k-1} \lambda_i\, x_i\, r^i
+\]</span></p>
+<p>这个框架把三种看似无关的数系统一了：<span class="math inline">\(\lambda\)</span> 全为 <span class="math inline">\(+1\)</span> 是普通正基数；仅最高位为 <span class="math inline">\(-1\)</span> 是 2 的补码；<span class="math inline">\(\lambda\)</span> 交替取 <span class="math inline">\(\pm 1\)</span> 则得到<strong>负基数（negative radix）</strong>表示。也就是说，2 的补码并非什么特殊技巧，只是”符号向量”这个更大空间里的一个点。</p>
+<p>图 2.10 给出的例子是基数 4、数位集合 <span class="math inline">\([-1, 2]\)</span>：把标准数位 <span class="math inline">\(3\)</span> 改写成 <span class="math inline">\(-1 + 4\)</span>（后者成为向左传播的进位 1），反复进行直到没有 3 剩下。它仍是<strong>非冗余</strong>的（恰好 4 个数位值），所以转换过程本质上是一次进位传播，最坏要扫完全部数位。</p>
+<p>而图 2.11 的基数 4、数位集合 <span class="math inline">\([-2, 2]\)</span> 则是<strong>冗余</strong>的：把 <span class="math inline">\(3\)</span> 写成 <span class="math inline">\(-1+4\)</span>、把 <span class="math inline">\(2\)</span> 写成 <span class="math inline">\(-2+4\)</span>，产生的进位 1 一定能被高位一个 <span class="math inline">\(\le 1\)</span> 的数位吸收掉，因此<strong>转换过程无进位传播</strong>（反向转换则仍是从低到高串行的）。这一对比正是第 3 章的主题：冗余带来的”吸收余量”，把串行过程变成了并行过程。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch02/fig02_11.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 2.11 把标准基数 4 整数转换为非标准数位集 <span class="math inline">\([-2,2]\)</span> 的基数 4 整数：进位被高位吸收，转换无进位传播</figcaption>
+</figure>
+</div>
+<p>一般地，任何包含 0 的连续整数区间 <span class="math inline">\([-\alpha, \beta]\)</span>（只要区间内至少有 <span class="math inline">\(r\)</span> 个值）都可以作为基数 <span class="math inline">\(r\)</span> 的数位集合。若恰好有 <span class="math inline">\(r\)</span> 个值，表示是<strong>非冗余</strong>的、每个值唯一编码；若超过 <span class="math inline">\(r\)</span> 个，则冗余度（redundancy index）为</p>
+<p><span class="math display">\[
+\rho = \alpha + \beta + 1 - r
+\]</span></p>
+<p><span class="math inline">\(\rho \ge 1\)</span> 就意味着有些数有多种写法。第 3 章会证明：<span class="math inline">\(\rho\)</span> 越大，无进位加法的实现越宽松，但<strong>每个数位要占的比特也越多</strong>（存储与布线成本上升）。这就是冗余数系的全部账本。</p>
+<p>为了在图上区分正负权重，本书把点记号扩展成<strong>扩展点记号</strong>：实心点表示正权重位（posibit），空心点表示负权重位（negabit）。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch02/fig02_12.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 2.12 用扩展点记号描绘各种数表示格式（空心点代表负权重位）</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch02/fig02_13.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 2.13 用扩展点记号表示的若干算术算法示例</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-important callout-titled" title="承上启下">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">重要</span>承上启下
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>这种<strong>带符号数字（signed-digit）表示</strong>就是第 3 章冗余数系（redundant number system）的核心。冗余带来的自由度，换来的是<strong>加法不需要等待进位传播</strong>——这是所有高速算术部件（乘法器的部分积压缩、SRT 除法的商数字选择）的共同秘密武器。</p>
+</div>
+</div>
+</section>
+<section id="本章小结" class="level2">
+<h2 class="anchored" data-anchor-id="本章小结">本章小结</h2>
+<ul>
+<li>2 的补码让加减共用一套加法器，是整数硬件的事实标准；记住取负 = 取反 + 1、符号扩展、溢出判据三件套。</li>
+<li>原码活在浮点数里，偏置码活在浮点阶码里——老编码在特定生态位仍有优势。</li>
+<li>1 的补码只剩历史意义和教学价值（循环进位在时序上是灾难）。</li>
+<li>“数位可以带符号”这个想法，是通往高速算术的大门。</li>
+</ul>
+</section>
+<section id="原书插图" class="level2">
+<h2 class="anchored" data-anchor-id="原书插图">原书插图</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch02/fig02_02.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 2.2 用预补码（precomplementation）与后补码（postcomplementation）实现原码数的加法</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch02/fig02_08.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 2.8 有符号数的直接运算与间接运算对比：间接法把符号移除与结果调整作为前后两级包裹在无符号运算外面</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch02/fig02_10.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 2.10 把标准基数 4 整数（数位集 <span class="math inline">\([0,3]\)</span>）转换为非标准数位集 <span class="math inline">\([-1,2]\)</span> 的基数 4 整数</figcaption>
+</figure>
+</div>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./ch01.html" class="pagination-link" aria-label="第1章 数与算术（Numbers and Arithmetic）">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./ch03.html" class="pagination-link" aria-label="第3章 冗余数系（Redundant Number Systems）">
+        <span class="nav-page-text"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 第2章 有符号数的表示（Representing Signed Numbers）</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章导读</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>无符号数是"天然"的——比特串就是数值。但一旦要表示负数，就必须做一个**编码约定**。本章对比四种约定：原码、偏置码、补码（1's/2's complement），并引出"带符号数位"的思想（这是第 3 章冗余数系的入口）。**2 的补码（2's complement）之所以一统天下，靠的不是数学美感，而是它让减法器彻底消失**：加法器一套硬件通吃加减。</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2.1 原码表示（Signed-Magnitude Representation）</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>最高位做符号位（0 正 1 负），其余位表示绝对值。$k$ 位原码的表示范围是 $<span class="co">[</span><span class="ot">-(2^{k-1}-1),\ +(2^{k-1}-1)</span><span class="co">]</span>$。</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="al">![图 2.1 4 位原码整数表示系统](images/ch02/fig02_01.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>优点：取负只需翻转符号位；乘法/除法的符号处理是天然的"同号得正"。</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>缺点（硬件工程师的噩梦）：</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**存在两个零**：$+0$ 与 $-0$ 是不同编码，比较逻辑要特判；</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**加减法不统一**：<span class="in">`a + b`</span> 的实际操作取决于两数符号的组合，硬件上要先比较绝对值大小、决定做加还是做减、再定结果符号——一套控制状态机换来一堆关键路径延迟。</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>原码加法的完整流程通常写成"**预补码 → 无符号运算 → 后补码**"三步（图 2.2）：先把负数操作数按模 $2^{k-1}$ 取补，变成"补码化的幅值"；然后当作无符号数相加；最后根据两数符号决定结果是否要再取补、符号位取什么。这三步看着绕，本质上是**把符号信息从数据通路里剥离出来，交给一条独立的符号逻辑处理**——而这条符号逻辑要在加法结果出来之后才能定夺，正好压在关键路径末端。</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="工程视角"}</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>原码并没有被淘汰——**IEEE 754 浮点数的有效数（significand）部分就是原码表示**。浮点加减法里那套"对阶→比较→加减→规格化"的复杂流程，很大程度上就是在为原码表示还债（见第 18 章）。</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>一个常被忽略的细节：原码的 $\pm 0$ 不只是"浪费一个码字"。在浮点里，$+0$ 与 $-0$ 是**语义不同**的两个值（$1/0^+ = +\infty$，$1/0^- = -\infty$），IEEE 754 特意规定了它们 equality 成立但符号位不同。所以"两个零"在某些场景下是特性而非缺陷——判断它到底是开销还是收益，要看上层语义。</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2.2 偏置表示（Biased Representations）</span></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>给所有数统一加上一个偏置常数（bias）$B$，把有符号区间平移到无符号区间：</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>x_{\text{code}} = x + B</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>典型取 $B = 2^{k-1}$（称为 excess-$2^{k-1}$ 码）。偏置码的一个漂亮性质：**按无符号数比较编码的大小，就等价于比较有符号真值的大小**——比较器免费用无符号的。</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">图 2.3 用偏置 8 把区间 $[-8,+7]$ 内的有符号整数编码为 $0\sim15$ 的无符号值</span><span class="co">](images/ch02/fig02_03.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>以 $k=4$、$B=8$ 为例，编码表是 $-8<span class="sc">\!</span>\to<span class="sc">\!</span>0000$、$-1<span class="sc">\!</span>\to<span class="sc">\!</span>0111$、$0<span class="sc">\!</span>\to<span class="sc">\!</span>1000$、$+7<span class="sc">\!</span>\to<span class="sc">\!</span>1111$。注意这里的符号约定与直觉**相反**：最高位为 0 表示负、为 1 表示非负。这不影响比较器（平移不改变序关系），但会让"看最高位判正负"的直觉失效，读 RTL 时容易踩坑。</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>$B$ 取 $2^{k-1}$ 还是 $2^{k-1}-1$，是一个小但真实的取舍：</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>$B = 2^{k-1}$：最小值对应全 0 码，最大值对应全 1 码，**范围严格不对称**（负数比正数多一个）；</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>$B = 2^{k-1}-1$：范围**几乎对称**，且"最高位为 0 表示负"的边界正好落在 0 附近。</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip title="在哪见过它"}</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>IEEE 754 的**阶码（exponent）字段就是偏置码**：单精度 bias = 127，双精度 bias = 1023。这样阶码比较可以用普通无符号比较器完成，浮点排序电路因此大大简化。</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>IEEE 754 还额外规定：阶码全 0 与全 1 被保留给**非规格化数（subnormal）**与 $\pm\infty$/NaN，不参与正常偏置解释。也就是说，实际可用的阶码区间是 $[1, 254]$（单精度），对应真值 $[-126, 127]$。这是"用码字换特殊语义"的典型手法——**每保留一个特殊码字，就少一个可表示的正常值**，规格设计时必须算清楚这笔账。</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2.3 补码表示（Complement Representations）</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>补码的核心思想：在模 $M$ 的算术系统里，用 $M - x$ 扮演 $-x$ 的角色。因为</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>a - b \equiv a + (M - b) \pmod{M}</span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>减法就变成了加法。对 $k$ 位硬件，模 $M = 2^k$ 是"免费"的——寄存器溢出自然丢弃高位，等价于自动取模。这就是**2 的补码（2's complement）**。</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a><span class="al">![图 2.4 有符号整数的补码表示：在模 $M$ 的环形数轴上，$-x$ 的位置由 $M-x$ 占据](images/ch02/fig02_04.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>这个思想对任意基数都成立。基数 $r$、$k$ 位时有两种补码：</span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**基补（radix complement，$r$'s complement）**：$x^\ast = r^k - x$；</span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**减基补（diminished radix complement，$(r-1)$'s complement）**：$x^\ast = (r^k - 1) - x$。</span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>二者的关系是 $r\text{'s} = (r-1)\text{'s} + 1$。放到二进制上：1 的补码就是按位取反（因为 $2^k-1$ 是全 1，减去 $x$ 等价于逐位取反），2 的补码则是"取反加 1"。放到十进制上：4 位数的 9 的补码是逐位用 $9$ 减，10 的补码再加 1，例如 $-1234$ 的 10 的补码是 $10000-1234 = 8766$。</span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>若取 $M = 2^k - 1$，得到**1 的补码（1's complement）**：按位取反即可取负，实现更简单，但同样有两个零，且加法后要"循环进位（end-around carry）"修正——把最高位的进位加回到最低位。这个修正让进位链形成一个环，时序上很尴尬，现代整数 ALU 基本不用它。</span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="为什么循环进位这么讨厌"}</span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>循环进位把进位链首尾相接，意味着**没有任何一个时刻可以说"进位传播已经结束"**：最高位产生的进位还要绕回最低位再算一遍。对同步设计，这等于把最坏路径从 $k$ 级变成 $k+1$ 级还要加一级反馈；对异步的进位完成检测（5.4 节），环形结构更是直接破坏"单调收敛"的前提。1 的补码换来的是"取负少一个加 1"，代价却是整条进位链的时序可控性——这笔交易不划算。</span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2.4 2 的补码与 1 的补码（2's- and 1's-Complement Numbers）</span></span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>2 的补码的关键性质（$k$ 位，最高位权重为 $-2^{k-1}$）：</span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a>x = -x_{k-1}\cdot 2^{k-1} + \sum_{i=0}^{k-2} x_i \cdot 2^i</span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a><span class="al">![图 2.5 4 位 2 的补码整数表示系统](images/ch02/fig02_05.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>**取负规则**：按位取反再加 1。硬件上是"反相器 + 加法器进位置 1"，而一个加法器本来就有 $c_{in}$ 端口——所以 **加减法器可以共享同一个加法器**：做减法时把 $b$ 取反、$c_{in}$ 置 1。这就是 2 的补码统一天下的直接原因。</span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a><span class="al">![图 2.7 2 的补码加/减法器结构：同一套加法器，减法时把操作数取反并置进位输入为 1](images/ch02/fig02_07.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>对应的 RTL 几乎不需要额外资源，只是一排 XOR 门加一个把 <span class="in">`sub`</span> 接到 $c_{in}$ 的连线：</span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a><span class="in">```systemverilog</span></span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a><span class="in">module add_sub #(parameter int N = 8) (</span></span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a><span class="in">    input  logic [N-1:0] a, b,</span></span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a><span class="in">    input  logic         sub,   // 1 = 减法</span></span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a><span class="in">    output logic [N-1:0] s,</span></span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a><span class="in">    output logic         cout</span></span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a><span class="in">);</span></span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a><span class="in">    logic [N-1:0] b_eff = b ^ {N{sub}};   // sub=1 时取反</span></span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a><span class="in">    assign {cout, s} = a + b_eff + sub;   // sub=1 时等价于 +1</span></span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a><span class="in">endmodule</span></span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a>**符号扩展（sign extension）**：位宽扩展时把符号位向左复制即可，数值不变。这个性质在 RTL 里每天都在用：</span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a><span class="in">```systemverilog</span></span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a><span class="in">logic [7:0]  a;</span></span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a><span class="in">logic [15:0] b;</span></span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a><span class="in">assign b = {{8{a[7]}}, a};   // 有符号扩展</span></span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a><span class="in">// 或更稳妥地：b = 16'(signed'(a));</span></span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a>**范围不对称**：$k$ 位 2 的补码范围 $[-2^{k-1},\ 2^{k-1}-1]$。最小值没有对应的正数——对 $-2^{k-1}$ 取负会**溢出（overflow）**。这是定点软件里经典的 corner case（`abs(INT_MIN)` 未定义行为的硬件根源）。以 $k=4$ 为例，$(-8)_{10} = 1000_2$，取反加 1 后仍是 $1000_2$，即 $-(-8) = -8$。**取负运算在最小值处不是对合的**，这在写 RTL 时必须显式处理（饱和取负、加宽一位、或在上层禁止该输入）。</span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a>**溢出判据**（第 5 章会再次用到）：</span>
+<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a>\text{Overflow} = c_k \oplus c_{k-1} = \overline{x_{k-1}}\,\overline{y_{k-1}}\,s_{k-1} + x_{k-1} y_{k-1} \overline{s_{k-1}}</span>
+<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a>即：两个同号数相加得到异号结果，才是溢出；异号相加永不溢出。</span>
+<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">图 2.6 4 位 1 的补码整数表示系统：全 1 码表示 $-0$，范围退化为 $[-7,+7]$</span><span class="co">](images/ch02/fig02_06.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a>1 的补码在同一张 4 位编码表上的差别只有一处：全 1 码 $1111$ 表示 $-0$ 而不是 $-1$，因此范围退化为 $<span class="co">[</span><span class="ot">-7, +7</span><span class="co">]</span>$ 且有两个零。除此之外，它的取负（纯取反）比 2 的补码少一次加 1，但代价是 2.3 节说的循环进位。</span>
+<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip title="快速自检"}</span>
+<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a>判断补码溢出最快的心算法：**看两个操作数的符号与结果的符号**。$+7 + +1$ 在 4 位下得到 $1000 = -8$，两个正数加出负数，溢出；而 $-8 + +7 = -1$ 无论从哪个角度看都没问题。所谓 $c_k \oplus c_{k-1}$，只是这个直观判据在电路上的等价写法。</span>
+<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2.5 直接与间接有符号运算（Direct and Indirect Signed Arithmetic）</span></span>
+<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**直接法（direct）**：运算电路直接消化符号编码——2 的补码加法器就是典型，符号位与其余位一视同仁地进位。</span>
+<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**间接法（indirect）**：先把操作数转成无符号（或分离符号），做完幅值运算，再按规则拼回符号——原码运算属于此类。</span>
+<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a>间接法看着麻烦，但在乘除法里反而常见：先把符号异或出来，幅值用无符号阵列算，最后再根据符号决定是否取补。**Booth 重编码（第 10 章）之前的朴素有符号乘法就是这么干的**。</span>
+<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>三种编码下"符号移除（sign removal）"与"结果调整（adjustment）"两步的代价并不相同：原码只需拆出符号位，几乎零成本；偏置码两步都要做加法/减法；补码两步都是**选择性取补**（根据符号位决定是否取反加 1）。所以"间接法"的开销与所选编码强相关——这也是评价一个表示法时要连带着看"配套运算贵不贵"的原因。</span>
+<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a>更进一步说，间接法的思想不止于处理符号，它是**操作数预处理**这一通用手法的特例。计算 $\sin x$ 时，先用 $\sin(-x) = -\sin x$、$\sin(\pi - x) = \sin x$ 把自变量折进 $[0, \pi/2]$（第 22 章 CORDIC 正是这么做的）；做除法时，先把除数和被除数同乘一个比例因子把除数拉到接近 1 的区间（第 15、16 章）。共同套路是：**花一点预处理，把运算核心放进一个更好算、更好收敛的区间**。</span>
+<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2.6 带符号位与带符号数字（Using Signed Positions or Signed Digits）</span></span>
+<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a>2 的补码可以理解为"最高位权重为负"的位置数制——这是**带符号位置（signed position）**。顺着这个思路再进一步：如果允许**每一位数字**都带符号呢？例如数位集合取 $<span class="sc">\{</span>-1, 0, +1<span class="sc">\}</span>$（常记作 $<span class="sc">\{</span>\bar{1}, 0, 1<span class="sc">\}</span>$），一个数就有了无穷多种合法编码（$1 = 1 = 1\bar{1} = \bar{1}11\cdots$ 风格的不同写法）。</span>
+<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a>形式化地，用一个符号向量 $\lambda = (\lambda_{k-1}, \dots, \lambda_0)$、$\lambda_i \in <span class="sc">\{</span>-1, +1<span class="sc">\}</span>$ 指定每个位置的权重符号：</span>
+<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a>(x_{k-1}\dots x_0)_{r,\lambda} = \sum_{i=0}^{k-1} \lambda_i\, x_i\, r^i</span>
+<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a>这个框架把三种看似无关的数系统一了：$\lambda$ 全为 $+1$ 是普通正基数；仅最高位为 $-1$ 是 2 的补码；$\lambda$ 交替取 $\pm 1$ 则得到**负基数（negative radix）**表示。也就是说，2 的补码并非什么特殊技巧，只是"符号向量"这个更大空间里的一个点。</span>
+<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a>图 2.10 给出的例子是基数 4、数位集合 $<span class="co">[</span><span class="ot">-1, 2</span><span class="co">]</span>$：把标准数位 $3$ 改写成 $-1 + 4$（后者成为向左传播的进位 1），反复进行直到没有 3 剩下。它仍是**非冗余**的（恰好 4 个数位值），所以转换过程本质上是一次进位传播，最坏要扫完全部数位。</span>
+<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a>而图 2.11 的基数 4、数位集合 $<span class="co">[</span><span class="ot">-2, 2</span><span class="co">]</span>$ 则是**冗余**的：把 $3$ 写成 $-1+4$、把 $2$ 写成 $-2+4$，产生的进位 1 一定能被高位一个 $\le 1$ 的数位吸收掉，因此**转换过程无进位传播**（反向转换则仍是从低到高串行的）。这一对比正是第 3 章的主题：冗余带来的"吸收余量"，把串行过程变成了并行过程。</span>
+<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">图 2.11 把标准基数 4 整数转换为非标准数位集 $[-2,2]$ 的基数 4 整数：进位被高位吸收，转换无进位传播</span><span class="co">](images/ch02/fig02_11.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a>一般地，任何包含 0 的连续整数区间 $<span class="co">[</span><span class="ot">-\alpha, \beta</span><span class="co">]</span>$（只要区间内至少有 $r$ 个值）都可以作为基数 $r$ 的数位集合。若恰好有 $r$ 个值，表示是**非冗余**的、每个值唯一编码；若超过 $r$ 个，则冗余度（redundancy index）为</span>
+<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a>\rho = \alpha + \beta + 1 - r</span>
+<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a>$\rho \ge 1$ 就意味着有些数有多种写法。第 3 章会证明：$\rho$ 越大，无进位加法的实现越宽松，但**每个数位要占的比特也越多**（存储与布线成本上升）。这就是冗余数系的全部账本。</span>
+<span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a>为了在图上区分正负权重，本书把点记号扩展成**扩展点记号**：实心点表示正权重位（posibit），空心点表示负权重位（negabit）。</span>
+<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a><span class="al">![图 2.12 用扩展点记号描绘各种数表示格式（空心点代表负权重位）](images/ch02/fig02_12.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a><span class="al">![图 2.13 用扩展点记号表示的若干算术算法示例](images/ch02/fig02_13.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a>::: {.callout-important title="承上启下"}</span>
+<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a>这种**带符号数字（signed-digit）表示**就是第 3 章冗余数系（redundant number system）的核心。冗余带来的自由度，换来的是**加法不需要等待进位传播**——这是所有高速算术部件（乘法器的部分积压缩、SRT 除法的商数字选择）的共同秘密武器。</span>
+<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章小结</span></span>
+<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>2 的补码让加减共用一套加法器，是整数硬件的事实标准；记住取负 = 取反 + 1、符号扩展、溢出判据三件套。</span>
+<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>原码活在浮点数里，偏置码活在浮点阶码里——老编码在特定生态位仍有优势。</span>
+<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>1 的补码只剩历史意义和教学价值（循环进位在时序上是灾难）。</span>
+<span id="cb3-185"><a href="#cb3-185" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>"数位可以带符号"这个想法，是通往高速算术的大门。</span>
+<span id="cb3-186"><a href="#cb3-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-187"><a href="#cb3-187" aria-hidden="true" tabindex="-1"></a><span class="fu">## 原书插图</span></span>
+<span id="cb3-188"><a href="#cb3-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-189"><a href="#cb3-189" aria-hidden="true" tabindex="-1"></a><span class="al">![图 2.2 用预补码（precomplementation）与后补码（postcomplementation）实现原码数的加法](images/ch02/fig02_02.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-190"><a href="#cb3-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-191"><a href="#cb3-191" aria-hidden="true" tabindex="-1"></a><span class="al">![图 2.8 有符号数的直接运算与间接运算对比：间接法把符号移除与结果调整作为前后两级包裹在无符号运算外面](images/ch02/fig02_08.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-192"><a href="#cb3-192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-193"><a href="#cb3-193" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">图 2.10 把标准基数 4 整数（数位集 $[0,3]$）转换为非标准数位集 $[-1,2]$ 的基数 4 整数</span><span class="co">](images/ch02/fig02_10.png)</span>{fig-align="center" width="85%"}</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

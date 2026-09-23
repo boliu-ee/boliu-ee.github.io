@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第21章 开平方方法（Square-Rooting Methods） – 计算机算术：算法与硬件设计（中文解读版）</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./ch22.html" rel="next">
+<link href="./ch20.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-77d2b90c99eeff80c5837adab8b96ac7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch21.html">第六部分 函数求值 (Function Evaluation)</a></li><li class="breadcrumb-item"><a href="./ch21.html"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">计算机算术：算法与硬件设计（中文解读版）</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第一部分 数的表示 (Number Representation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch01.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第二部分 加法与减法 (Addition/Subtraction)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第7章 快速加法器的变体（Variations in Fast Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第8章 多操作数加法（Multioperand Addition）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部分 乘法 (Multiplication)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第9章 基本乘法方案（Basic Multiplication Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第10章 高基数乘法器（High-Radix Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">第四部分 除法 (Division)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第14章 高基数除法器（High-Radix Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第15章 除法器的变体（Variations in Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第16章 收敛法除法（Division by Convergence）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">第五部分 实数运算 (Real Arithmetic)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第17章 浮点数表示（Floating-Point Representations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">第六部分 函数求值 (Function Evaluation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch21.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第23章 函数求值的变体（Variations in Function Evaluation）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第24章 查表算术（Arithmetic by Table Lookup）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">第七部分 实现专题 (Implementation Topics)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch26.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch27.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch28.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第28章 可重构算术（Reconfigurable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">附录 过去、现在与未来（Past, Present, and Future）</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#本章导读" id="toc-本章导读" class="nav-link active" data-scroll-target="#本章导读">本章导读</a></li>
+  <li><a href="#纸笔算法the-pencil-and-paper-algorithm" id="toc-纸笔算法the-pencil-and-paper-algorithm" class="nav-link" data-scroll-target="#纸笔算法the-pencil-and-paper-algorithm">21.1 纸笔算法（The Pencil-and-Paper Algorithm)</a></li>
+  <li><a href="#恢复式移位减算法restoring-shiftsubtract-algorithm" id="toc-恢复式移位减算法restoring-shiftsubtract-algorithm" class="nav-link" data-scroll-target="#恢复式移位减算法restoring-shiftsubtract-algorithm">21.2 恢复式移位/减算法（Restoring Shift/Subtract Algorithm)</a></li>
+  <li><a href="#二进制不恢复算法binary-nonrestoring-algorithm" id="toc-二进制不恢复算法binary-nonrestoring-algorithm" class="nav-link" data-scroll-target="#二进制不恢复算法binary-nonrestoring-algorithm">21.3 二进制不恢复算法（Binary Nonrestoring Algorithm)</a></li>
+  <li><a href="#高基数开方high-radix-square-rooting" id="toc-高基数开方high-radix-square-rooting" class="nav-link" data-scroll-target="#高基数开方high-radix-square-rooting">21.4 高基数开方（High-Radix Square-Rooting)</a></li>
+  <li><a href="#收敛法开方square-rooting-by-convergence" id="toc-收敛法开方square-rooting-by-convergence" class="nav-link" data-scroll-target="#收敛法开方square-rooting-by-convergence">21.5 收敛法开方（Square-Rooting by Convergence)</a></li>
+  <li><a href="#快速硬件开方器fast-hardware-square-rooters" id="toc-快速硬件开方器fast-hardware-square-rooters" class="nav-link" data-scroll-target="#快速硬件开方器fast-hardware-square-rooters">21.6 快速硬件开方器（Fast Hardware Square-Rooters)</a></li>
+  <li><a href="#rtl-实践rtlch21_2_restoring_sqrt" id="toc-rtl-实践rtlch21_2_restoring_sqrt" class="nav-link" data-scroll-target="#rtl-实践rtlch21_2_restoring_sqrt">RTL 实践：<code>rtl/ch21_2_restoring_sqrt</code></a></li>
+  <li><a href="#本章小结" id="toc-本章小结" class="nav-link" data-scroll-target="#本章小结">本章小结</a></li>
+  <li><a href="#原书插图" id="toc-原书插图" class="nav-link" data-scroll-target="#原书插图">原书插图</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch21.html">第六部分 函数求值 (Function Evaluation)</a></li><li class="breadcrumb-item"><a href="./ch21.html"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="本章导读" class="level2">
+<h2 class="anchored" data-anchor-id="本章导读">本章导读</h2>
+<p>开平方（square root）是除法的”近亲”：同样有数字递归（逐位试根）与收敛迭代（Newton）两大家族，且都能复用除法器的数据通路。本章从纸笔算法讲起，走完恢复/不恢复、高基数、收敛法全程，最后看快速硬件开方器——图形学（归一化）、DSP（均方根）、科学计算的日常需求。</p>
+</section>
+<section id="纸笔算法the-pencil-and-paper-algorithm" class="level2">
+<h2 class="anchored" data-anchor-id="纸笔算法the-pencil-and-paper-algorithm">21.1 纸笔算法（The Pencil-and-Paper Algorithm)</h2>
+<p>手工开平方的口诀：两位一组分段，逐位试根 <span class="math inline">\(q\)</span>，每步计算”当前根×20 + 新位”乘以新位并从余数中减去。本质：利用 <span class="math inline">\((10a + b)^2 = 100a^2 + (20a + b)b\)</span> 的展开，每步确定一位新根。</p>
+<p>二进制版本大幅简化：<strong>试根位只需试 1</strong>（0 自动成立），每步比较”部分余数 vs.&nbsp;<span class="math inline">\((4q + 1) \ll 2j\)</span>“——一次减法定一位。</p>
+<p>先补上记号与一条关键不等式：设 <span class="math inline">\(2k\)</span> 位的被开方数 <span class="math inline">\(z\)</span>（radicand）、<span class="math inline">\(k\)</span> 位的根 <span class="math inline">\(q\)</span>，则余数 <span class="math inline">\(s = z - q^2\)</span> 必满足 <span class="math inline">\(s \le 2q\)</span>——若 <span class="math inline">\(s \ge 2q+1\)</span>，就有 <span class="math inline">\(z = q^2 + s \ge (q+1)^2\)</span>，与 <span class="math inline">\(q = \lfloor\sqrt{z}\rfloor\)</span> 矛盾。这解释了为什么 <span class="math inline">\(2k\)</span> 位的 <span class="math inline">\(z\)</span> 需要 <span class="math inline">\(k+1\)</span> 位的余数：余数寄存器必须容得下”根再长一位”所需的全部信息。</p>
+<p>“乘 20 添位”的来历一步可推。设部分根为 <span class="math inline">\(q^{(i)}\)</span>，添上新数字 <span class="math inline">\(b\)</span> 后新根为 <span class="math inline">\(10q^{(i)} + b\)</span>，其平方为</p>
+<p><span class="math display">\[
+(10q^{(i)} + b)^2 = 100\,(q^{(i)})^2 + (20q^{(i)} + b)\,b
+\]</span></p>
+<p>第一项 <span class="math inline">\(100(q^{(i)})^2\)</span> 已在早前各步从部分余数中扣净，故本步只需再减 <span class="math inline">\((20q^{(i)} + b) \times b\)</span>——把部分根翻倍、右端拼上新位、再乘新位，口诀的全部内容都在这个展开式里。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="算例：十进制 √95241 与二进制 √1110110">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>算例：十进制 √95241 与二进制 √1110110
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>十进制：两位分组 <span class="math inline">\(09\,52\,41\)</span>，故根有 3 位。首位 <span class="math inline">\(q_2 = 3\)</span>：<span class="math inline">\(3^2 = 9\)</span> 恰好扣净首组 09，部分余数剩 52。次位：部分根 3 翻倍得 6，找 <span class="math inline">\(q_1\)</span> 使 <span class="math inline">\((60 + q_1) \cdot q_1 \le 52\)</span>——<span class="math inline">\(61 \times 1\)</span> 都放不下，故 <span class="math inline">\(q_1 = 0\)</span>。末位：部分根 30 翻倍得 60，找 <span class="math inline">\(q_0\)</span> 使 <span class="math inline">\((600 + q_0) \cdot q_0 \le 5241\)</span>，取 <span class="math inline">\(q_0 = 8\)</span>（<span class="math inline">\(608 \times 8 = 4864\)</span>）。最终 <span class="math inline">\(q = 308\)</span>，<span class="math inline">\(s = 95241 - 308^2 = 377\)</span>。</p>
+<p>二进制：<span class="math inline">\(z = (1110110)_2 = 118\)</span>，分组 <span class="math inline">\(1\,11\,01\,10\)</span>。根数字只取 0/1，试根退化为一次试探减法：把部分根 <span class="math inline">\(q^{(i)}\)</span> 右端拼上 <span class="math inline">\(01\)</span>（即 <span class="math inline">\(4q^{(i)} + 1\)</span>）与部分余数比较，够减则该位为 1。各步比较依次为 <span class="math inline">\(\ge 1\)</span>?（是）、<span class="math inline">\(\ge 101\)</span>?（否）、<span class="math inline">\(\ge 1001\)</span>?（是）、<span class="math inline">\(\ge 10101\)</span>?（否），得 <span class="math inline">\(q = (1010)_2 = 10\)</span>、余数 <span class="math inline">\(s = 18\)</span>——与 <span class="math inline">\(10^2 + 18 = 118\)</span> 相符。</p>
+</div>
+</div>
+<p>从二进制算例还能抽象出<strong>点记法（dot notation）</strong>视图：被开方数与根写在顶部，其下每行点阵对应一个”部分根拼 <span class="math inline">\(0q_{k-i-1}\)</span> 后乘新根位”的被减数。由于根数字只有 0/1 两种取值，二进制开平方就退化为”从 <span class="math inline">\(z\)</span> 中减去一串 0 或 <span class="math inline">\((q^{(i)}01)_2\)</span> 的移位版本”。这张点阵图与乘法点阵一样，是后文推导恢复/不恢复阵列开方器的蓝图。</p>
+</section>
+<section id="恢复式移位减算法restoring-shiftsubtract-algorithm" class="level2">
+<h2 class="anchored" data-anchor-id="恢复式移位减算法restoring-shiftsubtract-algorithm">21.2 恢复式移位/减算法（Restoring Shift/Subtract Algorithm)</h2>
+<p>硬件版恢复式开方，与恢复除法同构：</p>
+<ol type="1">
+<li>部分余数左移 2 位（每拍出 1 位根，因为开方每次消耗被开方数 2 位）；</li>
+<li>试减 <span class="math inline">\((4q + 1) \ll 2j\)</span>；</li>
+<li>够减：根位置 1，保留差；不够减：根位置 0，恢复原值。</li>
+</ol>
+<p>数据通路可直接改造自除法器：除数寄存器换成”动态生成的试减项”（<span class="math inline">\((4q+1)\)</span> 由当前根左移 2 位 + 1 构成，一个拼接电路即可）。</p>
+<p>把算法写成对<strong>小数（fractional）</strong>被开方数的递推更贴近硬件实现。IEEE 754 浮点开方对应 <span class="math inline">\(1 \le z &lt; 4\)</span>、<span class="math inline">\(1 \le q &lt; 2\)</span>（奇指数先减 1 变偶、尾数左移一位即落入此区间）。维持不变式 <span class="math inline">\(s^{(j)} = z - [q^{(j)}]^2\)</span>，由 <span class="math inline">\(q^{(j)} = q^{(j-1)} + 2^{-j}q_{-j}\)</span> 展开平方差可解出每拍递推</p>
+<p><span class="math display">\[
+s^{(j)} = 2s^{(j-1)} - q_{-j}\left(2q^{(j-1)} + 2^{-j}q_{-j}\right), \qquad s^{(0)} = z - 1,\ q^{(0)} = 1
+\]</span></p>
+<p>即部分余数每拍左移 2 位（开方每拍消耗 <span class="math inline">\(z\)</span> 的 2 位），再减去试减项 <span class="math inline">\(2q^{(j-1)} + 2^{-j}\)</span> 或 0。试减项的构造极其便宜：<span class="math inline">\(2q^{(j-1)} + 2^{-j}\)</span> 就是”部分根左移一位后右端拼 <span class="math inline">\(01\)</span>“——纯拼接、无加法器。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="算例：恢复式开方 z = 118/64">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>算例：恢复式开方 z = 118/64
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><span class="math inline">\(z = (01.110110)_2\)</span>，<span class="math inline">\(s^{(0)} = z - 1 = 0.110110\)</span>。逐拍：<span class="math inline">\(2s^{(0)} = 001.101100\)</span>，试减 <span class="math inline">\(10.1_2\)</span>（即 <span class="math inline">\(2 \times 1 + 0.5\)</span>）得负 → <span class="math inline">\(q_{-1} = 0\)</span>，恢复原余数；<span class="math inline">\(2s^{(1)} = 011.011000\)</span>，试减 <span class="math inline">\(10.01_2\)</span> 成功 → <span class="math inline">\(q_{-2} = 1\)</span>；如此继续六拍得 <span class="math inline">\(q = 1.010110_2 = 86/64\)</span>，<span class="math inline">\(s^{(6)} = 156/64\)</span>。</p>
+</div>
+</div>
+<p>舍入环节有个漂亮的免费午餐。要得到 <span class="math inline">\(l\)</span> 位的舍入结果，只需多迭代一位 <span class="math inline">\(q_{-l-1}\)</span>：为 0 则截断、为 1 则末位进 1。除法里最麻烦的”恰在中间”（需要 sticky bit 的场景）在开方中<strong>不可能出现</strong>：中点情形要求 <span class="math inline">\(z = (q + 2^{-(l+1)})^2\)</span>，展开后其小数部分在第 <span class="math inline">\(2l+2\)</span> 位上有一个无法对消的 1，而 <span class="math inline">\(z\)</span> 本身只有 <span class="math inline">\(l\)</span> 个小数位——矛盾。于是既不用 sticky 逻辑，也不用检查余数是否为零。</p>
+</section>
+<section id="二进制不恢复算法binary-nonrestoring-algorithm" class="level2">
+<h2 class="anchored" data-anchor-id="二进制不恢复算法binary-nonrestoring-algorithm">21.3 二进制不恢复算法（Binary Nonrestoring Algorithm)</h2>
+<p>与不恢复除法平行：试减失败不回退，下一拍改做加法补偿。根数字集合 <span class="math inline">\(\{-1, +1\}\)</span>（或 <span class="math inline">\(\{0, 1\}\)</span> 编码），每拍固定一次加减：</p>
+<ul>
+<li>部分余数 <span class="math inline">\(\ge 0\)</span>：根位 1，下拍减；</li>
+<li>部分余数 <span class="math inline">\(&lt; 0\)</span>：根位 0（即 <span class="math inline">\(-1\)</span>），下拍加。</li>
+</ul>
+<p>收尾时若余数为负做一次最终修正。根以冗余形式产出，<strong>即时转换（on-the-fly conversion）</strong>为普通二进制——与 SRT 除法完全同款技巧。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch21/fig21_05.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 21.5</figcaption>
+</figure>
+</div>
+<p>工程实现上唯一的新麻烦是 <span class="math inline">\(q_{-j} = -1\)</span> 时的加数 <span class="math inline">\(2q^{(j-1)} - 2^{-j}\)</span>：它不再是对部分根的简单拼接（<span class="math inline">\(+2^{-j}\)</span> 变成了 <span class="math inline">\(-2^{-j}\)</span>）。经典解法是维护一对寄存器——<span class="math inline">\(Q\)</span> 存部分根 <span class="math inline">\(q^{(j-1)}\)</span>，<span class="math inline">\(Q^*\)</span> 存<strong>缩减小根（diminished partial root）</strong> <span class="math inline">\(q^{(j-1)} - 2^{-j+1}\)</span>。于是两种情形都能拼出来：</p>
+<ul>
+<li><span class="math inline">\(q_{-j} = 1\)</span>：减 <span class="math inline">\(2q^{(j-1)} + 2^{-j}\)</span>，由 <span class="math inline">\(Q\)</span> 右端拼 <span class="math inline">\(01\)</span> 移位形成；</li>
+<li><span class="math inline">\(q_{-j} = -1\)</span>：加 <span class="math inline">\(2q^{(j-1)} - 2^{-j}\)</span>，由 <span class="math inline">\(Q^*\)</span> 右端拼 <span class="math inline">\(11\)</span> 移位形成。</li>
+</ul>
+<p><span class="math inline">\(Q/Q^*\)</span> 的更新规则同样只是拼接：<span class="math inline">\(q_{-j}=1 \Rightarrow Q := Q\,1,\ Q^* := Q\,0\)</span>；<span class="math inline">\(q_{-j}=-1 \Rightarrow Q := Q^*\,1,\ Q^* := Q^*\,0\)</span>。再补一条 <span class="math inline">\(q_{-j}=0 \Rightarrow Q := Q\,0,\ Q^* := Q^*\,1\)</span>，就得到与 SRT 除法（13.6 节）同款的”跳 0/跳 1”变体：检测部分余数的前导 0/1 并连移，一次产出多位根数字。若进一步把部分余数保持为<strong>保留进位形式（stored-carry form）</strong>，用和/进位两分量高几位查表选根位，便得到与 14.2 节 carry-save SRT 完全平行的开方器——除法器的每一级进化都能在开方器上重演一遍。</p>
+</section>
+<section id="高基数开方high-radix-square-rooting" class="level2">
+<h2 class="anchored" data-anchor-id="高基数开方high-radix-square-rooting">21.4 高基数开方（High-Radix Square-Rooting)</h2>
+<p>radix-4 开方每拍出 2 位根，试减项集合变大，同样需要”根数字选择表”——与 radix-4 SRT 除法的问题结构几乎一致（部分余数截断估计 + 冗余根数字）。差别：除法的”除数”固定，开方的”试减项”随根的增长逐拍变化——选择表的输入因此多一维，设计更微妙。实用系统中 radix-4 开方多由 SRT 除法器共享实现。</p>
+<p>基数 <span class="math inline">\(r\)</span> 的开方递推是二进制版本的直接推广：</p>
+<p><span class="math display">\[
+s^{(j)} = r\,s^{(j-1)} - q_{-j}\left(2q^{(j-1)} + r^{-j}q_{-j}\right)
+\]</span></p>
+<p>以 radix-4、根数字集 <span class="math inline">\([-2, 2]\)</span> 为例：<span class="math inline">\(Q^*\)</span> 存 <span class="math inline">\(q^{(j-1)} - 4^{-j+1}\)</span>，四种非零数字对应的加/减项都可由 <span class="math inline">\(Q\)</span> 或 <span class="math inline">\(Q^*\)</span> 拼接常数后移位形成——<span class="math inline">\(q_{-j} = 2\)</span> 减 <span class="math inline">\(4q^{(j-1)} + 2^{-2j+2}\)</span>（<span class="math inline">\(Q\)</span> 拼 <span class="math inline">\(010\)</span> 双移）、<span class="math inline">\(q_{-j} = 1\)</span> 减 <span class="math inline">\(2q^{(j-1)} + 2^{-2j}\)</span>（<span class="math inline">\(Q\)</span> 拼 <span class="math inline">\(001\)</span>）、<span class="math inline">\(q_{-j} = -1\)</span> 加 <span class="math inline">\(2q^{(j-1)} - 2^{-2j}\)</span>（<span class="math inline">\(Q^*\)</span> 拼 <span class="math inline">\(111\)</span>）、<span class="math inline">\(q_{-j} = -2\)</span> 加 <span class="math inline">\(4q^{(j-1)} - 2^{-2j+2}\)</span>（<span class="math inline">\(Q^*\)</span> 拼 <span class="math inline">\(110\)</span>）。<span class="math inline">\(Q/Q^*\)</span> 的五条更新规则仍是纯拼接，根在<strong>即时转换（on-the-fly conversion）</strong>中直接落成普通二进制，无需收尾转换步骤。</p>
+<p>与除法相比有两处结构性差异，设计者必须警惕：</p>
+<ol type="1">
+<li><strong>选择表无法全程统一</strong>。除法的除数从头就是已知的，选择表只需观察部分余数；开方的”试减项”依赖部分根本身，而最初几拍根几乎未知。补救：开机时用一个小 PLA/查表先”冒出”根的前几位，或前几拍改用略有不同的选择规则。</li>
+<li><strong>与除法共享选择表需要改数字集</strong>。对比 radix-4 两种递推——除法减 <span class="math inline">\(q_{-j} d\)</span>，开方减 <span class="math inline">\(q_{-j}(2q^{(j-1)} + 4^{-j}q_{-j})\)</span>——若把开方数字集改用 <span class="math inline">\(\{-1, -\tfrac12, 0, \tfrac12, 1\}\)</span>，两者部分余数的幅值范围就一致了，可复用同一张商/根数字选择表；该数字集转回 <span class="math inline">\([-2,2]\)</span> 或普通二进制无需额外计算。</li>
+</ol>
+<p>另外，IEEE 754 下 <span class="math inline">\(z \in [1,4)\)</span> 的根在 <span class="math inline">\([1,2)\)</span>，radix-4 数字集 <span class="math inline">\([-2,2]\)</span> 表示绰绰有余；首位数字实际可限制在 <span class="math inline">\([0,2]\)</span>，但不能想当然压到 <span class="math inline">\([0,1]\)</span>——冗余表示下首位仍可能需要取 2、由后续位借位补偿（原书留作思考题）。</p>
+</section>
+<section id="收敛法开方square-rooting-by-convergence" class="level2">
+<h2 class="anchored" data-anchor-id="收敛法开方square-rooting-by-convergence">21.5 收敛法开方（Square-Rooting by Convergence)</h2>
+<p>与收敛除法（16 章）完全平行：</p>
+<ol type="1">
+<li><strong>直接 Newton</strong>：<span class="math inline">\(r_{i+1} = \frac{1}{2}(r_i + x / r_i)\)</span>——每轮含一次除法，不理想；</li>
+<li><strong>倒根 Newton</strong>：先求 <span class="math inline">\(1/\sqrt{x}\)</span>：<span class="math inline">\(r_{i+1} = \frac{r_i}{2}(3 - x r_i^2)\)</span>——<strong>只用乘法</strong>（每轮 2-3 次乘法，FMA 友好），最后乘 <span class="math inline">\(x\)</span> 得 <span class="math inline">\(\sqrt{x}\)</span>。二次收敛：8 位查表初值 → 16 → 32 → 64 位，3 轮。</li>
+</ol>
+<p>补全推导与收敛分析。对 <span class="math inline">\(f(x) = x^2 - z\)</span> 套 Newton–Raphson 迭代 <span class="math inline">\(x^{(i+1)} = x^{(i)} - f(x^{(i)})/f'(x^{(i)})\)</span> 即得上式。令 <span class="math inline">\(\delta_i = \sqrt{z} - x^{(i)}\)</span>，代入可证</p>
+<p><span class="math display">\[
+\delta_{i+1} = -\frac{\delta_i^2}{2x^{(i)}}
+\]</span></p>
+<p>误差恒为负（从上方单调收敛）且按平方消失；<span class="math inline">\(z \in [1,4)\)</span> 时从 <span class="math inline">\(x^{(0)} = 2\)</span> 出发可保持 <span class="math inline">\(|\delta_{i+1}| \le \delta_i^2/2\)</span>。若查表把初值精度提到 <span class="math inline">\(2^{-8}\)</span>，三轮迭代即达 64 位。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="算例：Newton 开方 z = 2.4">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>算例：Newton 开方 z = 2.4
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>查表得初值 <span class="math inline">\(x^{(0)} = 1.5\)</span>（精度 <span class="math inline">\(10^{-1}\)</span>）：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th><span class="math inline">\(i\)</span></th>
+<th><span class="math inline">\(x^{(i)}\)</span></th>
+<th>精度</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>1.5</td>
+<td><span class="math inline">\(10^{-1}\)</span></td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td><span class="math inline">\(0.5\,(1.5 + 2.4/1.5) = 1.550\,000\)</span></td>
+<td><span class="math inline">\(10^{-2}\)</span></td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td><span class="math inline">\(1.549\,193\,548\)</span></td>
+<td><span class="math inline">\(10^{-4}\)</span></td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td><span class="math inline">\(1.549\,193\,338\)</span></td>
+<td><span class="math inline">\(10^{-8}\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>三轮、每轮一次除法——这正是”直接 Newton 含除法”的代价，也是各种免除非法（division-free）变体的动机。</p>
+</div>
+</div>
+<p>去除法的三条路线，按工程出现频率排序：</p>
+<ol type="1">
+<li><strong>倒根 Newton</strong>：对 <span class="math inline">\(f(x) = 1/x^2 - z\)</span>（根在 <span class="math inline">\(x = 1/\sqrt{z}\)</span>）迭代，得 <span class="math inline">\(x^{(i+1)} = \frac{x^{(i)}}{2}\left(3 - z(x^{(i)})^2\right)\)</span>，每轮 3 乘 1 加，最后乘 <span class="math inline">\(z\)</span> 还原。Cray-2 即用此法，且把 <span class="math inline">\(1.5x^{(0)}\)</span> 与 <span class="math inline">\(0.5(x^{(0)})^3\)</span> 预存成表，首轮只剩 1 乘 1 加；<span class="math inline">\(x^{(1)}\)</span> 已达半个机器精度，第二轮后乘 <span class="math inline">\(z\)</span> 收工。算例：<span class="math inline">\(z = 0.5678\)</span>，<span class="math inline">\(x^{(0)} = 1.3\)</span> → <span class="math inline">\(x^{(1)} = 1.326\,271\,700\)</span> → <span class="math inline">\(x^{(2)} = 1.327\,095\,128\)</span>，乘 <span class="math inline">\(z\)</span> 得 <span class="math inline">\(\sqrt{z} \approx 0.753\,524\,613\)</span>。</li>
+<li><strong>倒数表辅助</strong>：把迭代改写为 <span class="math inline">\(x^{(i+1)} = x^{(i)} + \frac{1}{2x^{(i)}}\left(z - (x^{(i)})^2\right)\)</span>，用近似倒数 <span class="math inline">\(\gamma(x^{(i)})\)</span> 代替精确的 <span class="math inline">\(1/x^{(i)}\)</span>——每轮表查 + 2 乘 2 加，但收敛降到低于二次，轮数要放宽。</li>
+<li><strong>双迭代交织</strong>：<span class="math inline">\(x^{(i+1)} = \frac{1}{2}(x^{(i)} + z\,y^{(i)})\)</span>、<span class="math inline">\(y^{(i+1)} = y^{(i)}(2 - x^{(i)}y^{(i)})\)</span>，<span class="math inline">\(x\)</span> 逼近 <span class="math inline">\(\sqrt{z}\)</span>、<span class="math inline">\(y\)</span> 逼近 <span class="math inline">\(1/\sqrt{z}\)</span>（后者即 16 章的倒数 Newton）；两路乘法可流水，收敛介于线性与二次之间。</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="工程观察">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>工程观察
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>GPU 的 <code>rsqrt</code>（快速逆平方根）指令 = 查表 + 1 轮倒根 Newton，精度约 23 位——图形学向量归一化的标配。它与 15.5 节的倒数 Newton 共享同一套”初始粗值 + 平方收敛 + FMA 实现”方法论。</p>
+</div>
+</div>
+</section>
+<section id="快速硬件开方器fast-hardware-square-rooters" class="level2">
+<h2 class="anchored" data-anchor-id="快速硬件开方器fast-hardware-square-rooters">21.6 快速硬件开方器（Fast Hardware Square-Rooters)</h2>
+<p>工程选型指南：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>方案</th>
+<th>延迟</th>
+<th>面积</th>
+<th>适用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>数字递归（radix-2/4）</td>
+<td><span class="math inline">\(k\)</span> 或 <span class="math inline">\(k/2\)</span> 拍</td>
+<td>小（可复用除法器）</td>
+<td>通用 FPU、嵌入式</td>
+</tr>
+<tr class="even">
+<td>收敛法</td>
+<td>~3 轮乘法</td>
+<td>复用乘法器 + 表</td>
+<td>已有快速乘法器的 FPU/GPU</td>
+</tr>
+<tr class="odd">
+<td>组合阵列</td>
+<td>1 拍</td>
+<td>大</td>
+<td>小位宽、极致延迟</td>
+</tr>
+</tbody>
+</table>
+<p>现代 FPU 通常让开方与除法<strong>共享同一个 SRT 单元</strong>（控制微码不同），因为两者数据通路同构——面积几乎零增加。</p>
+<p>组合式开方器有两大用途：给收敛法提供初值，或干脆整体替代递归式方案。初值近似的”阶梯”很能说明设计取舍——对 <span class="math inline">\(z \in [1,4)\)</span> 上的 <span class="math inline">\(\sqrt{z}\)</span>：</p>
+<ul>
+<li>最佳常数近似 <span class="math inline">\(x^{(0)} = 1.5\)</span>：最大绝对误差 0.5，<span class="math inline">\(z=1\)</span> 处相对误差 50%；</li>
+<li>免运算线性近似 <span class="math inline">\(x^{(0)} = 1 + z/4\)</span>（移位拼位即得）：绝对误差 0.25，相对误差 25%；</li>
+<li>只加一次法的线性近似 <span class="math inline">\(x^{(0)} = 7/8 + z/4\)</span>：误差减半至 0.125；</li>
+<li>最佳线性近似 <span class="math inline">\(x^{(0)} = 17/24 + z/3\)</span>（需一次常数乘法）：误差 <span class="math inline">\(1/24 \approx 4.2\%\)</span>，在 <span class="math inline">\(z = 1, 2.25, 4\)</span> 三处达到。</li>
+</ul>
+<p>把 <span class="math inline">\([1,4)\)</span> 按 <span class="math inline">\(z_1\)</span> 位切成 <span class="math inline">\([1,2)\)</span> 与 <span class="math inline">\([2,4)\)</span> 两个子区间、各用免运算线性近似（低位子区间用 <span class="math inline">\(1 + (z-1)/2\)</span>，高位用 <span class="math inline">\(1 + z/4\)</span>），最大误差进一步降到约 0.086。整条阶梯与 24 章的插值/分段表一脉相承——<strong>用一点点逻辑换大幅存储或迭代轮数</strong>。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch21/fig21_07.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 21.7 √z 在 1 ≤ z &lt; 4 上的图像：各种初值近似本质上都是对这条曲线的粗略拟合</figcaption>
+</figure>
+</div>
+<p>整数情形还有一个只靠”计前导零 + 移位”的初值：设 <span class="math inline">\(z\)</span> 的最高位 1 在奇位置 <span class="math inline">\(2^{2m-1}\)</span>（否则把 <span class="math inline">\(z\)</span> 翻倍、结果乘 <span class="math inline">\(1/\sqrt{2} \approx 0.707\,107\)</span>），取 <span class="math inline">\(x^{(0)} = 2^{m-1} + 2^{-(m+1)}z\)</span>，可证最大相对误差 6.07%（最坏在 <span class="math inline">\(z_{rest} = 0\)</span> 处，<span class="math inline">\(x^{(0)}/\sqrt{z} = 3/\sqrt{8}\)</span>）。Schwarz 与 Flynn 给出更工程化的方案：在 53 位乘法器上加约 1000 个门，让它顺带”算出”16 位的 <span class="math inline">\(\sqrt{z}\)</span> 初值，之后仅两轮 Newton 即达双精度——初值生成几乎白拿。</p>
+<p>另一极端是完全不迭代的<strong>阵列开方器（array square-rooter）</strong>：从点记法图出发，像 15.5 节由除法点阵导出阵列除法器那样，直接铺出受控加/减细胞阵列。下图为非恢复式 8 位小数开方器：每个细胞含一个全加器（FA）与一个异或门，按上一行部分余数的符号决定本行做加还是做减——非恢复算法的”欠账/还账”被摊平成二维电路。与阵列除法器一样，它用面积换延迟，适合位宽小、延迟极敏感的场合。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch21/fig21_08.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 21.8 由含全加器（FA）与异或门的受控加/减细胞构成的非恢复阵列开方器</figcaption>
+</figure>
+</div>
+</section>
+<section id="rtl-实践rtlch21_2_restoring_sqrt" class="level2">
+<h2 class="anchored" data-anchor-id="rtl-实践rtlch21_2_restoring_sqrt">RTL 实践：<code>rtl/ch21_2_restoring_sqrt</code></h2>
+<p>16 位无符号恢复式开方器：每拍部分余数左移 2 位、试减 <span class="math inline">\(4q+1\)</span>，8 拍出 8 位根与余数：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">wire</span> [<span class="dv">15</span>:<span class="dv">0</span>] rem_sh = {rem[<span class="dv">13</span>:<span class="dv">0</span>], din[<span class="dv">15</span>:<span class="dv">14</span>]};   <span class="co">// 左移 2 位 + 被开方数新 2 位</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">wire</span> [<span class="dv">15</span>:<span class="dv">0</span>] trial  = {<span class="bn">6'b0</span>, root, <span class="bn">2'b01</span>};       <span class="co">// 4q + 1：当前根左移 2 位置 1</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">// 够减：rem &lt;= rem_sh - trial，根位置 1；否则 rem &lt;= rem_sh，根位置 0</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>设计要点：</p>
+<ul>
+<li><strong>试减项的拼接触</strong>：（<span class="math inline">\(4q+1\)</span>）无需乘法器——把当前根左移 2 位、末位置 01 即可，这正是二进制开方比十进制优雅的原因；</li>
+<li><strong>每拍消耗 2 位输入</strong>：开方每拍出 1 位根，对应被开方数 2 位——与除法（每拍 1 位）的节奏差异来自平方的幂次；</li>
+<li>不变式：迭代全程保持 <span class="math inline">\(d = q^2 + r\)</span> 且 <span class="math inline">\(0 \le r \le 2q\)</span>，testbench 的黄金模型直接按定义枚举验证，覆盖 <span class="math inline">\(0\)</span>、<span class="math inline">\(255^2\)</span>、<span class="math inline">\(2^{16}-1\)</span> 边界与 1000 组随机。</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> rtl/ch21_2_restoring_sqrt</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> run_iverilog.sh    <span class="co"># 或 bash run_verilator.sh</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="本章小结" class="level2">
+<h2 class="anchored" data-anchor-id="本章小结">本章小结</h2>
+<ul>
+<li>开方与除法同构：数字递归（恢复/不恢复/SRT）与收敛（Newton）两族。</li>
+<li>不恢复 + 即时转换 = SRT 开方，与除法器共享数据通路。</li>
+<li>倒根 Newton 只用乘法，GPU rsqrt 的内部实现。</li>
+<li>工程上开方器很少独立存在——它是除法器的一种工作模式。</li>
+</ul>
+</section>
+<section id="原书插图" class="level2">
+<h2 class="anchored" data-anchor-id="原书插图">原书插图</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch21/fig21_01.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 21.1</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch21/fig21_02.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 21.2</figcaption>
+</figure>
+</div>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./ch20.html" class="pagination-link" aria-label="第20章 精确与可证算术（Precise and Certifiable Arithmetic）">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./ch22.html" class="pagination-link" aria-label="第22章 CORDIC 算法（The CORDIC Algorithms）">
+        <span class="nav-page-text"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 第21章 开平方方法（Square-Rooting Methods）</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章导读</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>开平方（square root）是除法的"近亲"：同样有数字递归（逐位试根）与收敛迭代（Newton）两大家族，且都能复用除法器的数据通路。本章从纸笔算法讲起，走完恢复/不恢复、高基数、收敛法全程，最后看快速硬件开方器——图形学（归一化）、DSP（均方根）、科学计算的日常需求。</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## 21.1 纸笔算法（The Pencil-and-Paper Algorithm)</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>手工开平方的口诀：两位一组分段，逐位试根 $q$，每步计算"当前根×20 + 新位"乘以新位并从余数中减去。本质：利用 $(10a + b)^2 = 100a^2 + (20a + b)b$ 的展开，每步确定一位新根。</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>二进制版本大幅简化：**试根位只需试 1**（0 自动成立），每步比较"部分余数 vs. $(4q + 1) \ll 2j$"——一次减法定一位。</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>先补上记号与一条关键不等式：设 $2k$ 位的被开方数 $z$（radicand）、$k$ 位的根 $q$，则余数 $s = z - q^2$ 必满足 $s \le 2q$——若 $s \ge 2q+1$，就有 $z = q^2 + s \ge (q+1)^2$，与 $q = \lfloor\sqrt{z}\rfloor$ 矛盾。这解释了为什么 $2k$ 位的 $z$ 需要 $k+1$ 位的余数：余数寄存器必须容得下"根再长一位"所需的全部信息。</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>"乘 20 添位"的来历一步可推。设部分根为 $q^{(i)}$，添上新数字 $b$ 后新根为 $10q^{(i)} + b$，其平方为</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>(10q^{(i)} + b)^2 = 100\,(q^{(i)})^2 + (20q^{(i)} + b)\,b</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>第一项 $100(q^{(i)})^2$ 已在早前各步从部分余数中扣净，故本步只需再减 $(20q^{(i)} + b) \times b$——把部分根翻倍、右端拼上新位、再乘新位，口诀的全部内容都在这个展开式里。</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="算例：十进制 √95241 与二进制 √1110110"}</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>十进制：两位分组 $09\,52\,41$，故根有 3 位。首位 $q_2 = 3$：$3^2 = 9$ 恰好扣净首组 09，部分余数剩 52。次位：部分根 3 翻倍得 6，找 $q_1$ 使 $(60 + q_1) \cdot q_1 \le 52$——$61 \times 1$ 都放不下，故 $q_1 = 0$。末位：部分根 30 翻倍得 60，找 $q_0$ 使 $(600 + q_0) \cdot q_0 \le 5241$，取 $q_0 = 8$（$608 \times 8 = 4864$）。最终 $q = 308$，$s = 95241 - 308^2 = 377$。</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>二进制：$z = (1110110)_2 = 118$，分组 $1\,11\,01\,10$。根数字只取 0/1，试根退化为一次试探减法：把部分根 $q^{(i)}$ 右端拼上 $01$（即 $4q^{(i)} + 1$）与部分余数比较，够减则该位为 1。各步比较依次为 $\ge 1$?（是）、$\ge 101$?（否）、$\ge 1001$?（是）、$\ge 10101$?（否），得 $q = (1010)_2 = 10$、余数 $s = 18$——与 $10^2 + 18 = 118$ 相符。</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>从二进制算例还能抽象出**点记法（dot notation）**视图：被开方数与根写在顶部，其下每行点阵对应一个"部分根拼 $0q_{k-i-1}$ 后乘新根位"的被减数。由于根数字只有 0/1 两种取值，二进制开平方就退化为"从 $z$ 中减去一串 0 或 $(q^{(i)}01)_2$ 的移位版本"。这张点阵图与乘法点阵一样，是后文推导恢复/不恢复阵列开方器的蓝图。</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="fu">## 21.2 恢复式移位/减算法（Restoring Shift/Subtract Algorithm)</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>硬件版恢复式开方，与恢复除法同构：</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>部分余数左移 2 位（每拍出 1 位根，因为开方每次消耗被开方数 2 位）；</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>试减 $(4q + 1) \ll 2j$；</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>够减：根位置 1，保留差；不够减：根位置 0，恢复原值。</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>数据通路可直接改造自除法器：除数寄存器换成"动态生成的试减项"（$(4q+1)$ 由当前根左移 2 位 + 1 构成，一个拼接电路即可）。</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>把算法写成对**小数（fractional）**被开方数的递推更贴近硬件实现。IEEE 754 浮点开方对应 $1 \le z &lt; 4$、$1 \le q &lt; 2$（奇指数先减 1 变偶、尾数左移一位即落入此区间）。维持不变式 $s^{(j)} = z - <span class="co">[</span><span class="ot">q^{(j)}</span><span class="co">]</span>^2$，由 $q^{(j)} = q^{(j-1)} + 2^{-j}q_{-j}$ 展开平方差可解出每拍递推</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>s^{(j)} = 2s^{(j-1)} - q_{-j}\left(2q^{(j-1)} + 2^{-j}q_{-j}\right), \qquad s^{(0)} = z - 1,\ q^{(0)} = 1</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>即部分余数每拍左移 2 位（开方每拍消耗 $z$ 的 2 位），再减去试减项 $2q^{(j-1)} + 2^{-j}$ 或 0。试减项的构造极其便宜：$2q^{(j-1)} + 2^{-j}$ 就是"部分根左移一位后右端拼 $01$"——纯拼接、无加法器。</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="算例：恢复式开方 z = 118/64"}</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>$z = (01.110110)_2$，$s^{(0)} = z - 1 = 0.110110$。逐拍：$2s^{(0)} = 001.101100$，试减 $10.1_2$（即 $2 \times 1 + 0.5$）得负 → $q_{-1} = 0$，恢复原余数；$2s^{(1)} = 011.011000$，试减 $10.01_2$ 成功 → $q_{-2} = 1$；如此继续六拍得 $q = 1.010110_2 = 86/64$，$s^{(6)} = 156/64$。</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>舍入环节有个漂亮的免费午餐。要得到 $l$ 位的舍入结果，只需多迭代一位 $q_{-l-1}$：为 0 则截断、为 1 则末位进 1。除法里最麻烦的"恰在中间"（需要 sticky bit 的场景）在开方中**不可能出现**：中点情形要求 $z = (q + 2^{-(l+1)})^2$，展开后其小数部分在第 $2l+2$ 位上有一个无法对消的 1，而 $z$ 本身只有 $l$ 个小数位——矛盾。于是既不用 sticky 逻辑，也不用检查余数是否为零。</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="fu">## 21.3 二进制不恢复算法（Binary Nonrestoring Algorithm)</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>与不恢复除法平行：试减失败不回退，下一拍改做加法补偿。根数字集合 $<span class="sc">\{</span>-1, +1<span class="sc">\}</span>$（或 $<span class="sc">\{</span>0, 1<span class="sc">\}</span>$ 编码），每拍固定一次加减：</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>部分余数 $\ge 0$：根位 1，下拍减；</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>部分余数 $&lt; 0$：根位 0（即 $-1$），下拍加。</span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>收尾时若余数为负做一次最终修正。根以冗余形式产出，**即时转换（on-the-fly conversion）**为普通二进制——与 SRT 除法完全同款技巧。</span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 21.5](images/ch21/fig21_05.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>工程实现上唯一的新麻烦是 $q_{-j} = -1$ 时的加数 $2q^{(j-1)} - 2^{-j}$：它不再是对部分根的简单拼接（$+2^{-j}$ 变成了 $-2^{-j}$）。经典解法是维护一对寄存器——$Q$ 存部分根 $q^{(j-1)}$，$Q^*$ 存**缩减小根（diminished partial root）** $q^{(j-1)} - 2^{-j+1}$。于是两种情形都能拼出来：</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>$q_{-j} = 1$：减 $2q^{(j-1)} + 2^{-j}$，由 $Q$ 右端拼 $01$ 移位形成；</span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>$q_{-j} = -1$：加 $2q^{(j-1)} - 2^{-j}$，由 $Q^*$ 右端拼 $11$ 移位形成。</span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>$Q/Q^*$ 的更新规则同样只是拼接：$q_{-j}=1 \Rightarrow Q := Q\,1,\ Q^* := Q\,0$；$q_{-j}=-1 \Rightarrow Q := Q^*\,1,\ Q^* := Q^*\,0$。再补一条 $q_{-j}=0 \Rightarrow Q := Q\,0,\ Q^* := Q^*\,1$，就得到与 SRT 除法（13.6 节）同款的"跳 0/跳 1"变体：检测部分余数的前导 0/1 并连移，一次产出多位根数字。若进一步把部分余数保持为**保留进位形式（stored-carry form）**，用和/进位两分量高几位查表选根位，便得到与 14.2 节 carry-save SRT 完全平行的开方器——除法器的每一级进化都能在开方器上重演一遍。</span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a><span class="fu">## 21.4 高基数开方（High-Radix Square-Rooting)</span></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>radix-4 开方每拍出 2 位根，试减项集合变大，同样需要"根数字选择表"——与 radix-4 SRT 除法的问题结构几乎一致（部分余数截断估计 + 冗余根数字）。差别：除法的"除数"固定，开方的"试减项"随根的增长逐拍变化——选择表的输入因此多一维，设计更微妙。实用系统中 radix-4 开方多由 SRT 除法器共享实现。</span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>基数 $r$ 的开方递推是二进制版本的直接推广：</span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>s^{(j)} = r\,s^{(j-1)} - q_{-j}\left(2q^{(j-1)} + r^{-j}q_{-j}\right)</span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a>以 radix-4、根数字集 $<span class="co">[</span><span class="ot">-2, 2</span><span class="co">]</span>$ 为例：$Q^*$ 存 $q^{(j-1)} - 4^{-j+1}$，四种非零数字对应的加/减项都可由 $Q$ 或 $Q^*$ 拼接常数后移位形成——$q_{-j} = 2$ 减 $4q^{(j-1)} + 2^{-2j+2}$（$Q$ 拼 $010$ 双移）、$q_{-j} = 1$ 减 $2q^{(j-1)} + 2^{-2j}$（$Q$ 拼 $001$）、$q_{-j} = -1$ 加 $2q^{(j-1)} - 2^{-2j}$（$Q^*$ 拼 $111$）、$q_{-j} = -2$ 加 $4q^{(j-1)} - 2^{-2j+2}$（$Q^*$ 拼 $110$）。$Q/Q^*$ 的五条更新规则仍是纯拼接，根在**即时转换（on-the-fly conversion）**中直接落成普通二进制，无需收尾转换步骤。</span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a>与除法相比有两处结构性差异，设计者必须警惕：</span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**选择表无法全程统一**。除法的除数从头就是已知的，选择表只需观察部分余数；开方的"试减项"依赖部分根本身，而最初几拍根几乎未知。补救：开机时用一个小 PLA/查表先"冒出"根的前几位，或前几拍改用略有不同的选择规则。</span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**与除法共享选择表需要改数字集**。对比 radix-4 两种递推——除法减 $q_{-j} d$，开方减 $q_{-j}(2q^{(j-1)} + 4^{-j}q_{-j})$——若把开方数字集改用 $<span class="sc">\{</span>-1, -\tfrac12, 0, \tfrac12, 1<span class="sc">\}</span>$，两者部分余数的幅值范围就一致了，可复用同一张商/根数字选择表；该数字集转回 $<span class="co">[</span><span class="ot">-2,2</span><span class="co">]</span>$ 或普通二进制无需额外计算。</span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a>另外，IEEE 754 下 $z \in <span class="co">[</span><span class="ot">1,4)$ 的根在 $[1,2)$，radix-4 数字集 $[-2,2</span><span class="co">]</span>$ 表示绰绰有余；首位数字实际可限制在 $<span class="co">[</span><span class="ot">0,2</span><span class="co">]</span>$，但不能想当然压到 $<span class="co">[</span><span class="ot">0,1</span><span class="co">]</span>$——冗余表示下首位仍可能需要取 2、由后续位借位补偿（原书留作思考题）。</span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a><span class="fu">## 21.5 收敛法开方（Square-Rooting by Convergence)</span></span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a>与收敛除法（16 章）完全平行：</span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**直接 Newton**：$r_{i+1} = \frac{1}{2}(r_i + x / r_i)$——每轮含一次除法，不理想；</span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**倒根 Newton**：先求 $1/\sqrt{x}$：$r_{i+1} = \frac{r_i}{2}(3 - x r_i^2)$——**只用乘法**（每轮 2-3 次乘法，FMA 友好），最后乘 $x$ 得 $\sqrt{x}$。二次收敛：8 位查表初值 → 16 → 32 → 64 位，3 轮。</span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a>补全推导与收敛分析。对 $f(x) = x^2 - z$ 套 Newton–Raphson 迭代 $x^{(i+1)} = x^{(i)} - f(x^{(i)})/f'(x^{(i)})$ 即得上式。令 $\delta_i = \sqrt{z} - x^{(i)}$，代入可证</span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>\delta_{i+1} = -\frac{\delta_i^2}{2x^{(i)}}</span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a>误差恒为负（从上方单调收敛）且按平方消失；$z \in [1,4)$ 时从 $x^{(0)} = 2$ 出发可保持 $|\delta_{i+1}| \le \delta_i^2/2$。若查表把初值精度提到 $2^{-8}$，三轮迭代即达 64 位。</span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="算例：Newton 开方 z = 2.4"}</span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a>查表得初值 $x^{(0)} = 1.5$（精度 $10^{-1}$）：</span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> $i$ <span class="pp">|</span> $x^{(i)}$ <span class="pp">|</span> 精度 <span class="pp">|</span></span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|</span></span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 0 <span class="pp">|</span> 1.5 <span class="pp">|</span> $10^{-1}$ <span class="pp">|</span></span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 1 <span class="pp">|</span> $0.5\,(1.5 + 2.4/1.5) = 1.550\,000$ <span class="pp">|</span> $10^{-2}$ <span class="pp">|</span></span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 2 <span class="pp">|</span> $1.549\,193\,548$ <span class="pp">|</span> $10^{-4}$ <span class="pp">|</span></span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 3 <span class="pp">|</span> $1.549\,193\,338$ <span class="pp">|</span> $10^{-8}$ <span class="pp">|</span></span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a>三轮、每轮一次除法——这正是"直接 Newton 含除法"的代价，也是各种免除非法（division-free）变体的动机。</span>
+<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a>去除法的三条路线，按工程出现频率排序：</span>
+<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**倒根 Newton**：对 $f(x) = 1/x^2 - z$（根在 $x = 1/\sqrt{z}$）迭代，得 $x^{(i+1)} = \frac{x^{(i)}}{2}\left(3 - z(x^{(i)})^2\right)$，每轮 3 乘 1 加，最后乘 $z$ 还原。Cray-2 即用此法，且把 $1.5x^{(0)}$ 与 $0.5(x^{(0)})^3$ 预存成表，首轮只剩 1 乘 1 加；$x^{(1)}$ 已达半个机器精度，第二轮后乘 $z$ 收工。算例：$z = 0.5678$，$x^{(0)} = 1.3$ → $x^{(1)} = 1.326\,271\,700$ → $x^{(2)} = 1.327\,095\,128$，乘 $z$ 得 $\sqrt{z} \approx 0.753\,524\,613$。</span>
+<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**倒数表辅助**：把迭代改写为 $x^{(i+1)} = x^{(i)} + \frac{1}{2x^{(i)}}\left(z - (x^{(i)})^2\right)$，用近似倒数 $\gamma(x^{(i)})$ 代替精确的 $1/x^{(i)}$——每轮表查 + 2 乘 2 加，但收敛降到低于二次，轮数要放宽。</span>
+<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**双迭代交织**：$x^{(i+1)} = \frac{1}{2}(x^{(i)} + z\,y^{(i)})$、$y^{(i+1)} = y^{(i)}(2 - x^{(i)}y^{(i)})$，$x$ 逼近 $\sqrt{z}$、$y$ 逼近 $1/\sqrt{z}$（后者即 16 章的倒数 Newton）；两路乘法可流水，收敛介于线性与二次之间。</span>
+<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip title="工程观察"}</span>
+<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a>GPU 的 <span class="in">`rsqrt`</span>（快速逆平方根）指令 = 查表 + 1 轮倒根 Newton，精度约 23 位——图形学向量归一化的标配。它与 15.5 节的倒数 Newton 共享同一套"初始粗值 + 平方收敛 + FMA 实现"方法论。</span>
+<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a><span class="fu">## 21.6 快速硬件开方器（Fast Hardware Square-Rooters)</span></span>
+<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a>工程选型指南：</span>
+<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 方案 <span class="pp">|</span> 延迟 <span class="pp">|</span> 面积 <span class="pp">|</span> 适用 <span class="pp">|</span></span>
+<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|---|</span></span>
+<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 数字递归（radix-2/4） <span class="pp">|</span> $k$ 或 $k/2$ 拍 <span class="pp">|</span> 小（可复用除法器） <span class="pp">|</span> 通用 FPU、嵌入式 <span class="pp">|</span></span>
+<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 收敛法 <span class="pp">|</span> ~3 轮乘法 <span class="pp">|</span> 复用乘法器 + 表 <span class="pp">|</span> 已有快速乘法器的 FPU/GPU <span class="pp">|</span></span>
+<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 组合阵列 <span class="pp">|</span> 1 拍 <span class="pp">|</span> 大 <span class="pp">|</span> 小位宽、极致延迟 <span class="pp">|</span></span>
+<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>现代 FPU 通常让开方与除法**共享同一个 SRT 单元**（控制微码不同），因为两者数据通路同构——面积几乎零增加。</span>
+<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a>组合式开方器有两大用途：给收敛法提供初值，或干脆整体替代递归式方案。初值近似的"阶梯"很能说明设计取舍——对 $z \in [1,4)$ 上的 $\sqrt{z}$：</span>
+<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>最佳常数近似 $x^{(0)} = 1.5$：最大绝对误差 0.5，$z=1$ 处相对误差 50%；</span>
+<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>免运算线性近似 $x^{(0)} = 1 + z/4$（移位拼位即得）：绝对误差 0.25，相对误差 25%；</span>
+<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>只加一次法的线性近似 $x^{(0)} = 7/8 + z/4$：误差减半至 0.125；</span>
+<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>最佳线性近似 $x^{(0)} = 17/24 + z/3$（需一次常数乘法）：误差 $1/24 \approx 4.2\%$，在 $z = 1, 2.25, 4$ 三处达到。</span>
+<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a>把 $[1,4)$ 按 $z_1$ 位切成 $[1,2)$ 与 $[2,4)$ 两个子区间、各用免运算线性近似（低位子区间用 $1 + (z-1)/2$，高位用 $1 + z/4$），最大误差进一步降到约 0.086。整条阶梯与 24 章的插值/分段表一脉相承——**用一点点逻辑换大幅存储或迭代轮数**。</span>
+<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a><span class="al">![图 21.7 √z 在 1 ≤ z &lt; 4 上的图像：各种初值近似本质上都是对这条曲线的粗略拟合](images/ch21/fig21_07.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a>整数情形还有一个只靠"计前导零 + 移位"的初值：设 $z$ 的最高位 1 在奇位置 $2^{2m-1}$（否则把 $z$ 翻倍、结果乘 $1/\sqrt{2} \approx 0.707\,107$），取 $x^{(0)} = 2^{m-1} + 2^{-(m+1)}z$，可证最大相对误差 6.07%（最坏在 $z_{rest} = 0$ 处，$x^{(0)}/\sqrt{z} = 3/\sqrt{8}$）。Schwarz 与 Flynn 给出更工程化的方案：在 53 位乘法器上加约 1000 个门，让它顺带"算出"16 位的 $\sqrt{z}$ 初值，之后仅两轮 Newton 即达双精度——初值生成几乎白拿。</span>
+<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a>另一极端是完全不迭代的**阵列开方器（array square-rooter）**：从点记法图出发，像 15.5 节由除法点阵导出阵列除法器那样，直接铺出受控加/减细胞阵列。下图为非恢复式 8 位小数开方器：每个细胞含一个全加器（FA）与一个异或门，按上一行部分余数的符号决定本行做加还是做减——非恢复算法的"欠账/还账"被摊平成二维电路。与阵列除法器一样，它用面积换延迟，适合位宽小、延迟极敏感的场合。</span>
+<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a><span class="al">![图 21.8 由含全加器（FA）与异或门的受控加/减细胞构成的非恢复阵列开方器](images/ch21/fig21_08.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a><span class="fu">## RTL 实践：`rtl/ch21_2_restoring_sqrt`</span></span>
+<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a>16 位无符号恢复式开方器：每拍部分余数左移 2 位、试减 $4q+1$，8 拍出 8 位根与余数：</span>
+<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a><span class="in">```systemverilog</span></span>
+<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a><span class="in">wire [15:0] rem_sh = {rem[13:0], din[15:14]};   // 左移 2 位 + 被开方数新 2 位</span></span>
+<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a><span class="in">wire [15:0] trial  = {6'b0, root, 2'b01};       // 4q + 1：当前根左移 2 位置 1</span></span>
+<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a><span class="in">// 够减：rem &lt;= rem_sh - trial，根位置 1；否则 rem &lt;= rem_sh，根位置 0</span></span>
+<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a>设计要点：</span>
+<span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**试减项的拼接触**：（$4q+1$）无需乘法器——把当前根左移 2 位、末位置 01 即可，这正是二进制开方比十进制优雅的原因；</span>
+<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**每拍消耗 2 位输入**：开方每拍出 1 位根，对应被开方数 2 位——与除法（每拍 1 位）的节奏差异来自平方的幂次；</span>
+<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>不变式：迭代全程保持 $d = q^2 + r$ 且 $0 \le r \le 2q$，testbench 的黄金模型直接按定义枚举验证，覆盖 $0$、$255^2$、$2^{16}-1$ 边界与 1000 组随机。</span>
+<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> rtl/ch21_2_restoring_sqrt</span>
+<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> run_iverilog.sh    <span class="co"># 或 bash run_verilator.sh</span></span>
+<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章小结</span></span>
+<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>开方与除法同构：数字递归（恢复/不恢复/SRT）与收敛（Newton）两族。</span>
+<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>不恢复 + 即时转换 = SRT 开方，与除法器共享数据通路。</span>
+<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>倒根 Newton 只用乘法，GPU rsqrt 的内部实现。</span>
+<span id="cb3-185"><a href="#cb3-185" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>工程上开方器很少独立存在——它是除法器的一种工作模式。</span>
+<span id="cb3-186"><a href="#cb3-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-187"><a href="#cb3-187" aria-hidden="true" tabindex="-1"></a><span class="fu">## 原书插图</span></span>
+<span id="cb3-188"><a href="#cb3-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-189"><a href="#cb3-189" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 21.1](images/ch21/fig21_01.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-190"><a href="#cb3-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-191"><a href="#cb3-191" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 21.2](images/ch21/fig21_02.png)</span>{fig-align="center" width="85%"}</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

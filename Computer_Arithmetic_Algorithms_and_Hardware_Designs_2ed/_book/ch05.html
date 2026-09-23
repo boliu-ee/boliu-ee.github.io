@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第5章 基本加法与计数（Basic Addition and Counting） – 计算机算术：算法与硬件设计（中文解读版）</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./ch06.html" rel="next">
+<link href="./ch04.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-77d2b90c99eeff80c5837adab8b96ac7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch05.html">第二部分 加法与减法 (Addition/Subtraction)</a></li><li class="breadcrumb-item"><a href="./ch05.html"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">计算机算术：算法与硬件设计（中文解读版）</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第一部分 数的表示 (Number Representation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch01.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第二部分 加法与减法 (Addition/Subtraction)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch05.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第7章 快速加法器的变体（Variations in Fast Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第8章 多操作数加法（Multioperand Addition）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部分 乘法 (Multiplication)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第9章 基本乘法方案（Basic Multiplication Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第10章 高基数乘法器（High-Radix Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">第四部分 除法 (Division)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第14章 高基数除法器（High-Radix Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第15章 除法器的变体（Variations in Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第16章 收敛法除法（Division by Convergence）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">第五部分 实数运算 (Real Arithmetic)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第17章 浮点数表示（Floating-Point Representations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">第六部分 函数求值 (Function Evaluation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第23章 函数求值的变体（Variations in Function Evaluation）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第24章 查表算术（Arithmetic by Table Lookup）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">第七部分 实现专题 (Implementation Topics)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch26.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch27.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch28.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第28章 可重构算术（Reconfigurable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">附录 过去、现在与未来（Past, Present, and Future）</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#本章导读" id="toc-本章导读" class="nav-link active" data-scroll-target="#本章导读">本章导读</a></li>
+  <li><a href="#位串行与行波进位加法器bit-serial-and-ripple-carry-adders" id="toc-位串行与行波进位加法器bit-serial-and-ripple-carry-adders" class="nav-link" data-scroll-target="#位串行与行波进位加法器bit-serial-and-ripple-carry-adders">5.1 位串行与行波进位加法器（Bit-Serial and Ripple-Carry Adders）</a>
+  <ul class="collapse">
+  <li><a href="#rtl-实践rtlch5_1_ripple_carry_adder" id="toc-rtl-实践rtlch5_1_ripple_carry_adder" class="nav-link" data-scroll-target="#rtl-实践rtlch5_1_ripple_carry_adder">RTL 实践：<code>rtl/ch5_1_ripple_carry_adder</code></a></li>
+  </ul></li>
+  <li><a href="#条件码与异常conditions-and-exceptions" id="toc-条件码与异常conditions-and-exceptions" class="nav-link" data-scroll-target="#条件码与异常conditions-and-exceptions">5.2 条件码与异常（Conditions and Exceptions）</a></li>
+  <li><a href="#进位传播分析analysis-of-carry-propagation" id="toc-进位传播分析analysis-of-carry-propagation" class="nav-link" data-scroll-target="#进位传播分析analysis-of-carry-propagation">5.3 进位传播分析（Analysis of Carry Propagation）</a></li>
+  <li><a href="#进位完成检测carry-completion-detection" id="toc-进位完成检测carry-completion-detection" class="nav-link" data-scroll-target="#进位完成检测carry-completion-detection">5.4 进位完成检测（Carry-Completion Detection）</a></li>
+  <li><a href="#加常数计数器addition-of-a-constant-counters" id="toc-加常数计数器addition-of-a-constant-counters" class="nav-link" data-scroll-target="#加常数计数器addition-of-a-constant-counters">5.5 加常数：计数器（Addition of a Constant: Counters）</a>
+  <ul class="collapse">
+  <li><a href="#rtl-实践rtlch5_5_updown_counter" id="toc-rtl-实践rtlch5_5_updown_counter" class="nav-link" data-scroll-target="#rtl-实践rtlch5_5_updown_counter">RTL 实践：<code>rtl/ch5_5_updown_counter</code></a></li>
+  </ul></li>
+  <li><a href="#manchester-进位链与加法器manchester-carry-chains-and-adders" id="toc-manchester-进位链与加法器manchester-carry-chains-and-adders" class="nav-link" data-scroll-target="#manchester-进位链与加法器manchester-carry-chains-and-adders">5.6 Manchester 进位链与加法器（Manchester Carry Chains and Adders）</a></li>
+  <li><a href="#本章小结" id="toc-本章小结" class="nav-link" data-scroll-target="#本章小结">本章小结</a></li>
+  <li><a href="#原书插图" id="toc-原书插图" class="nav-link" data-scroll-target="#原书插图">原书插图</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch05.html">第二部分 加法与减法 (Addition/Subtraction)</a></li><li class="breadcrumb-item"><a href="./ch05.html"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="本章导读" class="level2">
+<h2 class="anchored" data-anchor-id="本章导读">本章导读</h2>
+<p>加法是所有算术的原子操作——减法靠补码变成加法，乘法是重复的加法，除法是重复的条件减法。本章从最基本的半加器（half adder, HA）、全加器（full adder, FA）讲起，搭建行波进位加法器（ripple-carry adder），分析进位传播的延迟本质，并介绍进位完成检测、计数器与 Manchester 进位链。第 6、7 章的所有”快速加法器”，都可以理解为对本章进位链问题的不同回应。</p>
+</section>
+<section id="位串行与行波进位加法器bit-serial-and-ripple-carry-adders" class="level2">
+<h2 class="anchored" data-anchor-id="位串行与行波进位加法器bit-serial-and-ripple-carry-adders">5.1 位串行与行波进位加法器（Bit-Serial and Ripple-Carry Adders）</h2>
+<p><strong>半加器（HA）</strong>：两个比特相加，<span class="math inline">\(s = x \oplus y\)</span>，<span class="math inline">\(c_{out} = xy\)</span>。它只占一个 AND 门加一个 XOR 门，但如果手头只有 NOR 或只有 NAND，也可以很划算地实现——用两个 NOR 门加一个反相器就能搭出 HA，用 NAND 门实现时得到的则是<strong>反相的进位输出</strong>，正好可以直接喂给下一级同样用 NAND 实现的结构。原书 Fig. 5.1 给出了这三种实现。<strong>同一个布尔函数在不同工艺库里的最优实现可以完全不同</strong>，这是算术部件设计里最基础的一条经验。</p>
+<p><strong>全加器（FA）</strong>：三个比特（含进位输入）相加：</p>
+<p><span class="math display">\[
+s = x \oplus y \oplus c_{in}, \qquad c_{out} = xy + (x \oplus y)c_{in}
+\]</span></p>
+<p>写成展开形式更容易看出它的两个”身份”：<span class="math inline">\(s\)</span> 是三输入的<strong>奇校验（odd parity）</strong>函数，<span class="math inline">\(c_{out}\)</span> 是三输入的<strong>多数（majority）</strong>函数 <span class="math inline">\(xy \lor x c_{in} \lor y c_{in}\)</span>。这个视角在第 8 章的多操作数加法里会反复用到。</p>
+<p>全加器的另一种读法（第 8 章视角）：它是一个 <strong>3:2 压缩器（3:2 compressor）</strong>——把 3 个同权重的比特压缩成 2 个比特（和位与进位）。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_02.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 5.2 全加器的三种实现：(a) 两个半加器加一个或门；(b) 直接用与或二级逻辑；(c) 七个反相器加两个 4 选 1 多路器的 CMOS 传输门实现</figcaption>
+</figure>
+</div>
+<p>三种 FA 实现的取舍很典型：图 5.2a 最规整、最容易验证，但进位要经过两级 HA；图 5.2b 是标准的二级 AND-OR（或 NAND-NAND），延迟最短但晶体管尺寸较大；图 5.2c 是 CMOS 传输门逻辑的经典设计——用 <span class="math inline">\(c_{in}\)</span> 同时作为两个 4 选 1 多路器的选择端，<span class="math inline">\(x,y\)</span> 的四种组合直接选出 <span class="math inline">\(s\)</span> 与 <span class="math inline">\(c_{out}\)</span> 应有的常量，<strong>进位路径上只有一个传输门</strong>，因此特别适合做位宽较宽的行波进位链。由于 FA 是算术电路里复用次数最多的单元，工业界为它积累了大量针对具体工艺优化过的定制版图。</p>
+<p><strong>行波进位加法器（ripple-carry adder）</strong>：<span class="math inline">\(k\)</span> 个 FA 首尾相接，进位从最低位逐级”涟漪”到最高位。结构最规整、面积最小、版图最友好，但最坏延迟：</p>
+<p><span class="math display">\[
+T_{\text{ripple}} = T_{FA}(x,y \to c_{out}) + (k-2)\,T_{FA}(c_{in} \to c_{out}) + T_{FA}(c_{in} \to s)
+\]</span></p>
+<p><strong>延迟随位宽线性增长</strong>——32 位就是 32 级 FA 的进位链，这是它被高速设计抛弃的原因。粗略地说 <span class="math inline">\(T_{\text{ripple}} \approx k\,T_{FA}\)</span>。</p>
+<p><strong>位串行加法器（bit-serial adder）</strong>：另一个极端——只用 1 个 FA，操作数存在移位寄存器里，每拍移入一对比特，进位存在 1 位锁存器中。<span class="math inline">\(k\)</span> 位加法要 <span class="math inline">\(k\)</span> 拍，但硬件只有常数大小。在对吞吐要求低、引脚/面积极其敏感的场合（如某些传感器前端）仍有价值。</p>
+<p>注意位串行加法器的总延迟也是 <span class="math inline">\(O(k)\)</span>，但<strong>比例系数比行波进位大得多</strong>——它每拍都要付一次触发器建立/保持与时钟开销。所以位串行赢在面积（1 个 FA vs.&nbsp;<span class="math inline">\(k\)</span> 个 FA），行波进位赢在延迟，<strong>两者不是”同一条曲线上的两个点”，而是两个不同的设计点</strong>。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_04.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 5.4 4 位行波进位加法器的 CMOS 版图实现，按 <span class="math inline">\(\lambda\)</span>（最小特征尺寸的一半）标注的面积约为 <span class="math inline">\(760\lambda \times 150\lambda\)</span></figcaption>
+</figure>
+</div>
+<p>图 5.4 给出的是用图 5.2c 的传输门 FA 直接拼出的 4 位版图。它的价值在于说明<strong>规则性的实际收益</strong>：4 个完全相同的单元横向平铺，进位链是相邻单元间的短直线，没有任何跨越布线，版图面积几乎就等于单元面积之和。这就是为什么即使在有了超前进位之后，行波进位仍然活在”位宽不大、对面积敏感”的角落里。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_03.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 5.3：用全加器搭建的位串行加法器与 4 位行波进位加法器</figcaption>
+</figure>
+</div>
+<p><strong>加法器还是一块万能积木</strong>。一个带 <span class="math inline">\(c_{in}\)</span>、两个 <span class="math inline">\(k\)</span> 位操作数输入、<span class="math inline">\(c_{out}\)</span> 与 <span class="math inline">\(k\)</span> 位和输出的二进制加法器，可以用来合成各种非算术逻辑函数。例如 <span class="math inline">\(f = w \lor xyz\)</span> 可以这样接：第 0 位放 <span class="math inline">\((x, y)\)</span>，得 <span class="math inline">\(c_1 = xy\)</span>；第 1 位放 <span class="math inline">\((0, z)\)</span>，得 <span class="math inline">\(c_2 = z\cdot xy = xyz\)</span>；第 2 位放 <span class="math inline">\((1, w)\)</span>，得</p>
+<p><span class="math display">\[
+c_3 = 1\cdot w \lor (1 \oplus w)\,c_2 = w \lor \bar{w}\,xyz = w \lor xyz
+\]</span></p>
+<p>第 3 位放 <span class="math inline">\((0, 1)\)</span>，则 <span class="math inline">\(c_4 = c_3 = f\)</span>、<span class="math inline">\(s_3 = \bar{c}_3 = \bar{f}\)</span>。于是<strong>一次加法同时给出 <span class="math inline">\(f\)</span> 与其反</strong>。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_06.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 5.6 用 4 位二进制加法器实现逻辑函数 <span class="math inline">\(f = w \lor xyz\)</span> 及其反函数（箭头标注了各级进位）</figcaption>
+</figure>
+</div>
+<p>这个技巧的原理是：加法器的进位链本身就是一条”与-或”链，<span class="math inline">\(g_i\)</span> 提供与项、<span class="math inline">\(p_i\)</span> 提供传播，两者组合足以覆盖许多多变量逻辑函数。而且<strong>该加法器不必是行波进位结构</strong>——任何进位语义正确的加法器（超前进位、前缀结构）都能得到同样的输出。在 FPGA 上，硬加法器（进位链专用布线）常常是实现宽与/或逻辑最快的资源，这条路子至今仍在用。</p>
+<section id="rtl-实践rtlch5_1_ripple_carry_adder" class="level3">
+<h3 class="anchored" data-anchor-id="rtl-实践rtlch5_1_ripple_carry_adder">RTL 实践：<code>rtl/ch5_1_ripple_carry_adder</code></h3>
+<p>参数化行波进位加法器，用 <code>generate</code> 把 <span class="math inline">\(N\)</span> 个全加器串成进位链：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> full_adder (</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span>  <span class="kw">logic</span> a, b, cin,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span> <span class="kw">s</span>, cout</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> <span class="kw">s</span>    = a ^ b ^ cin;</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> cout = (a &amp; b) | ((a ^ b) &amp; cin);</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> ripple_carry_adder #(<span class="kw">parameter</span> <span class="kw">int</span> N = <span class="dv">8</span>) (</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span>  <span class="kw">logic</span> [N<span class="dv">-1</span>:<span class="dv">0</span>] a, b,</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span>  <span class="kw">logic</span>         cin,</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span> [N<span class="dv">-1</span>:<span class="dv">0</span>] <span class="kw">s</span>,</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span>         cout</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">logic</span> [N:<span class="dv">0</span>] c;</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> c[<span class="dv">0</span>] = cin;</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> cout = c[N];</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">genvar</span> i;</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">generate</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>        <span class="kw">for</span> (i = <span class="dv">0</span>; i &lt; N; i++) <span class="kw">begin :</span><span class="dt"> </span><span class="kw">g_fa</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>            full_adder fa <span class="dt">(.a</span>(a[i]),<span class="dt"> .b</span>(b[i]),<span class="dt"> .cin</span>(c[i]),</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>                           .<span class="kw">s</span>(<span class="kw">s</span>[i]),<span class="dt"> .cout</span>(c[i+<span class="dv">1</span>]));</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>        <span class="kw">end</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    <span class="kw">endgenerate</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>testbench 用无符号黄金模型 <code>a + b + cin</code> 比对，定向用例覆盖全 0/全 1/交替进位，外加随机回归。运行：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> rtl/ch5_1_ripple_carry_adder</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> run_iverilog.sh    <span class="co"># 或 bash run_verilator.sh</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="条件码与异常conditions-and-exceptions" class="level2">
+<h2 class="anchored" data-anchor-id="条件码与异常conditions-and-exceptions">5.2 条件码与异常（Conditions and Exceptions）</h2>
+<p>ALU 的加法器除了给出和，还要产出条件码（condition codes）：</p>
+<ul>
+<li><strong>进位输出（carry-out, <span class="math inline">\(c_{out}\)</span>）</strong>：无符号加法的溢出标志，也是无符号减法”无借位”的标志；</li>
+<li><strong>溢出（overflow）</strong>：2 的补码溢出，判据 <span class="math inline">\(\text{overflow} = c_k \oplus c_{k-1}\)</span>（见第 2 章）；</li>
+<li><strong>零标志（zero）</strong>：和的各位全 0——一个 <span class="math inline">\(k\)</span> 输入 NOR；</li>
+<li><strong>符号标志（sign/negative）</strong>：和的最高位。</li>
+</ul>
+<p>对<strong>无符号</strong>加法而言，<span class="math inline">\(c_{out}\)</span> 与”溢出”是同一件事，符号标志则毫无意义；对 <strong>2 的补码</strong>加法而言，<span class="math inline">\(c_{out}\)</span> 本身不代表溢出，真正的判据是”两个同号数相加得到异号结果”：</p>
+<p><span class="math display">\[
+\text{Overflow}_{2\text{'s-compl}} = x_{k-1}y_{k-1}\bar{s}_{k-1} \lor \bar{x}_{k-1}\bar{y}_{k-1}s_{k-1} = c_k \oplus c_{k-1}
+\]</span></p>
+<p>由于同一套加法器常常既要服务无符号又要服务有符号运算，<span class="math inline">\(c_{out}\)</span> 通常也一并输出，由软件按数据类型取用。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_07.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 5.7 带条件与异常检测输出的 2 的补码行波进位加法器</figcaption>
+</figure>
+</div>
+<p>有两个实现细节值得注意。其一，<strong>零检测的那个 <span class="math inline">\(k\)</span> 输入 NOR 门在物理上不存在</strong>——门电路的扇入通常限制在 4-8，实际要用一棵 OR 树加一个反相器来实现，因此零标志的延迟是 <span class="math inline">\(O(\log k)\)</span> 而不是 <span class="math inline">\(O(1)\)</span>，在宽位 ALU 里可能反过来成为关键路径。其二，溢出检测需要 <span class="math inline">\(c_k\)</span> 与 <span class="math inline">\(c_{k-1}\)</span>，也就是<strong>最坏路径的终点</strong>，所以它天然是”免费”的，不额外增加延迟。</p>
+<p>溢出之后的行为也是一个设计选择。默认行为是<strong>回绕（wrap）</strong>：无符号和超出 <span class="math inline">\(k\)</span> 位时，输出是正确和减去 <span class="math inline">\(2^k\)</span> 的值。但很多应用更需要<strong>饱和（saturate）</strong>：图像像素的亮度加过头应该钳到最大值，而不是回绕成一个接近 0 的数（那样会在画面上产生黑点）。饱和加法器的实现极为简单——在普通加法器输出处加一个多路器，选择端接溢出信号，溢出时输出全 1（无符号）或正/负最大值（有符号）。<strong>饱和是有序性（ordering）友好的，回绕则不是</strong>。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="工程细节">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>工程细节
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>注意<strong>无符号溢出与有符号溢出是两套判据</strong>，同一次加法可以同时置位两个标志，由软件按数据类型取用。这也是为什么处理器 FLAGS 寄存器里 CF 和 OF 是分开的两个位。</p>
+</div>
+</div>
+</section>
+<section id="进位传播分析analysis-of-carry-propagation" class="level2">
+<h2 class="anchored" data-anchor-id="进位传播分析analysis-of-carry-propagation">5.3 进位传播分析（Analysis of Carry Propagation）</h2>
+<p>进位链何时最长？引入两个在后续章节反复出现的信号：</p>
+<ul>
+<li><strong>生成（generate）</strong>：<span class="math inline">\(g_i = x_i y_i\)</span> —— 本位自己产生进位；</li>
+<li><strong>传播（propagate）</strong>：<span class="math inline">\(p_i = x_i \oplus y_i\)</span>（或 <span class="math inline">\(x_i + y_i\)</span>，两种定义各有用途）—— 本位把进位传下去。</li>
+</ul>
+<p>进位递推：<span class="math inline">\(c_{i+1} = g_i + p_i c_i\)</span>。</p>
+<p>定义<strong>进位链长度</strong>为：从进位产生的位置起，到进位最终被吸收（annihilate）的位置为止，中间经过的数位个数。长度为 0 表示根本没有进位，长度为 1 表示进位在下一级就被吸收。决定加法器延迟的是<strong>最长那条链</strong>。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_08.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 5.8 一次 16 位加法示例及其进位链：四条链的长度分别为 2、3、6、4，最长链（6）决定了该次加法的实际延迟</figcaption>
+</figure>
+</div>
+<p>对随机操作数，每个位位置上三种事件的概率是</p>
+<p><span class="math display">\[
+P(\text{生成}) = \tfrac{1}{4}\;(x_i y_i = 11),\quad
+P(\text{吸收}) = \tfrac{1}{4}\;(x_i y_i = 00),\quad
+P(\text{传播}) = \tfrac{1}{2}\;(x_i \neq y_i)
+\]</span></p>
+<p>一个在第 <span class="math inline">\(i\)</span> 位产生的进位，传播到第 <span class="math inline">\(j-1\)</span> 位并在第 <span class="math inline">\(j\)</span> 位停下（<span class="math inline">\(j&gt;i\)</span>）的概率是 <span class="math inline">\(2^{-(j-1-i)}\times\frac{1}{2} = 2^{-(j-i)}\)</span>。于是从位置 <span class="math inline">\(i\)</span> 出发的进位链的<strong>期望长度</strong>为</p>
+<p><span class="math display">\[
+\sum_{j=i+1}^{k-1}(j-i)\,2^{-(j-i)} + (k-i)\,2^{-(k-1-i)} = 2 - 2^{-(k-i-1)}
+\]</span></p>
+<p>（最后一项不乘 <span class="math inline">\(\frac12\)</span>，是因为进位在第 <span class="math inline">\(k\)</span> 位必然停止。）当 <span class="math inline">\(i \ll k\)</span> 时，这个值约等于 <strong>2</strong>——也就是说，平均而言一条进位链只有两位长，而不是直觉上的 <span class="math inline">\(k\)</span> 位。</p>
+<p>但延迟取决于<strong>最长</strong>链，而最长链的平均长度是</p>
+<p><span class="math display">\[
+\lambda = \sum_{h\ge 1} h\big[\eta_k(h) - \eta_k(h+1)\big] = \sum_{h=1}^{k} \eta_k(h) \;&lt;\; \log_2 k
+\]</span></p>
+<p>其中 <span class="math inline">\(\eta_k(h)\)</span> 是”最长链长度 <span class="math inline">\(\ge h\)</span>“的概率。证明思路是递推：<span class="math inline">\(\eta_k(h) \le \eta_{k-1}(h) + 2^{-(h+1)}\)</span>（第二项 = 生成概率 <span class="math inline">\(\frac14\)</span> × 连续传播 <span class="math inline">\(h-2\)</span> 级并在最后一级停下的概率 <span class="math inline">\(2^{-(h-1)}\)</span>），累加得 <span class="math inline">\(\eta_k(h) \le (k-h+1)2^{-(h+1)}\)</span>；再把求和拆成前 <span class="math inline">\(\lfloor\log_2 k\rfloor - 1\)</span> 项（每项上界取 1）与剩余项（用上面的几何上界），即得 <span class="math inline">\(\lambda &lt; \log_2 k\)</span>。这个结果最早由 Burks、Goldstine 与 von Neumann 在他们定义存储程序计算机结构的经典报告中给出；实验数据表明 <span class="math inline">\(\log_2(1.25k)\)</span> 是更贴合的估计。</p>
+<p><strong>平均 vs.&nbsp;最坏</strong>：随机操作数下，进位链的平均长度只有 <span class="math inline">\(O(\log k)\)</span> 级——远低于最坏情况的 <span class="math inline">\(k\)</span>。这给两类设计留出空间：异步的进位完成检测（5.4 节）赌平均情况；同步设计则必须按最坏情况设计时钟，于是有第 6、7 章的加速结构。</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="这个结论怎么用">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>这个结论怎么用
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><span class="math inline">\(\log_2 k\)</span> 与 <span class="math inline">\(k\)</span> 的差距，是所有”快速加法”技术的动机来源。64 位加法的最坏进位链是 64 级，而平均只有约 6 级——<strong>十倍的差距</strong>。要么把时钟周期按 6 级定（异步自定时，5.4 节），要么想办法把最坏情况从 64 级压到 6 级（第 6、7 章）。两条路的终点相同，代价不同。</p>
+</div>
+</div>
+</section>
+<section id="进位完成检测carry-completion-detection" class="level2">
+<h2 class="anchored" data-anchor-id="进位完成检测carry-completion-detection">5.4 进位完成检测（Carry-Completion Detection）</h2>
+<p>想法：给每位增加”进位已确定”的信号——一旦所有位的进位都确定（无论是 0 还是 1），加法就完成了。实现上需要双轨（dual-rail）编码进位信号：<span class="math inline">\((c, \bar{c})\)</span> 用两根线表示”0/1/未确定”三态。</p>
+<p>具体地，进入第 <span class="math inline">\(i\)</span> 级的进位用二轨码 <span class="math inline">\((b_i, c_i)\)</span> 表示：</p>
+<p><span class="math display">\[
+(b_i, c_i) = (0,0)\ \text{未确定},\qquad (0,1)\ \text{进位为 1},\qquad (1,0)\ \text{进位为 0}
+\]</span></p>
+<p>两个 1 会产生进位 1 向左传，<strong>两个 0 同样会”产生”一个进位 0</strong> 向左传——这正是普通行波进位加法器做不到的事（它只能传 1，不能传 0）。初始时所有进位都是 <span class="math inline">\((0,0)\)</span>；随后凡满足 <span class="math inline">\(x_i = y_i\)</span> 的位置立刻做出判定，把 <span class="math inline">\((b_{i+1}, c_{i+1}) = (\bar{x}_i\bar{y}_i,\ x_i y_i)\)</span> 注入进位链：两个 1 注入”进位 1”，两个 0 注入”进位 0”。当所有进位都变成 <span class="math inline">\((0,1)\)</span> 或 <span class="math inline">\((1,0)\)</span> 时，传播结束。</p>
+<p>每位的完成信号是 <span class="math inline">\(d_i = b_i \lor c_i\)</span>，全部相与即得 <code>alldone</code>。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_09.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 5.9 采用二轨进位信号与进位完成检测逻辑的加法器进位网络</figcaption>
+</figure>
+</div>
+<p>延迟上，最好情况（把一个数加到它自己，或者说所有位立即判定）只需 <strong>1 个门延迟</strong>；最坏情况（进位从 <span class="math inline">\(c_{in}\)</span> 一路传到 <span class="math inline">\(c_{out}\)</span>）是 <span class="math inline">\(2k+1\)</span> 个门延迟；<strong>平均约 <span class="math inline">\(2\log_2 k + 1\)</span></strong>。注意和位与完成检测是重叠进行的，所以 <span class="math inline">\(s_i\)</span> 的计算不计入上述延迟。</p>
+<p>设计上有两个坑必须避开。其一是<strong>冒险（hazard）</strong>：<code>alldone</code> 可能在进位尚未真正稳定时被虚假置位。可靠的做法是把所有进位初始化为 0（清空输入位）并<strong>同时</strong>施加全部输入数据。其二是 <code>alldone</code> 本身是一个 <span class="math inline">\(k\)</span> 输入与门，实际要用与树实现，带来 <span class="math inline">\(O(\log k)\)</span> 的额外延迟——所以严格说总延迟是 <span class="math inline">\(O(\log k) + O(\log k)\)</span>，仍是对数量级，而非 <span class="math inline">\(O(\log^2 k)\)</span>。</p>
+<p>这是<strong>自定时（self-timed）/异步设计</strong>的经典案例：平均延迟接近进位链的真实长度（对随机数据约 <span class="math inline">\(\log_2 k\)</span> 级），无需时钟。代价是约一倍的进位网络面积和复杂的握手。在同步一统江湖的今天，它主要活在教科书和低功耗研究里。</p>
+</section>
+<section id="加常数计数器addition-of-a-constant-counters" class="level2">
+<h2 class="anchored" data-anchor-id="加常数计数器addition-of-a-constant-counters">5.5 加常数：计数器（Addition of a Constant: Counters）</h2>
+<p>加法的一个特化场景：<strong>一个操作数是常数</strong>。此时 FA 退化为 HA 级别的逻辑：</p>
+<ul>
+<li>加 1 → <strong>增量器（incrementer）/上行计数器</strong>：<span class="math inline">\(c_{i+1} = c_i x_i\)</span> 型递推，硬件约为普通加法器的一半；</li>
+<li>加减 1 可切换 → <strong>可逆计数器（up/down counter）</strong>；</li>
+<li>除以常数的”模 <span class="math inline">\(m\)</span> 计数器”：达到 <span class="math inline">\(m-1\)</span> 归零，只需一个比较/译码逻辑。</li>
+</ul>
+<p>一般地，设常数 <span class="math inline">\(y = (y_{k-1}\dots y_1\,1)_2\)</span>（末位为 1，即 <span class="math inline">\(y\)</span> 为奇数）。若 <span class="math inline">\(y\)</span> 是偶数，可以把 <span class="math inline">\(x\)</span> 的最低若干位原样保留——因为 <span class="math inline">\(x + y_{\text{odd}}2^h\)</span> 的低 <span class="math inline">\(h\)</span> 位不受影响——于是<strong>只需处理奇数常数</strong>，不失一般性。此时</p>
+<p><span class="math display">\[
+s_0 = x_0 \oplus 1 = \bar{x}_0,\qquad c_1 = x_0\cdot 1 = x_0
+\]</span></p>
+<p>其余 <span class="math inline">\(k-1\)</span> 位交给一个 <span class="math inline">\((k-1)\)</span> 位行波进位链，其 <span class="math inline">\(c_{in} = x_0\)</span>，每一格依 <span class="math inline">\(y_i\)</span> 是 0 还是 1 而退化为一个 HA 或一个”改进的 HA”。<strong>硬件大约是普通加法器的一半</strong>——这就是”加常数”的全部红利来源。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_10.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 5.10 由寄存器、增量器（减量器）与多路器构成的带并行加载的上行（下行）计数器</figcaption>
+</figure>
+</div>
+<p>图 5.10 是最常见的同步计数器结构：寄存器保存当前计数值，增量器每拍算 <span class="math inline">\(x+1\)</span>，多路器在”计数”与”加载初值”之间切换。把它改成可逆计数器只需把增量器换成增量/减量器并加一根控制信号。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_11.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 5.11 仅用下降沿触发的 T 触发器搭成的 4 位异步上行计数器</figcaption>
+</figure>
+</div>
+<p>图 5.11 则走另一条路：用级联的 T（翻转）触发器做<strong>异步</strong>计数器。每个输入脉冲翻转最低位，最低位每次 1→0 翻转下一位，依此类推。由于进位（翻转传播）不必在一个时钟周期内走完，<strong>下一个输入脉冲可以在进位尚未传到最高位之前就被接受</strong>——这是典型的”靠数据而非靠时钟决定完成”的思路，代价是读出计数值时必须等待所有级稳定（毛刺问题）。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_12.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 5.12 快速三级上行计数器：低位段窄而快，高位段宽但由慢速增量器预计算后加载</figcaption>
+</figure>
+</div>
+<p>图 5.12 是一种很实用的加速技巧：把计数寄存器分成三段，低位段最窄因而最快，高位段最宽但只在低位段溢出时才需要更新——<strong>而这次更新可以由一个慢速增量器提前算好，需要时直接加载</strong>。这样计数器的最高工作频率由最窄的那一段决定。同样的思路也能推广到可逆计数器（在高位段里保存旧值以支持借位）。</p>
+<p>还有两条备选路线值得一提：一是<strong>用冗余格式保存计数值</strong>，使增量/减量成为常数时间操作（代价是读出时要做一次转换）；二是当输入脉冲频率实在太高时，在前面加一个<strong>预分频器（prescaler）</strong>，先降频再计数——代价是计数值变成近似的。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="计数器的隐藏难点">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>计数器的隐藏难点
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>计数器看着简单，却是少数几个”<strong>位宽可以任意大、而频率要求又极高</strong>”的部件（比如 64 位性能计数器、时间数字转换器）。它的关键路径是一条最长进位链，所以第 6、7 章的快速加法技术在这里全都有用武之地。别把它当玩具电路。</p>
+</div>
+</div>
+<section id="rtl-实践rtlch5_5_updown_counter" class="level3">
+<h3 class="anchored" data-anchor-id="rtl-实践rtlch5_5_updown_counter">RTL 实践：<code>rtl/ch5_5_updown_counter</code></h3>
+<p>参数化可逆计数器（带同步使能与加载），验证脚本同前。计数器虽小，却是时序控制、地址生成、分频的基本积木。</p>
+</section>
+</section>
+<section id="manchester-进位链与加法器manchester-carry-chains-and-adders" class="level2">
+<h2 class="anchored" data-anchor-id="manchester-进位链与加法器manchester-carry-chains-and-adders">5.6 Manchester 进位链与加法器（Manchester Carry Chains and Adders）</h2>
+<p>Manchester 进位链用<strong>传输门/预充电</strong>实现进位递推 <span class="math inline">\(c_{i+1} = g_i + p_i c_i\)</span>：每位只需”生成开关”与”传播开关”两个管子，进位信号沿开关链传播，级延迟远低于 CMOS 门级 FA。它说明了一个重要思想：</p>
+<p>先补上三个标准信号的定义（对二进制）：</p>
+<p><span class="math display">\[
+g_i = x_i y_i,\qquad p_i = x_i \oplus y_i,\qquad a_i = \bar{x}_i\bar{y}_i
+\]</span></p>
+<p>其中 <span class="math inline">\(a_i\)</span> 是<strong>吸收（annihilate/kill）</strong>信号。三者有且仅有一个为 1。对一般基数 <span class="math inline">\(r\)</span>，判据是 <span class="math inline">\(g_i=1 \iff x_i+y_i \ge r\)</span>，<span class="math inline">\(p_i=1 \iff x_i+y_i = r-1\)</span>，<span class="math inline">\(a_i=1 \iff x_i+y_i &lt; r-1\)</span>——<strong>进位网络的设计完全不依赖具体基数与编码</strong>，这是它能被第 6、7 章反复复用的原因。</p>
+<p>还可以定义”传递（transfer）“信号 <span class="math inline">\(t_i = g_i \lor p_i = \bar{a}_i = x_i \lor y_i\)</span>，于是</p>
+<p><span class="math display">\[
+c_{i+1} = g_i \lor c_i p_i = g_i \lor c_i(g_i \lor p_i) = g_i \lor c_i t_i
+\]</span></p>
+<p>由于 <span class="math inline">\(t_i\)</span> 是<strong>或</strong>而 <span class="math inline">\(p_i\)</span> 是<strong>异或</strong>，在多数工艺里 <span class="math inline">\(t_i\)</span> 更快，因此这个变形往往能给出略快的加法器。本书后文统一用 <span class="math inline">\(c_{i+1} = g_i \lor c_i p_i\)</span> 的形式（更直观），但心里要记住 <span class="math inline">\(p_i\)</span> 大多时候可以换成 <span class="math inline">\(t_i\)</span>。</p>
+<p>Manchester 链的每一位由三个受 <span class="math inline">\(p_i, g_i, a_i\)</span> 控制的开关组成：<span class="math inline">\(a_i=1\)</span> 时把 <span class="math inline">\(c_{i+1}\)</span> 接到 0，<span class="math inline">\(g_i=1\)</span> 时接到 1，<span class="math inline">\(p_i=1\)</span> 时接到 <span class="math inline">\(c_i\)</span>。在 CMOS 实现里，时钟为低时各 <span class="math inline">\(c\)</span> 节点<strong>预充电</strong>；时钟变高后，若 <span class="math inline">\(g_i\)</span> 有效则把 <span class="math inline">\(c_{i+1}\)</span> 拉低（有效）。这里有个关键约束：为了防止 <span class="math inline">\(g_i\)</span> 反向影响 <span class="math inline">\(c_i\)</span>，<span class="math inline">\(p_i\)</span> 必须用<strong>异或</strong>而不是或来实现——恰好求和本来就需要 <span class="math inline">\(x_i \oplus y_i\)</span>，所以这个约束不增加成本。</p>
+<p>总延迟由三部分组成：形成开关控制信号的时间、开关建立时间、以及最坏情况下穿过 <span class="math inline">\(k\)</span> 个开关的传播延迟。前两项是常数，第三项在最好的情况下线性于 <span class="math inline">\(k\)</span>；但在现代 CMOS 里，<span class="math inline">\(k\)</span> 个串联传输管的 RC 效应使延迟大致按 <span class="math inline">\(k^2\)</span> 增长。所以 Manchester 链<strong>只适合做短链（一般不超过 8 位）</strong>，作为各种快速加法方案里的积木块，而不是独立承担宽位加法。</p>
+<div class="callout callout-style-default callout-important callout-titled" title="解读">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">重要</span>解读
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>进位递推是加法器的全部瓶颈，和位本身是”赠品”</strong>。一旦进位已知，<span class="math inline">\(s_i = p_i \oplus c_i\)</span> 只是一级 XOR。所有快速加法器技术（第 6、7 章）的本质，都是想办法把 <span class="math inline">\(c_i\)</span> 们更快地算出来。</p>
+</div>
+</div>
+<p>把这个观点画成结构图，就得到了加法器的<strong>通用形式</strong>：顶部一排 AND 与 XOR 生成 <span class="math inline">\(g_i\)</span>、<span class="math inline">\(p_i\)</span>，底部一排 XOR 由 <span class="math inline">\(s_i = p_i \oplus c_i\)</span> 得到和位，<strong>中间那个”进位网络”是唯一的设计变量</strong>。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_14.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 5.14 二进制加法器的通用结构：上下两排门是固定的，设计差异全在中间的进位网络</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_15.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 5.15 行波进位网络在通用加法器结构中的另一种画法（对应图 5.14 的进位网络部分）</figcaption>
+</figure>
+</div>
+<p>有了这张图，后续章节的讨论就可以极大简化：<strong>所有加法器共享相同的 <span class="math inline">\(g/p\)</span> 生成级与求和级，只需比较各自的进位网络在延迟与成本上的差别</strong>。第 6 章的超前进位与并行前缀、第 7 章的进位跳过与进位选择，本质上都是往图 5.14 那个椭圆里塞进不同的网络。</p>
+</section>
+<section id="本章小结" class="level2">
+<h2 class="anchored" data-anchor-id="本章小结">本章小结</h2>
+<ul>
+<li>FA = 3:2 压缩器；行波进位 = <span class="math inline">\(O(k)\)</span> 延迟、最小面积；位串行 = 常数面积、<span class="math inline">\(k\)</span> 拍。</li>
+<li>条件码：CF（无符号溢出）与 OF（有符号溢出）分开。</li>
+<li>进位递推 <span class="math inline">\(c_{i+1} = g_i + p_i c_i\)</span> 是全书加法器章节的”万有公式”。</li>
+<li>计数器是”加常数”的退化加法器，硬件减半。</li>
+</ul>
+</section>
+<section id="原书插图" class="level2">
+<h2 class="anchored" data-anchor-id="原书插图">原书插图</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_01.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 5.1 半加器的三种实现：AND/XOR 结构、NOR 门结构、带反相进位输出的 NAND 门结构</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_05.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 5.5 <span class="math inline">\(k\)</span> 位行波进位加法器的关键路径：从 <span class="math inline">\(x_0\)</span> 或 <span class="math inline">\(y_0\)</span> 进入，沿进位链到最高位，再由 <span class="math inline">\(c_{k-1}\)</span> 到 <span class="math inline">\(s_{k-1}\)</span></figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch05/fig05_13.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 5.13 Manchester 进位链的单级结构与 CMOS 实现：时钟为低时预充电，为高时按 <span class="math inline">\(g_i\)</span>/<span class="math inline">\(p_i\)</span> 决定 <span class="math inline">\(c_{i+1}\)</span></figcaption>
+</figure>
+</div>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./ch04.html" class="pagination-link" aria-label="第4章 剩余数系（Residue Number Systems）">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./ch06.html" class="pagination-link" aria-label="第6章 超前进位加法器（Carry-Lookahead Adders）">
+        <span class="nav-page-text"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 第5章 基本加法与计数（Basic Addition and Counting）</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章导读</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>加法是所有算术的原子操作——减法靠补码变成加法，乘法是重复的加法，除法是重复的条件减法。本章从最基本的半加器（half adder, HA）、全加器（full adder, FA）讲起，搭建行波进位加法器（ripple-carry adder），分析进位传播的延迟本质，并介绍进位完成检测、计数器与 Manchester 进位链。第 6、7 章的所有"快速加法器"，都可以理解为对本章进位链问题的不同回应。</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## 5.1 位串行与行波进位加法器（Bit-Serial and Ripple-Carry Adders）</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>**半加器（HA）**：两个比特相加，$s = x \oplus y$，$c_{out} = xy$。它只占一个 AND 门加一个 XOR 门，但如果手头只有 NOR 或只有 NAND，也可以很划算地实现——用两个 NOR 门加一个反相器就能搭出 HA，用 NAND 门实现时得到的则是**反相的进位输出**，正好可以直接喂给下一级同样用 NAND 实现的结构。原书 Fig. 5.1 给出了这三种实现。**同一个布尔函数在不同工艺库里的最优实现可以完全不同**，这是算术部件设计里最基础的一条经验。</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>**全加器（FA）**：三个比特（含进位输入）相加：</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>s = x \oplus y \oplus c_{in}, \qquad c_{out} = xy + (x \oplus y)c_{in}</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>写成展开形式更容易看出它的两个"身份"：$s$ 是三输入的**奇校验（odd parity）**函数，$c_{out}$ 是三输入的**多数（majority）**函数 $xy \lor x c_{in} \lor y c_{in}$。这个视角在第 8 章的多操作数加法里会反复用到。</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>全加器的另一种读法（第 8 章视角）：它是一个 **3:2 压缩器（3:2 compressor）**——把 3 个同权重的比特压缩成 2 个比特（和位与进位）。</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="al">![图 5.2 全加器的三种实现：(a) 两个半加器加一个或门；(b) 直接用与或二级逻辑；(c) 七个反相器加两个 4 选 1 多路器的 CMOS 传输门实现](images/ch05/fig05_02.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>三种 FA 实现的取舍很典型：图 5.2a 最规整、最容易验证，但进位要经过两级 HA；图 5.2b 是标准的二级 AND-OR（或 NAND-NAND），延迟最短但晶体管尺寸较大；图 5.2c 是 CMOS 传输门逻辑的经典设计——用 $c_{in}$ 同时作为两个 4 选 1 多路器的选择端，$x,y$ 的四种组合直接选出 $s$ 与 $c_{out}$ 应有的常量，**进位路径上只有一个传输门**，因此特别适合做位宽较宽的行波进位链。由于 FA 是算术电路里复用次数最多的单元，工业界为它积累了大量针对具体工艺优化过的定制版图。</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>**行波进位加法器（ripple-carry adder）**：$k$ 个 FA 首尾相接，进位从最低位逐级"涟漪"到最高位。结构最规整、面积最小、版图最友好，但最坏延迟：</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>T_{\text{ripple}} = T_{FA}(x,y \to c_{out}) + (k-2)\,T_{FA}(c_{in} \to c_{out}) + T_{FA}(c_{in} \to s)</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>**延迟随位宽线性增长**——32 位就是 32 级 FA 的进位链，这是它被高速设计抛弃的原因。粗略地说 $T_{\text{ripple}} \approx k\,T_{FA}$。</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>**位串行加法器（bit-serial adder）**：另一个极端——只用 1 个 FA，操作数存在移位寄存器里，每拍移入一对比特，进位存在 1 位锁存器中。$k$ 位加法要 $k$ 拍，但硬件只有常数大小。在对吞吐要求低、引脚/面积极其敏感的场合（如某些传感器前端）仍有价值。</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>注意位串行加法器的总延迟也是 $O(k)$，但**比例系数比行波进位大得多**——它每拍都要付一次触发器建立/保持与时钟开销。所以位串行赢在面积（1 个 FA vs. $k$ 个 FA），行波进位赢在延迟，**两者不是"同一条曲线上的两个点"，而是两个不同的设计点**。</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="al">![图 5.4 4 位行波进位加法器的 CMOS 版图实现，按 $\lambda$（最小特征尺寸的一半）标注的面积约为 $760\lambda \times 150\lambda$](images/ch05/fig05_04.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>图 5.4 给出的是用图 5.2c 的传输门 FA 直接拼出的 4 位版图。它的价值在于说明**规则性的实际收益**：4 个完全相同的单元横向平铺，进位链是相邻单元间的短直线，没有任何跨越布线，版图面积几乎就等于单元面积之和。这就是为什么即使在有了超前进位之后，行波进位仍然活在"位宽不大、对面积敏感"的角落里。</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 5.3：用全加器搭建的位串行加法器与 4 位行波进位加法器](images/ch05/fig05_03.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>**加法器还是一块万能积木**。一个带 $c_{in}$、两个 $k$ 位操作数输入、$c_{out}$ 与 $k$ 位和输出的二进制加法器，可以用来合成各种非算术逻辑函数。例如 $f = w \lor xyz$ 可以这样接：第 0 位放 $(x, y)$，得 $c_1 = xy$；第 1 位放 $(0, z)$，得 $c_2 = z\cdot xy = xyz$；第 2 位放 $(1, w)$，得</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>c_3 = 1\cdot w \lor (1 \oplus w)\,c_2 = w \lor \bar{w}\,xyz = w \lor xyz</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>第 3 位放 $(0, 1)$，则 $c_4 = c_3 = f$、$s_3 = \bar{c}_3 = \bar{f}$。于是**一次加法同时给出 $f$ 与其反**。</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="al">![图 5.6 用 4 位二进制加法器实现逻辑函数 $f = w \lor xyz$ 及其反函数（箭头标注了各级进位）](images/ch05/fig05_06.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>这个技巧的原理是：加法器的进位链本身就是一条"与-或"链，$g_i$ 提供与项、$p_i$ 提供传播，两者组合足以覆盖许多多变量逻辑函数。而且**该加法器不必是行波进位结构**——任何进位语义正确的加法器（超前进位、前缀结构）都能得到同样的输出。在 FPGA 上，硬加法器（进位链专用布线）常常是实现宽与/或逻辑最快的资源，这条路子至今仍在用。</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="fu">### RTL 实践：`rtl/ch5_1_ripple_carry_adder`</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>参数化行波进位加法器，用 <span class="in">`generate`</span> 把 $N$ 个全加器串成进位链：</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a><span class="in">```systemverilog</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a><span class="in">module full_adder (</span></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a><span class="in">    input  logic a, b, cin,</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a><span class="in">    output logic s, cout</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a><span class="in">);</span></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="in">    assign s    = a ^ b ^ cin;</span></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a><span class="in">    assign cout = (a &amp; b) | ((a ^ b) &amp; cin);</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a><span class="in">endmodule</span></span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="in">module ripple_carry_adder #(parameter int N = 8) (</span></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a><span class="in">    input  logic [N-1:0] a, b,</span></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a><span class="in">    input  logic         cin,</span></span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a><span class="in">    output logic [N-1:0] s,</span></span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a><span class="in">    output logic         cout</span></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a><span class="in">);</span></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a><span class="in">    logic [N:0] c;</span></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a><span class="in">    assign c[0] = cin;</span></span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a><span class="in">    assign cout = c[N];</span></span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a><span class="in">    genvar i;</span></span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a><span class="in">    generate</span></span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a><span class="in">        for (i = 0; i &lt; N; i++) begin : g_fa</span></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a><span class="in">            full_adder fa (.a(a[i]), .b(b[i]), .cin(c[i]),</span></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a><span class="in">                           .s(s[i]), .cout(c[i+1]));</span></span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a><span class="in">        end</span></span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a><span class="in">    endgenerate</span></span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a><span class="in">endmodule</span></span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>testbench 用无符号黄金模型 <span class="in">`a + b + cin`</span> 比对，定向用例覆盖全 0/全 1/交替进位，外加随机回归。运行：</span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> rtl/ch5_1_ripple_carry_adder</span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> run_iverilog.sh    <span class="co"># 或 bash run_verilator.sh</span></span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a><span class="fu">## 5.2 条件码与异常（Conditions and Exceptions）</span></span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a>ALU 的加法器除了给出和，还要产出条件码（condition codes）：</span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**进位输出（carry-out, $c_{out}$）**：无符号加法的溢出标志，也是无符号减法"无借位"的标志；</span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**溢出（overflow）**：2 的补码溢出，判据 $\text{overflow} = c_k \oplus c_{k-1}$（见第 2 章）；</span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**零标志（zero）**：和的各位全 0——一个 $k$ 输入 NOR；</span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**符号标志（sign/negative）**：和的最高位。</span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a>对**无符号**加法而言，$c_{out}$ 与"溢出"是同一件事，符号标志则毫无意义；对 **2 的补码**加法而言，$c_{out}$ 本身不代表溢出，真正的判据是"两个同号数相加得到异号结果"：</span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a>\text{Overflow}_{2\text{'s-compl}} = x_{k-1}y_{k-1}\bar{s}_{k-1} \lor \bar{x}_{k-1}\bar{y}_{k-1}s_{k-1} = c_k \oplus c_{k-1}</span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a>由于同一套加法器常常既要服务无符号又要服务有符号运算，$c_{out}$ 通常也一并输出，由软件按数据类型取用。</span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a><span class="al">![图 5.7 带条件与异常检测输出的 2 的补码行波进位加法器](images/ch05/fig05_07.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a>有两个实现细节值得注意。其一，**零检测的那个 $k$ 输入 NOR 门在物理上不存在**——门电路的扇入通常限制在 4-8，实际要用一棵 OR 树加一个反相器来实现，因此零标志的延迟是 $O(\log k)$ 而不是 $O(1)$，在宽位 ALU 里可能反过来成为关键路径。其二，溢出检测需要 $c_k$ 与 $c_{k-1}$，也就是**最坏路径的终点**，所以它天然是"免费"的，不额外增加延迟。</span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a>溢出之后的行为也是一个设计选择。默认行为是**回绕（wrap）**：无符号和超出 $k$ 位时，输出是正确和减去 $2^k$ 的值。但很多应用更需要**饱和（saturate）**：图像像素的亮度加过头应该钳到最大值，而不是回绕成一个接近 0 的数（那样会在画面上产生黑点）。饱和加法器的实现极为简单——在普通加法器输出处加一个多路器，选择端接溢出信号，溢出时输出全 1（无符号）或正/负最大值（有符号）。**饱和是有序性（ordering）友好的，回绕则不是**。</span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="工程细节"}</span>
+<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a>注意**无符号溢出与有符号溢出是两套判据**，同一次加法可以同时置位两个标志，由软件按数据类型取用。这也是为什么处理器 FLAGS 寄存器里 CF 和 OF 是分开的两个位。</span>
+<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a><span class="fu">## 5.3 进位传播分析（Analysis of Carry Propagation）</span></span>
+<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a>进位链何时最长？引入两个在后续章节反复出现的信号：</span>
+<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**生成（generate）**：$g_i = x_i y_i$ —— 本位自己产生进位；</span>
+<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**传播（propagate）**：$p_i = x_i \oplus y_i$（或 $x_i + y_i$，两种定义各有用途）—— 本位把进位传下去。</span>
+<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a>进位递推：$c_{i+1} = g_i + p_i c_i$。</span>
+<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a>定义**进位链长度**为：从进位产生的位置起，到进位最终被吸收（annihilate）的位置为止，中间经过的数位个数。长度为 0 表示根本没有进位，长度为 1 表示进位在下一级就被吸收。决定加法器延迟的是**最长那条链**。</span>
+<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a><span class="al">![图 5.8 一次 16 位加法示例及其进位链：四条链的长度分别为 2、3、6、4，最长链（6）决定了该次加法的实际延迟](images/ch05/fig05_08.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a>对随机操作数，每个位位置上三种事件的概率是</span>
+<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a>P(\text{生成}) = \tfrac{1}{4}\;(x_i y_i = 11),\quad</span>
+<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a>P(\text{吸收}) = \tfrac{1}{4}\;(x_i y_i = 00),\quad</span>
+<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a>P(\text{传播}) = \tfrac{1}{2}\;(x_i \neq y_i)</span>
+<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a>一个在第 $i$ 位产生的进位，传播到第 $j-1$ 位并在第 $j$ 位停下（$j&gt;i$）的概率是 $2^{-(j-1-i)}\times\frac{1}{2} = 2^{-(j-i)}$。于是从位置 $i$ 出发的进位链的**期望长度**为</span>
+<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a>\sum_{j=i+1}^{k-1}(j-i)\,2^{-(j-i)} + (k-i)\,2^{-(k-1-i)} = 2 - 2^{-(k-i-1)}</span>
+<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a>（最后一项不乘 $\frac12$，是因为进位在第 $k$ 位必然停止。）当 $i \ll k$ 时，这个值约等于 **2**——也就是说，平均而言一条进位链只有两位长，而不是直觉上的 $k$ 位。</span>
+<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a>但延迟取决于**最长**链，而最长链的平均长度是</span>
+<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a>\lambda = \sum_{h\ge 1} h\big<span class="co">[</span><span class="ot">\eta_k(h) - \eta_k(h+1)\big</span><span class="co">]</span> = \sum_{h=1}^{k} \eta_k(h) \;&lt;\; \log_2 k</span>
+<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a>其中 $\eta_k(h)$ 是"最长链长度 $\ge h$"的概率。证明思路是递推：$\eta_k(h) \le \eta_{k-1}(h) + 2^{-(h+1)}$（第二项 = 生成概率 $\frac14$ × 连续传播 $h-2$ 级并在最后一级停下的概率 $2^{-(h-1)}$），累加得 $\eta_k(h) \le (k-h+1)2^{-(h+1)}$；再把求和拆成前 $\lfloor\log_2 k\rfloor - 1$ 项（每项上界取 1）与剩余项（用上面的几何上界），即得 $\lambda &lt; \log_2 k$。这个结果最早由 Burks、Goldstine 与 von Neumann 在他们定义存储程序计算机结构的经典报告中给出；实验数据表明 $\log_2(1.25k)$ 是更贴合的估计。</span>
+<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a>**平均 vs. 最坏**：随机操作数下，进位链的平均长度只有 $O(\log k)$ 级——远低于最坏情况的 $k$。这给两类设计留出空间：异步的进位完成检测（5.4 节）赌平均情况；同步设计则必须按最坏情况设计时钟，于是有第 6、7 章的加速结构。</span>
+<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip title="这个结论怎么用"}</span>
+<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a>$\log_2 k$ 与 $k$ 的差距，是所有"快速加法"技术的动机来源。64 位加法的最坏进位链是 64 级，而平均只有约 6 级——**十倍的差距**。要么把时钟周期按 6 级定（异步自定时，5.4 节），要么想办法把最坏情况从 64 级压到 6 级（第 6、7 章）。两条路的终点相同，代价不同。</span>
+<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a><span class="fu">## 5.4 进位完成检测（Carry-Completion Detection）</span></span>
+<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a>想法：给每位增加"进位已确定"的信号——一旦所有位的进位都确定（无论是 0 还是 1），加法就完成了。实现上需要双轨（dual-rail）编码进位信号：$(c, \bar{c})$ 用两根线表示"0/1/未确定"三态。</span>
+<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a>具体地，进入第 $i$ 级的进位用二轨码 $(b_i, c_i)$ 表示：</span>
+<span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a>(b_i, c_i) = (0,0)\ \text{未确定},\qquad (0,1)\ \text{进位为 1},\qquad (1,0)\ \text{进位为 0}</span>
+<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a>两个 1 会产生进位 1 向左传，**两个 0 同样会"产生"一个进位 0** 向左传——这正是普通行波进位加法器做不到的事（它只能传 1，不能传 0）。初始时所有进位都是 $(0,0)$；随后凡满足 $x_i = y_i$ 的位置立刻做出判定，把 $(b_{i+1}, c_{i+1}) = (\bar{x}_i\bar{y}_i,\ x_i y_i)$ 注入进位链：两个 1 注入"进位 1"，两个 0 注入"进位 0"。当所有进位都变成 $(0,1)$ 或 $(1,0)$ 时，传播结束。</span>
+<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a>每位的完成信号是 $d_i = b_i \lor c_i$，全部相与即得 <span class="in">`alldone`</span>。</span>
+<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a><span class="al">![图 5.9 采用二轨进位信号与进位完成检测逻辑的加法器进位网络](images/ch05/fig05_09.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a>延迟上，最好情况（把一个数加到它自己，或者说所有位立即判定）只需 **1 个门延迟**；最坏情况（进位从 $c_{in}$ 一路传到 $c_{out}$）是 $2k+1$ 个门延迟；**平均约 $2\log_2 k + 1$**。注意和位与完成检测是重叠进行的，所以 $s_i$ 的计算不计入上述延迟。</span>
+<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a>设计上有两个坑必须避开。其一是**冒险（hazard）**：`alldone` 可能在进位尚未真正稳定时被虚假置位。可靠的做法是把所有进位初始化为 0（清空输入位）并**同时**施加全部输入数据。其二是 <span class="in">`alldone`</span> 本身是一个 $k$ 输入与门，实际要用与树实现，带来 $O(\log k)$ 的额外延迟——所以严格说总延迟是 $O(\log k) + O(\log k)$，仍是对数量级，而非 $O(\log^2 k)$。</span>
+<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a>这是**自定时（self-timed）/异步设计**的经典案例：平均延迟接近进位链的真实长度（对随机数据约 $\log_2 k$ 级），无需时钟。代价是约一倍的进位网络面积和复杂的握手。在同步一统江湖的今天，它主要活在教科书和低功耗研究里。</span>
+<span id="cb3-185"><a href="#cb3-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-186"><a href="#cb3-186" aria-hidden="true" tabindex="-1"></a><span class="fu">## 5.5 加常数：计数器（Addition of a Constant: Counters）</span></span>
+<span id="cb3-187"><a href="#cb3-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-188"><a href="#cb3-188" aria-hidden="true" tabindex="-1"></a>加法的一个特化场景：**一个操作数是常数**。此时 FA 退化为 HA 级别的逻辑：</span>
+<span id="cb3-189"><a href="#cb3-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-190"><a href="#cb3-190" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>加 1 → **增量器（incrementer）/上行计数器**：$c_{i+1} = c_i x_i$ 型递推，硬件约为普通加法器的一半；</span>
+<span id="cb3-191"><a href="#cb3-191" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>加减 1 可切换 → **可逆计数器（up/down counter）**；</span>
+<span id="cb3-192"><a href="#cb3-192" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>除以常数的"模 $m$ 计数器"：达到 $m-1$ 归零，只需一个比较/译码逻辑。</span>
+<span id="cb3-193"><a href="#cb3-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-194"><a href="#cb3-194" aria-hidden="true" tabindex="-1"></a>一般地，设常数 $y = (y_{k-1}\dots y_1\,1)_2$（末位为 1，即 $y$ 为奇数）。若 $y$ 是偶数，可以把 $x$ 的最低若干位原样保留——因为 $x + y_{\text{odd}}2^h$ 的低 $h$ 位不受影响——于是**只需处理奇数常数**，不失一般性。此时</span>
+<span id="cb3-195"><a href="#cb3-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-196"><a href="#cb3-196" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-197"><a href="#cb3-197" aria-hidden="true" tabindex="-1"></a>s_0 = x_0 \oplus 1 = \bar{x}_0,\qquad c_1 = x_0\cdot 1 = x_0</span>
+<span id="cb3-198"><a href="#cb3-198" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-199"><a href="#cb3-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-200"><a href="#cb3-200" aria-hidden="true" tabindex="-1"></a>其余 $k-1$ 位交给一个 $(k-1)$ 位行波进位链，其 $c_{in} = x_0$，每一格依 $y_i$ 是 0 还是 1 而退化为一个 HA 或一个"改进的 HA"。**硬件大约是普通加法器的一半**——这就是"加常数"的全部红利来源。</span>
+<span id="cb3-201"><a href="#cb3-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-202"><a href="#cb3-202" aria-hidden="true" tabindex="-1"></a><span class="al">![图 5.10 由寄存器、增量器（减量器）与多路器构成的带并行加载的上行（下行）计数器](images/ch05/fig05_10.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-203"><a href="#cb3-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-204"><a href="#cb3-204" aria-hidden="true" tabindex="-1"></a>图 5.10 是最常见的同步计数器结构：寄存器保存当前计数值，增量器每拍算 $x+1$，多路器在"计数"与"加载初值"之间切换。把它改成可逆计数器只需把增量器换成增量/减量器并加一根控制信号。</span>
+<span id="cb3-205"><a href="#cb3-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-206"><a href="#cb3-206" aria-hidden="true" tabindex="-1"></a><span class="al">![图 5.11 仅用下降沿触发的 T 触发器搭成的 4 位异步上行计数器](images/ch05/fig05_11.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-207"><a href="#cb3-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-208"><a href="#cb3-208" aria-hidden="true" tabindex="-1"></a>图 5.11 则走另一条路：用级联的 T（翻转）触发器做**异步**计数器。每个输入脉冲翻转最低位，最低位每次 1→0 翻转下一位，依此类推。由于进位（翻转传播）不必在一个时钟周期内走完，**下一个输入脉冲可以在进位尚未传到最高位之前就被接受**——这是典型的"靠数据而非靠时钟决定完成"的思路，代价是读出计数值时必须等待所有级稳定（毛刺问题）。</span>
+<span id="cb3-209"><a href="#cb3-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-210"><a href="#cb3-210" aria-hidden="true" tabindex="-1"></a><span class="al">![图 5.12 快速三级上行计数器：低位段窄而快，高位段宽但由慢速增量器预计算后加载](images/ch05/fig05_12.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-211"><a href="#cb3-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-212"><a href="#cb3-212" aria-hidden="true" tabindex="-1"></a>图 5.12 是一种很实用的加速技巧：把计数寄存器分成三段，低位段最窄因而最快，高位段最宽但只在低位段溢出时才需要更新——**而这次更新可以由一个慢速增量器提前算好，需要时直接加载**。这样计数器的最高工作频率由最窄的那一段决定。同样的思路也能推广到可逆计数器（在高位段里保存旧值以支持借位）。</span>
+<span id="cb3-213"><a href="#cb3-213" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-214"><a href="#cb3-214" aria-hidden="true" tabindex="-1"></a>还有两条备选路线值得一提：一是**用冗余格式保存计数值**，使增量/减量成为常数时间操作（代价是读出时要做一次转换）；二是当输入脉冲频率实在太高时，在前面加一个**预分频器（prescaler）**，先降频再计数——代价是计数值变成近似的。</span>
+<span id="cb3-215"><a href="#cb3-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-216"><a href="#cb3-216" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="计数器的隐藏难点"}</span>
+<span id="cb3-217"><a href="#cb3-217" aria-hidden="true" tabindex="-1"></a>计数器看着简单，却是少数几个"**位宽可以任意大、而频率要求又极高**"的部件（比如 64 位性能计数器、时间数字转换器）。它的关键路径是一条最长进位链，所以第 6、7 章的快速加法技术在这里全都有用武之地。别把它当玩具电路。</span>
+<span id="cb3-218"><a href="#cb3-218" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-219"><a href="#cb3-219" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-220"><a href="#cb3-220" aria-hidden="true" tabindex="-1"></a><span class="fu">### RTL 实践：`rtl/ch5_5_updown_counter`</span></span>
+<span id="cb3-221"><a href="#cb3-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-222"><a href="#cb3-222" aria-hidden="true" tabindex="-1"></a>参数化可逆计数器（带同步使能与加载），验证脚本同前。计数器虽小，却是时序控制、地址生成、分频的基本积木。</span>
+<span id="cb3-223"><a href="#cb3-223" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-224"><a href="#cb3-224" aria-hidden="true" tabindex="-1"></a><span class="fu">## 5.6 Manchester 进位链与加法器（Manchester Carry Chains and Adders）</span></span>
+<span id="cb3-225"><a href="#cb3-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-226"><a href="#cb3-226" aria-hidden="true" tabindex="-1"></a>Manchester 进位链用**传输门/预充电**实现进位递推 $c_{i+1} = g_i + p_i c_i$：每位只需"生成开关"与"传播开关"两个管子，进位信号沿开关链传播，级延迟远低于 CMOS 门级 FA。它说明了一个重要思想：</span>
+<span id="cb3-227"><a href="#cb3-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-228"><a href="#cb3-228" aria-hidden="true" tabindex="-1"></a>先补上三个标准信号的定义（对二进制）：</span>
+<span id="cb3-229"><a href="#cb3-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-230"><a href="#cb3-230" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-231"><a href="#cb3-231" aria-hidden="true" tabindex="-1"></a>g_i = x_i y_i,\qquad p_i = x_i \oplus y_i,\qquad a_i = \bar{x}_i\bar{y}_i</span>
+<span id="cb3-232"><a href="#cb3-232" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-233"><a href="#cb3-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-234"><a href="#cb3-234" aria-hidden="true" tabindex="-1"></a>其中 $a_i$ 是**吸收（annihilate/kill）**信号。三者有且仅有一个为 1。对一般基数 $r$，判据是 $g_i=1 \iff x_i+y_i \ge r$，$p_i=1 \iff x_i+y_i = r-1$，$a_i=1 \iff x_i+y_i &lt; r-1$——**进位网络的设计完全不依赖具体基数与编码**，这是它能被第 6、7 章反复复用的原因。</span>
+<span id="cb3-235"><a href="#cb3-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-236"><a href="#cb3-236" aria-hidden="true" tabindex="-1"></a>还可以定义"传递（transfer）"信号 $t_i = g_i \lor p_i = \bar{a}_i = x_i \lor y_i$，于是</span>
+<span id="cb3-237"><a href="#cb3-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-238"><a href="#cb3-238" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-239"><a href="#cb3-239" aria-hidden="true" tabindex="-1"></a>c_{i+1} = g_i \lor c_i p_i = g_i \lor c_i(g_i \lor p_i) = g_i \lor c_i t_i</span>
+<span id="cb3-240"><a href="#cb3-240" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-241"><a href="#cb3-241" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-242"><a href="#cb3-242" aria-hidden="true" tabindex="-1"></a>由于 $t_i$ 是**或**而 $p_i$ 是**异或**，在多数工艺里 $t_i$ 更快，因此这个变形往往能给出略快的加法器。本书后文统一用 $c_{i+1} = g_i \lor c_i p_i$ 的形式（更直观），但心里要记住 $p_i$ 大多时候可以换成 $t_i$。</span>
+<span id="cb3-243"><a href="#cb3-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-244"><a href="#cb3-244" aria-hidden="true" tabindex="-1"></a>Manchester 链的每一位由三个受 $p_i, g_i, a_i$ 控制的开关组成：$a_i=1$ 时把 $c_{i+1}$ 接到 0，$g_i=1$ 时接到 1，$p_i=1$ 时接到 $c_i$。在 CMOS 实现里，时钟为低时各 $c$ 节点**预充电**；时钟变高后，若 $g_i$ 有效则把 $c_{i+1}$ 拉低（有效）。这里有个关键约束：为了防止 $g_i$ 反向影响 $c_i$，$p_i$ 必须用**异或**而不是或来实现——恰好求和本来就需要 $x_i \oplus y_i$，所以这个约束不增加成本。</span>
+<span id="cb3-245"><a href="#cb3-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-246"><a href="#cb3-246" aria-hidden="true" tabindex="-1"></a>总延迟由三部分组成：形成开关控制信号的时间、开关建立时间、以及最坏情况下穿过 $k$ 个开关的传播延迟。前两项是常数，第三项在最好的情况下线性于 $k$；但在现代 CMOS 里，$k$ 个串联传输管的 RC 效应使延迟大致按 $k^2$ 增长。所以 Manchester 链**只适合做短链（一般不超过 8 位）**，作为各种快速加法方案里的积木块，而不是独立承担宽位加法。</span>
+<span id="cb3-247"><a href="#cb3-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-248"><a href="#cb3-248" aria-hidden="true" tabindex="-1"></a>::: {.callout-important title="解读"}</span>
+<span id="cb3-249"><a href="#cb3-249" aria-hidden="true" tabindex="-1"></a>**进位递推是加法器的全部瓶颈，和位本身是"赠品"**。一旦进位已知，$s_i = p_i \oplus c_i$ 只是一级 XOR。所有快速加法器技术（第 6、7 章）的本质，都是想办法把 $c_i$ 们更快地算出来。</span>
+<span id="cb3-250"><a href="#cb3-250" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-251"><a href="#cb3-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-252"><a href="#cb3-252" aria-hidden="true" tabindex="-1"></a>把这个观点画成结构图，就得到了加法器的**通用形式**：顶部一排 AND 与 XOR 生成 $g_i$、$p_i$，底部一排 XOR 由 $s_i = p_i \oplus c_i$ 得到和位，**中间那个"进位网络"是唯一的设计变量**。</span>
+<span id="cb3-253"><a href="#cb3-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-254"><a href="#cb3-254" aria-hidden="true" tabindex="-1"></a><span class="al">![图 5.14 二进制加法器的通用结构：上下两排门是固定的，设计差异全在中间的进位网络](images/ch05/fig05_14.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-255"><a href="#cb3-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-256"><a href="#cb3-256" aria-hidden="true" tabindex="-1"></a><span class="al">![图 5.15 行波进位网络在通用加法器结构中的另一种画法（对应图 5.14 的进位网络部分）](images/ch05/fig05_15.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-257"><a href="#cb3-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-258"><a href="#cb3-258" aria-hidden="true" tabindex="-1"></a>有了这张图，后续章节的讨论就可以极大简化：**所有加法器共享相同的 $g/p$ 生成级与求和级，只需比较各自的进位网络在延迟与成本上的差别**。第 6 章的超前进位与并行前缀、第 7 章的进位跳过与进位选择，本质上都是往图 5.14 那个椭圆里塞进不同的网络。</span>
+<span id="cb3-259"><a href="#cb3-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-260"><a href="#cb3-260" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章小结</span></span>
+<span id="cb3-261"><a href="#cb3-261" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-262"><a href="#cb3-262" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>FA = 3:2 压缩器；行波进位 = $O(k)$ 延迟、最小面积；位串行 = 常数面积、$k$ 拍。</span>
+<span id="cb3-263"><a href="#cb3-263" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>条件码：CF（无符号溢出）与 OF（有符号溢出）分开。</span>
+<span id="cb3-264"><a href="#cb3-264" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>进位递推 $c_{i+1} = g_i + p_i c_i$ 是全书加法器章节的"万有公式"。</span>
+<span id="cb3-265"><a href="#cb3-265" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>计数器是"加常数"的退化加法器，硬件减半。</span>
+<span id="cb3-266"><a href="#cb3-266" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-267"><a href="#cb3-267" aria-hidden="true" tabindex="-1"></a><span class="fu">## 原书插图</span></span>
+<span id="cb3-268"><a href="#cb3-268" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-269"><a href="#cb3-269" aria-hidden="true" tabindex="-1"></a><span class="al">![图 5.1 半加器的三种实现：AND/XOR 结构、NOR 门结构、带反相进位输出的 NAND 门结构](images/ch05/fig05_01.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-270"><a href="#cb3-270" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-271"><a href="#cb3-271" aria-hidden="true" tabindex="-1"></a><span class="al">![图 5.5 $k$ 位行波进位加法器的关键路径：从 $x_0$ 或 $y_0$ 进入，沿进位链到最高位，再由 $c_{k-1}$ 到 $s_{k-1}$](images/ch05/fig05_05.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-272"><a href="#cb3-272" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-273"><a href="#cb3-273" aria-hidden="true" tabindex="-1"></a><span class="al">![图 5.13 Manchester 进位链的单级结构与 CMOS 实现：时钟为低时预充电，为高时按 $g_i$/$p_i$ 决定 $c_{i+1}$](images/ch05/fig05_13.png)</span>{fig-align="center" width="85%"}</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

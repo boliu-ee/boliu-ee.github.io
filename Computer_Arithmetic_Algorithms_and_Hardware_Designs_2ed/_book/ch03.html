@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第3章 冗余数系（Redundant Number Systems） – 计算机算术：算法与硬件设计（中文解读版）</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./ch04.html" rel="next">
+<link href="./ch02.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-77d2b90c99eeff80c5837adab8b96ac7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch01.html">第一部分 数的表示 (Number Representation)</a></li><li class="breadcrumb-item"><a href="./ch03.html"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">计算机算术：算法与硬件设计（中文解读版）</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第一部分 数的表示 (Number Representation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch01.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch03.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第二部分 加法与减法 (Addition/Subtraction)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第7章 快速加法器的变体（Variations in Fast Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第8章 多操作数加法（Multioperand Addition）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部分 乘法 (Multiplication)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第9章 基本乘法方案（Basic Multiplication Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第10章 高基数乘法器（High-Radix Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">第四部分 除法 (Division)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第14章 高基数除法器（High-Radix Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第15章 除法器的变体（Variations in Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第16章 收敛法除法（Division by Convergence）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">第五部分 实数运算 (Real Arithmetic)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第17章 浮点数表示（Floating-Point Representations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">第六部分 函数求值 (Function Evaluation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第23章 函数求值的变体（Variations in Function Evaluation）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第24章 查表算术（Arithmetic by Table Lookup）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">第七部分 实现专题 (Implementation Topics)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch26.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch27.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch28.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第28章 可重构算术（Reconfigurable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">附录 过去、现在与未来（Past, Present, and Future）</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#本章导读" id="toc-本章导读" class="nav-link active" data-scroll-target="#本章导读">本章导读</a></li>
+  <li><a href="#进位问题coping-with-the-carry-problem" id="toc-进位问题coping-with-the-carry-problem" class="nav-link" data-scroll-target="#进位问题coping-with-the-carry-problem">3.1 进位问题（Coping with the Carry Problem）</a></li>
+  <li><a href="#计算机算术中的冗余redundancy-in-computer-arithmetic" id="toc-计算机算术中的冗余redundancy-in-computer-arithmetic" class="nav-link" data-scroll-target="#计算机算术中的冗余redundancy-in-computer-arithmetic">3.2 计算机算术中的冗余（Redundancy in Computer Arithmetic）</a></li>
+  <li><a href="#数位集合与数位集合转换digit-sets-and-digit-set-conversions" id="toc-数位集合与数位集合转换digit-sets-and-digit-set-conversions" class="nav-link" data-scroll-target="#数位集合与数位集合转换digit-sets-and-digit-set-conversions">3.3 数位集合与数位集合转换（Digit Sets and Digit-Set Conversions）</a></li>
+  <li><a href="#广义带符号数字表示generalized-signed-digit-numbers" id="toc-广义带符号数字表示generalized-signed-digit-numbers" class="nav-link" data-scroll-target="#广义带符号数字表示generalized-signed-digit-numbers">3.4 广义带符号数字表示（Generalized Signed-Digit Numbers）</a></li>
+  <li><a href="#无进位加法算法carry-free-addition-algorithms" id="toc-无进位加法算法carry-free-addition-algorithms" class="nav-link" data-scroll-target="#无进位加法算法carry-free-addition-algorithms">3.5 无进位加法算法（Carry-Free Addition Algorithms）</a></li>
+  <li><a href="#转换与支持函数conversions-and-support-functions" id="toc-转换与支持函数conversions-and-support-functions" class="nav-link" data-scroll-target="#转换与支持函数conversions-and-support-functions">3.6 转换与支持函数（Conversions and Support Functions）</a></li>
+  <li><a href="#本章小结" id="toc-本章小结" class="nav-link" data-scroll-target="#本章小结">本章小结</a></li>
+  <li><a href="#原书插图" id="toc-原书插图" class="nav-link" data-scroll-target="#原书插图">原书插图</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch01.html">第一部分 数的表示 (Number Representation)</a></li><li class="breadcrumb-item"><a href="./ch03.html"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="本章导读" class="level2">
+<h2 class="anchored" data-anchor-id="本章导读">本章导读</h2>
+<p>第 2 章结尾埋的伏笔在这里展开：普通二进制加法慢的根源是<strong>进位传播（carry propagation）</strong>——最低位的进位最坏要穿过全部 <span class="math inline">\(k\)</span> 位。冗余数系（redundant number system）用”一个数有多种编码”的自由度，把进位链彻底斩断，实现<strong>常数时间加法</strong>。代价是编码浪费与转换、比较变复杂。它是乘法器部分积压缩（第 8、11 章）和 SRT 除法（第 14 章）的理论地基。</p>
+</section>
+<section id="进位问题coping-with-the-carry-problem" class="level2">
+<h2 class="anchored" data-anchor-id="进位问题coping-with-the-carry-problem">3.1 进位问题（Coping with the Carry Problem）</h2>
+<p>进位传播是加法器的”光速限制”。应对策略无非三类：</p>
+<ol type="1">
+<li><strong>加快进位本身</strong>：超前进位（carry-lookahead）、进位跳过（carry-skip）等——第 6、7 章的主角，它们不改变数制，只是让进位传得更快；</li>
+<li><strong>检测进位完成</strong>：异步设计里让加法器自己报告”我算完了”，平均延迟远小于最坏延迟（第 5.4 节）；</li>
+<li><strong>消灭进位传播</strong>：换用冗余编码，让每个数位的和只依赖于相邻少数几位——本章的正题。</li>
+</ol>
+<p>先看一个十进制例子，把”消灭进位”这件事讲具体。取基数 <span class="math inline">\(r=10\)</span>、标准数位集 <span class="math inline">\([0,9]\)</span>，做加法时不去传播进位，只是把每位的<strong>位置和（position sum）</strong><span class="math inline">\(p_i = x_i + y_i\)</span> 原样写下来：</p>
+<p><span class="math display">\[
+\begin{array}{cccccc}
+&amp; 5 &amp; 7 &amp; 8 &amp; 2 &amp; 4 &amp; 9\\
++ &amp; 6 &amp; 2 &amp; 9 &amp; 3 &amp; 8 &amp; 9\\ \hline
+&amp; 11 &amp; 9 &amp; 17 &amp; 5 &amp; 12 &amp; 18
+\end{array}
+\]</span></p>
+<p>位置和落在 <span class="math inline">\([0,18]\)</span>。只要允许数位集取 <span class="math inline">\([0,18]\)</span>，这一次加法确实”无进位”。但<strong>只能做一次</strong>——下一次相加，位置和会跑到 <span class="math inline">\([0,36]\)</span>，数位集就不够用了。</p>
+<p>出路是把 <span class="math inline">\([0,36]\)</span> 拆成”传递（transfer）“与”中间和（interim sum）“两部分：</p>
+<p><span class="math display">\[
+[0, 36] = 10 \times [0, 2] + [0, 16],\qquad [0,16] + [0,2] = [0,18]
+\]</span></p>
+<p>即把位置和 <span class="math inline">\(p_i\)</span> 写成 <span class="math inline">\(p_i = 10\,t_{i+1} + w_i\)</span>，其中传递数位 <span class="math inline">\(t_{i+1} \in [0,2]\)</span>、中间和 <span class="math inline">\(w_i \in [0,16]\)</span>；最终本位结果 <span class="math inline">\(s_i = w_i + t_i\)</span> 仍落在 <span class="math inline">\([0,18]\)</span>，<strong>不再产生新的传递</strong>。进位因此最多向左走一位，与字长无关。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_02.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 3.2 理想与实际可行的无进位加法方案：(a) 理想单级（对固定数位集的位置数制不可能）；(b) 实际可行的两级方案；(c) 用超前后等效压缩成的单级方案</figcaption>
+</figure>
+</div>
+<p>需要强调的是：真正”单级完成、完全不看邻居”（图 3.2a）的加法，在固定数位集的位置数制里<strong>在数学上不可能</strong>——因为最高位的进位总要去某个地方。工程上能拿到的最好结果是图 3.2b 的”两级”方案，本书习惯上仍称它为<strong>无进位（carry-free）加法</strong>。若愿意付出稍复杂的组合逻辑，还可以把相邻两位的信息合并起来直接算出 <span class="math inline">\(s_i\)</span>（图 3.2c），用逻辑复杂度换掉一级延迟。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_03.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 3.3 用数位集 <span class="math inline">\([0,11]\)</span> 做基数 10 加法：冗余度比 <span class="math inline">\([0,18]\)</span> 小得多，却依然支持无进位相加</figcaption>
+</figure>
+</div>
+<p><span class="math inline">\([0,18]\)</span> 显然浪费——19 个数位值里只有 10 个是必需的。事实上基数 10 只需数位集 <span class="math inline">\([0,11]\)</span>（仅多一个值）就够了，如图 3.3。于是自然的问题是：<strong>无进位加法到底需要多少冗余？</strong> 这个问题留到 3.5 节给出严格的充要条件。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="解读">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>解读
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>第三条路是”空间换时间”在数制层面的体现：信息论上，<span class="math inline">\(k\)</span> 位冗余编码能表示的状态数多于 <span class="math inline">\(2^k\)</span> 个不同的数，多出来的编码空间就是吸收进位的缓冲垫。</p>
+</div>
+</div>
+</section>
+<section id="计算机算术中的冗余redundancy-in-computer-arithmetic" class="level2">
+<h2 class="anchored" data-anchor-id="计算机算术中的冗余redundancy-in-computer-arithmetic">3.2 计算机算术中的冗余（Redundancy in Computer Arithmetic）</h2>
+<p>冗余度可以用一个简单指标刻画：基数 <span class="math inline">\(r\)</span>、数位集合含 <span class="math inline">\(\alpha\)</span> 个不同值，则编码空间为 <span class="math inline">\(\alpha^k\)</span>，不同数值最多 <span class="math inline">\(r^k\)</span> 个，冗余比 <span class="math inline">\(\approx (\alpha/r)^k\)</span>。最常见的例子：</p>
+<ul>
+<li><strong>进位保存（carry-save）表示</strong>：数位集合 <span class="math inline">\(\{0,1,2\}\)</span>（基数 2），一个数由 (sum, carry) 两串比特共同表示。它是第 8 章多操作数加法的基石；</li>
+<li><strong>带符号数字（signed-digit, SD）表示</strong>：数位集合 <span class="math inline">\(\{-\alpha,\dots,\alpha\}\)</span>，如基数 2 的 <span class="math inline">\(\{\bar{1},0,1\}\)</span>。</li>
+</ul>
+<p>进位保存表示最早由 Metze 在 1959 年提出，是冗余思想在工业界最成功的落地。用 2 比特编码数位集 <span class="math inline">\([0,2]\)</span>：</p>
+<p><span class="math display">\[
+0:(0,0),\quad 1:(0,1)\ \text{或}\ (1,0),\quad 2:(1,1)
+\]</span></p>
+<p>于是一个”存储进位（stored-carry）数”实质上是<strong>两个二进制数</strong>：所有编码低位组成的串，与所有编码高位组成的串。把第三个二进制数加进来时，只要按位独立地跑一排全加器，把和位留在原位、进位位左移一位，就又得到两个串——<strong>进位被”保存”下来，而不是被传播掉</strong>。这就是 carry-save 名字的由来。</p>
+<p>关键收益在于<strong>延迟的摊销</strong>：累加 <span class="math inline">\(n\)</span> 个数，若每次都用普通进位传播加法器，要付 <span class="math inline">\(n\)</span> 次 <span class="math inline">\(O(k)\)</span> 的进位延迟；用 carry-save 则只需 <span class="math inline">\(n\)</span> 次 <span class="math inline">\(O(1)\)</span> 的全加器延迟，<strong>最后一次</strong>才做一次真正的进位传播加法（CPA）。这就是树形乘法器的基本算账方式（第 11 章）。</p>
+<p>由于一排全加器把 3 个二进制数压成 2 个、且总和不变，它也被称作 <strong>3:2 压缩器</strong>或 <strong>(3; 2) 计数器</strong>——“计数器”这个名字很贴切：全加器就是在数三个输入里有多少个 1，并把结果写成 2 位二进制。</p>
+</section>
+<section id="数位集合与数位集合转换digit-sets-and-digit-set-conversions" class="level2">
+<h2 class="anchored" data-anchor-id="数位集合与数位集合转换digit-sets-and-digit-set-conversions">3.3 数位集合与数位集合转换（Digit Sets and Digit-Set Conversions）</h2>
+<p><strong>关键问题</strong>：给定数位集合，加法的”进位”能被限制在多少位之内？答案取决于数位集合的大小。核心洞察：</p>
+<ul>
+<li>基数 <span class="math inline">\(r\)</span>、数位集合为连续区间 <span class="math inline">\([-\alpha, \beta]\)</span> 时，若 <span class="math inline">\(\alpha + \beta \ge r + 1\)</span>（即数位集合足够冗余），则存在<strong>完全无进位（carry-free）加法算法</strong>；</li>
+<li>若 <span class="math inline">\(\alpha + \beta = r\)</span>（如 carry-save 的 <span class="math inline">\(\{0,1,2\}\)</span>：<span class="math inline">\(0+2=2=r\)</span>），进位最多传播<strong>一位</strong>——称为<strong>受限进位（limited-carry）</strong>加法。</li>
+</ul>
+<p>严格的充要条件比上面这两条经验法则更细一些（3.5 节给出）：真正能支持无进位加法的，是 <span class="math inline">\(r&gt;2\)</span> 且冗余度 <span class="math inline">\(\rho \ge 3\)</span>，或 <span class="math inline">\(r&gt;2\)</span>、<span class="math inline">\(\rho=2\)</span> 且 <span class="math inline">\(\alpha\neq1\)</span>、<span class="math inline">\(\beta\neq1\)</span>；其余情形（<span class="math inline">\(r=2\)</span>，或 <span class="math inline">\(\rho=1\)</span>，或 <span class="math inline">\(\rho=2\)</span> 但 <span class="math inline">\(\alpha\)</span> 或 <span class="math inline">\(\beta\)</span> 等于 1）只能做到受限进位。<strong>二进制是最难伺候的基数</strong>——这也就是为什么实用的无进位加法多出现在高基除法（第 14 章）而非整数加法器里。</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="工程意义">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>工程意义
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>“进位最多走一位”意味着所有数位的加法可以<strong>同时</strong>完成，总延迟与字长无关——<span class="math inline">\(O(1)\)</span> 对比行波进位的 <span class="math inline">\(O(k)\)</span>。32 位、64 位、128 位，延迟一样。这就是冗余数系的价值。</p>
+</div>
+</div>
+<p>数位集合转换（digit-set conversion）——把一种冗余编码翻译成另一种——通常可以用每位一个小的查找表/组合逻辑完成，是冗余运算部件之间的”插头标准件”。</p>
+<p>转换的基本套路是<strong>从最低位开始的串行过程</strong>：把旧数位改写成一个合法的新数位，外加一个向高位传递的转移量（transfer，可以是进位也可以是借位）。以基数 10、<span class="math inline">\([0,18] \to [0,9]\)</span> 为例（原书例 3.1），反复把 <span class="math inline">\(\ge 10\)</span> 的数位写成 <span class="math inline">\(10\times 1 + (\text{余数})\)</span>：</p>
+<p><span class="math display">\[
+1\,1\;\,9\;\,17\;\,10\;\,12\;\,18 \;\longrightarrow\; 1\,2\;\,0\;\,8\;\,1\;\,3\;\,8
+\]</span></p>
+<p>注意每一步产生的进位可能让高位又越界，所以最坏情况下要一路扫到最高位——<strong>转换本质上就是一次进位传播</strong>。</p>
+<p>但冗余数位集会给出惊喜。仍以基数 2 的 <span class="math inline">\([0,2] \to [-1,1]\)</span> 为例（原书例 3.4）：把每个 2 写成 <span class="math inline">\(2\times1 + 0\)</span>，把每个 1 写成 <span class="math inline">\(2\times1 - 1\)</span>，于是<strong>所有</strong>中间数位都落在 <span class="math inline">\([-1,0]\)</span>，都能无条件吸收一个 incoming 进位 1：</p>
+<p><span class="math display">\[
+\begin{array}{cccccc}
+\text{原数} &amp; 1 &amp; 1 &amp; 2 &amp; 0 &amp; 2 &amp; 0\\
+\text{中间数位}\in[-1,0] &amp; -1 &amp; -1 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
+\text{传递数位}\in[0,1] &amp; 1 &amp; 1 &amp; 1 &amp; 0 &amp; 1 &amp; 0\\ \hline
+\text{结果}\in[-1,1] &amp; 1 &amp; 0 &amp; 0 &amp; 0 &amp; 1 &amp; 0
+\end{array}
+\]</span></p>
+<p>这个转换<strong>没有进位传播</strong>，一位延迟完成。判据很朴素：只要改写规则能保证中间数位留出足够的”吸收余量”，转换就能并行化。这正是冗余度 <span class="math inline">\(\rho\)</span> 的用处——它量化了余量有多大。</p>
+<p>另一个值得记住的性质：冗余数位集下<strong>同一个数可能有多种合法表示</strong>，转换结果不唯一（原书例 3.3 中就出现了两处可自由选择改写方式的地方）。这既是自由度的来源，也是”相等性判断变复杂”的根源（3.6 节）。</p>
+</section>
+<section id="广义带符号数字表示generalized-signed-digit-numbers" class="level2">
+<h2 class="anchored" data-anchor-id="广义带符号数字表示generalized-signed-digit-numbers">3.4 广义带符号数字表示（Generalized Signed-Digit Numbers）</h2>
+<p>把以上想法统一起来：GSD 表示 = 位置数制 + 允许带符号的数位集合 <span class="math inline">\(D = \{-\alpha, \dots, \beta\}\)</span>。</p>
+<ul>
+<li>当 <span class="math inline">\(\alpha = \beta = 0\)</span>：退化为普通无符号位置数制；</li>
+<li>当数位集合关于 0 对称（<span class="math inline">\(\alpha = \beta\)</span>）：得到对称 SD 表示，取负只需逐位取反，非常优雅；</li>
+<li><strong>最小冗余 vs.&nbsp;最大冗余</strong>：满足无进位加法的最小集合（省编码位）与最大对称集合（算法最简单）之间存在连续谱系，设计时按需取材。</li>
+</ul>
+<p>历史上，Avizienis 在 1960 年代初定义了<strong>普通带符号数字（ordinary signed-digit, OSD）</strong>表示：基数 <span class="math inline">\(r&gt;2\)</span>、对称数位集 <span class="math inline">\([-\alpha,\alpha]\)</span>，其中 <span class="math inline">\(\lfloor r/2\rfloor + 1 \le \alpha \le r-1\)</span>。它至少含 <span class="math inline">\(2\lfloor r/2\rfloor + 3\)</span> 个数位值，因而必然冗余。后来出现的 GSD 把数位集放宽到任意 <span class="math inline">\([-\alpha,\beta]\)</span>，把实践中所有冗余表示都纳入同一框架。</p>
+<p>GSD 数系的核心参数是<strong>冗余度（redundancy index）</strong>：</p>
+<p><span class="math display">\[
+\rho = \alpha + \beta + 1 - r
+\]</span></p>
+<p>即数位集大小超出非冗余所需 <span class="math inline">\(r\)</span> 个值的量。<span class="math inline">\(\rho = 0\)</span> 是非冗余，<span class="math inline">\(\rho = 1\)</span> 是最小冗余（binary stored-carry <span class="math inline">\([0,2]\)</span> 与 BSD <span class="math inline">\([-1,1]\)</span> 都在此列），<span class="math inline">\(\rho \ge 2\)</span> 是非最小冗余（如基数 4 的 <span class="math inline">\([-7,7]\)</span>、基数 2 的 <span class="math inline">\([0,3]\)</span>）。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_06.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 3.6 冗余与非冗余位置数系的分类谱系：从常规表示、非冗余带符号数字，到 GSD 及其最小冗余/非最小冗余、对称/非对称各子类</figcaption>
+</figure>
+</div>
+<p>有了数位集，还得给每个数位值选一套<strong>二进制编码</strong>，而这个选择会实实在在影响电路。以 BSD（<span class="math inline">\(r=2\)</span>，数位集 <span class="math inline">\([-1,1]\)</span>）为例，至少需要 2 比特，可选编码包括：</p>
+<ul>
+<li><strong><span class="math inline">\((s, v)\)</span> 码</strong>：符号位 + 幅值位，直观但运算逻辑啰嗦；</li>
+<li><strong>2 的补码</strong>：把两位当成一个 2 位补码数，取值范围 <span class="math inline">\([-2,1]\)</span>；</li>
+<li><strong><span class="math inline">\((n, p)\)</span> 码</strong>：一根”负线”加一根”正线”，<span class="math inline">\((1,1)\)</span> 视为 0 的替代表示或非法组合；</li>
+<li><strong>1-out-of-3 码</strong>：3 根线，多占一位但能检测部分存储/运算错误。</li>
+</ul>
+<p>工程实践表明 <strong><span class="math inline">\((n,p)\)</span> 编码能同时简化硬件并减少门级数</strong>，是 BSD 运算部件的主流选择；1-out-of-3 则用面积换取可检错性（第 27 章容错算术会用到这种思路）。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_08.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 3.8 扩展点记号新增的三种符号（doublebit、negadoublebit、unibit）及其用于可视化若干 BSD 编码</figcaption>
+</figure>
+</div>
+<p>为了在图上表达这些带权重的比特集合，本书扩展了点记号：posibit（值域 <span class="math inline">\(\{0,1\}\)</span>）、negabit（<span class="math inline">\(\{-1,0\}\)</span>）、doublebit（<span class="math inline">\(\{0,2\}\)</span>）、negadoublebit（<span class="math inline">\(\{-2,0\}\)</span>）、unibit（<span class="math inline">\(\{-1,1\}\)</span>）。一个 negabit + 一个 posibit 就是 <span class="math inline">\((n,p)\)</span> 编码的 BSD；一个 negadoublebit + 一个 posibit 就是 2 位补码编码的 BSD。这些<strong>带权重的比特集合（weighted bit-set）</strong>编码被证明在冗余数的高效表示与运算中非常有用。</p>
+<p><strong>混合带符号数字（hybrid signed-digit）</strong>表示走的是中间路线：只在<strong>选定的若干位</strong>引入冗余。例如每 3 位允许一个 BSD 位，其余位保持标准二进制。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_09.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 3.9 混合带符号数字数的加法示例：BSD 位每隔两位出现一次，最坏进位传播被限制在一个分组内</figcaption>
+</figure>
+</div>
+<p>其加法过程是：先在标准二进制位上算 <span class="math inline">\([0,2]\)</span> 的位置和、在 BSD 位上算 <span class="math inline">\([-2,2]\)</span> 的位置和；再把 BSD 位置的和拆成中间和与传递数位（都在 <span class="math inline">\([-1,1]\)</span>）。选择中间和取 <span class="math inline">\(1\)</span>（或 <span class="math inline">\(-1\)</span>）的前提，是<strong>确知</strong>低位不可能（或必然）送来 <span class="math inline">\(+1\)</span> 的传递——判据只需看低一位的两个操作数比特是否都为 0。因此最坏进位传播被限制在<strong>一个分组内</strong>（从一个 BSD 位到下一个更高的 BSD 位）。</p>
+<p>分组大小 <span class="math inline">\(g\)</span> 就是一个调节旋钮：<span class="math inline">\(g\)</span> 越大，BSD 位越少（BSD 位的加法单元比普通位复杂），硬件越省，但最坏进位传播距离越长。<strong>这是”速度 ↔︎ 成本”在冗余数系内部的一次再平衡。</strong></p>
+<p>把图 3.9 的 3 位分组从右往左看，它其实就是一个基数 8 的 GSD 系统，数位集为 <span class="math inline">\([-4,7]\)</span>（从 <span class="math inline">\((-1\,0\,0)_2\)</span> 到 <span class="math inline">\((1\,1\,1)_2\)</span>）。换句话说，混合表示可以看作是某个高基 GSD 表示的<strong>一种编码方式</strong>（原书 Fig. 3.10 展示了这一点，以及去掉”非冗余位只允许 posibit”限制后得到的对称版本 <span class="math inline">\([-4,4]\)</span>）。</p>
+<p>编码效率的代价：<span class="math inline">\(k\)</span> 位基数 2 的 SD 数需要 <span class="math inline">\(2k\)</span> 个比特存储（每位 SD 数字要 2 bit）。<strong>冗余 = 双倍存储 + 双倍布线</strong>，这就是为什么冗余表示只出现在运算部件内部，而不会用作存储格式。</p>
+</section>
+<section id="无进位加法算法carry-free-addition-algorithms" class="level2">
+<h2 class="anchored" data-anchor-id="无进位加法算法carry-free-addition-algorithms">3.5 无进位加法算法（Carry-Free Addition Algorithms）</h2>
+<p>无进位加法的标准套路是<strong>两步走</strong>（以 GSD 为例）：</p>
+<ol type="1">
+<li><strong>逐位求和并拆分</strong>：对每位计算位置和 <span class="math inline">\(p_i = x_i + y_i\)</span>，拆成”传递和（transfer sum）“与” interim sum”——即决定向高位传一个进位数字 <span class="math inline">\(t_{i+1}\)</span>，本位保留 <span class="math inline">\(w_i = p_i - r\cdot t_{i+1}\)</span>；</li>
+<li><strong>最终相加</strong>：<span class="math inline">\(s_i = w_i + t_i\)</span>，保证不再产生新进位。</li>
+</ol>
+<p>第一步的选择规则（什么情况下传 +1、0 还是 -1）需要基于<span class="math inline">\(p_i\)</span> 的区间判断，这就是数位集合必须足够冗余的原因——判断区间之间要有”安全间隙”。</p>
+<p>把”不再产生新进位”写成不等式，就得到了数位集与传递数位范围之间的约束。设传递数位取自 <span class="math inline">\([-\lambda, \mu]\)</span>，则必须同时满足</p>
+<p><span class="math display">\[
+-\alpha + \lambda \;\le\; p_i - r\,t_{i+1} \;\le\; \beta - \mu
+\]</span></p>
+<p>左边是最小的中间和也仍能吸收一个 <span class="math inline">\(-\lambda\)</span> 的入传递，右边是最大的中间和仍能吸收一个 <span class="math inline">\(+\mu\)</span> 的入传递。化简即得传递数位范围的下界：</p>
+<p><span class="math display">\[
+\lambda \ge \frac{\alpha}{r-1},\qquad \mu \ge \frac{\beta}{r-1}
+\]</span></p>
+<p><span class="math inline">\(\lambda\)</span>、<span class="math inline">\(\mu\)</span> 确定后，把位置和 <span class="math inline">\(p_i\)</span> 与一组常数 <span class="math inline">\(C_j\)</span>（<span class="math inline">\(-\lambda \le j \le \mu+1\)</span>）比较，<span class="math inline">\(C_j \le p_i &lt; C_{j+1}\)</span> 时取 <span class="math inline">\(t_{i+1} = j\)</span>。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_11.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 3.11 用数位集 <span class="math inline">\([-5,9]\)</span> 做基数 10 加法的完整例子（无进位加法算法）</figcaption>
+</figure>
+</div>
+<p>一个具体例子（原书例 3.5）：<span class="math inline">\(r=10\)</span>、数位集 <span class="math inline">\([-5,9]\)</span>。由上式 <span class="math inline">\(\lambda \ge 5/9\)</span>、<span class="math inline">\(\mu \ge 1\)</span>，取最小整数值 <span class="math inline">\(\lambda_{\min} = \mu_{\min} = 1\)</span>，即传递数位 <span class="math inline">\(\in [-1,1]\)</span>。位置和 <span class="math inline">\(p_i \in [-10, 18]\)</span>，比较常数允许取</p>
+<p><span class="math display">\[
+-4 \le C_0 \le -1,\qquad 6 \le C_1 \le 9
+\]</span></p>
+<p>直观解释：<span class="math inline">\(p_i = 6\)</span> 时取传递 1，剩下的中间和是 <span class="math inline">\(-4\)</span>，仍处在 <span class="math inline">\([-5,9]\)</span> 内、能吸收任意 <span class="math inline">\([-1,1]\)</span> 的入传递；而 <span class="math inline">\(p_i \ge 9\)</span> 时<strong>必须</strong>传 1，否则中间和会越界。中间地带的 <span class="math inline">\(C_0\)</span>、<span class="math inline">\(C_1\)</span> 有多种合法取法，给逻辑综合留出了优化空间。若把 <span class="math inline">\(p_i\)</span> 表示为 6 位补码 <span class="math inline">\(abcdef\)</span>，取 <span class="math inline">\(C_0=-4\)</span>、<span class="math inline">\(C_1=8\)</span> 时生成逻辑为</p>
+<p><span class="math display">\[
+g_{-1} = a(\bar{c} \lor \bar{d}),\qquad g_{1} = \bar{a}(b \lor c)
+\]</span></p>
+<p>不过这套”完全无进位”算法并非万能。原书证明它<strong>当且仅当</strong>下面两组条件之一成立时可用：</p>
+<p><span class="math display">\[
+\text{(a) } r&gt;2,\ \rho \ge 3;\qquad \text{(b) } r&gt;2,\ \rho = 2,\ \alpha \neq 1,\ \beta \neq 1
+\]</span></p>
+<p>也就是说，<span class="math inline">\(r = 2\)</span>、<span class="math inline">\(\rho = 1\)</span>，以及 <span class="math inline">\(\rho = 2\)</span> 但 <span class="math inline">\(\alpha\)</span> 或 <span class="math inline">\(\beta\)</span> 等于 1 的情形（即绝大多数二进制冗余表示）<strong>用不了</strong>无进位算法，只能用下面的受限进位算法。</p>
+<p><strong>受限进位加法算法</strong>在无进位算法中间插了一步”范围估计”：</p>
+<ol type="1">
+<li>计算位置和 <span class="math inline">\(p_i = x_i + y_i\)</span>；</li>
+<li>把 <span class="math inline">\(p_i\)</span> 与一个常数比较，得出传递数位的<strong>二值范围估计</strong> <span class="math inline">\(e_{i+1}\)</span>（“低”或”高”）；</li>
+<li>结合 <span class="math inline">\(e_i\)</span> 把 <span class="math inline">\(p_i\)</span> 拆成传递 <span class="math inline">\(t_{i+1}\)</span> 与中间和 <span class="math inline">\(w_i = p_i - r t_{i+1}\)</span>；</li>
+<li><span class="math inline">\(s_i = w_i + t_i\)</span>。</li>
+</ol>
+<p>多出来的第 2 步只增加一级比较器延迟，却让算法能覆盖 <span class="math inline">\(\rho=1\)</span> 的最小冗余表示。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_12.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 3.12 受限进位加法的三种实现：(a) 三级进位估计；(b) 三级重复进位；(c) 两级并行进位</figcaption>
+</figure>
+</div>
+<p>三种实现各有取舍：图 3.12a 用”估计”提前一步预判入传递的范围，逻辑最直观；图 3.12b 干脆再跑一遍传递生成/相加，用面积换掉估计逻辑的不确定性；图 3.12c 则从 <span class="math inline">\(i-2\)</span> 级直接把 <span class="math inline">\(t^{(1)}_{i+1}\)</span>、<span class="math inline">\(t^{(2)}_{i+2}\)</span> 两路传递并行送到第 <span class="math inline">\(i\)</span> 位，把三级压成两级——代价是第 <span class="math inline">\(i\)</span> 位的逻辑要同时看 <span class="math inline">\(x_{i},y_{i},x_{i-1},y_{i-1},x_{i-2},y_{i-2}\)</span> 六个输入，扇入与布线明显变重。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_13.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 3.13 基数 2、数位集 <span class="math inline">\([-1,1]\)</span> 的受限进位加法（进位估计法）：位置和为 <span class="math inline">\(-1\)</span> 在入传递属于 <span class="math inline">\([0,1]\)</span> 时保持原样，在入传递属于 <span class="math inline">\([-1,0]\)</span> 时改写为 1 并送出 <span class="math inline">\(-1\)</span> 传递</figcaption>
+</figure>
+</div>
+<p>BSD 的受限进位加法（原书例 3.6）：<span class="math inline">\(r=2\)</span>、数位集 <span class="math inline">\([-1,1]\)</span>、<span class="math inline">\(\rho=1\)</span>、<span class="math inline">\(\lambda_{\min}=\mu_{\min}=1\)</span>。传递数位的”低/高”子区间分别是 <span class="math inline">\([-1,0]\)</span> 与 <span class="math inline">\([0,1]\)</span>，判据是 <span class="math inline">\(p_i \ge 0\)</span> 时认为传递”高”。规则保证了 <span class="math inline">\(t_i \neq w_i\)</span>（两者不会同时取到让和越界的组合），从而 <span class="math inline">\(-1 \le s_i \le 1\)</span> 恒成立。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_14.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 3.14 基数 2、数位集 <span class="math inline">\([0,3]\)</span> 的受限进位加法（进位估计法）：位置和为 1 在入传递属于 <span class="math inline">\([0,2]\)</span> 时保持原样，在入传递属于 <span class="math inline">\([1,3]\)</span> 时改写为 <span class="math inline">\(-1\)</span> 并送出传递 1</figcaption>
+</figure>
+</div>
+<p>存储双进位（binary stored-double-carry）表示（原书例 3.7）：<span class="math inline">\(r=2\)</span>、数位集 <span class="math inline">\([0,3]\)</span>、<span class="math inline">\(\rho=2\)</span>、<span class="math inline">\(\lambda_{\min}=0\)</span>、<span class="math inline">\(\mu_{\min}=3\)</span>。传递的”低/高”子区间是 <span class="math inline">\([0,2]\)</span> 与 <span class="math inline">\([1,3]\)</span>，判据为 <span class="math inline">\(p_i \ge 4\)</span>。同一加法还可以用另外两种实现完成：</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_15.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 3.15 基数 2、数位集 <span class="math inline">\([0,3]\)</span> 的受限进位加法：重复进位（repeated-carry）实现</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_16.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 3.16 基数 2、数位集 <span class="math inline">\([0,3]\)</span> 的受限进位加法：并行进位（parallel-carries）实现</figcaption>
+</figure>
+</div>
+<p>三种实现算的是同一个结果，差别只在”进位信息如何跨越两个数位级”。<strong>选哪一种是典型的后端决策</strong>：在门级延迟主导的工艺里，并行进位（少一级）胜出；在布线拥塞主导的场景里，估计法（连线最少、最规整）反而更优。</p>
+<p>carry-save（受限进位）版本大家其实天天见：<strong>全加器（full adder）本身就是一个 3:2 压缩器</strong>——三个输入比特进来，(sum, carry) 两个比特出去，进位只给相邻高位，绝不远行。</p>
+<p>最后，GSD 减法与加法几乎同构。对称数位集下，把减数的每一位取反就得到了 <span class="math inline">\(-y\)</span> 的表示，随后照常做无进位/受限进位加法即可；非对称数位集（<span class="math inline">\([ -\beta, \alpha] \leftrightarrow [-\alpha,\beta]\)</span>）的取负稍复杂，但同样有对应的无进位算法。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_05.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 3.5：用一排相互独立的二进制全加器实现进位保存加法</figcaption>
+</figure>
+</div>
+</section>
+<section id="转换与支持函数conversions-and-support-functions" class="level2">
+<h2 class="anchored" data-anchor-id="转换与支持函数conversions-and-support-functions">3.6 转换与支持函数（Conversions and Support Functions）</h2>
+<p>冗余数系的”阿喀琉斯之踵”：</p>
+<ul>
+<li><strong>冗余 → 非冗余转换</strong>：逃不开一次完整的进位传播（把 carry 串真正加进 sum 串）。所以冗余表示适合<strong>一长串运算的中间形态</strong>，只在最后转换一次——这正是树形乘法器的工作方式（第 11 章）；</li>
+<li><strong>符号检测与比较</strong>：冗余编码下”这个数是正是负”不再等价于看最高位，需要一次完整加法或专门的符号检测逻辑；</li>
+<li><strong>溢出检测</strong>：同样变复杂，需要扫描最高若干位。</li>
+</ul>
+<p>BSD ↔︎ 有符号二进制的转换是最常用的一种，做法很巧妙：把 BSD 数的正数位（<span class="math inline">\(+1\)</span>）与负数位（<span class="math inline">\(-1\)</span>）拆成两个普通的二进制数，再做一次减法。</p>
+<p><span class="math display">\[
+\begin{array}{ccccc}
+\text{BSD} &amp; 1 &amp; -1 &amp; 0 &amp; -1 &amp; 0\\
+\text{正部} &amp; 1 &amp; 0 &amp; 0 &amp; 0 &amp; 0\\
+\text{负部} &amp; 0 &amp; 1 &amp; 0 &amp; 1 &amp; 0\\ \hline
+\text{差} &amp; &amp; &amp; &amp; &amp;
+\end{array}
+\]</span></p>
+<p>若 BSD 数用的是 <span class="math inline">\((n,p)\)</span> 编码，正部与负部就是现成的两根线，拆分零成本。<strong>编码选对了，转换就几乎是免费的</strong>——这是 3.4 节强调 <span class="math inline">\((n,p)\)</span> 编码的又一个理由。</p>
+<p>零检测、符号检测、溢出处理这三个”支持函数”在冗余域里各有各的麻烦：</p>
+<ul>
+<li><strong>零检测</strong>：GSD 下 0 可能有多种表示（基数 4 中 <span class="math inline">\(0\,0\,0\)</span> 与 <span class="math inline">\(-1\,4\,0\)</span> 都表示 0）。但若 <span class="math inline">\(\alpha &lt; r\)</span> 且 <span class="math inline">\(\beta &lt; r\)</span>，0 由全 0 向量<strong>唯一</strong>表示，相等性判断就退化成”做一次减法再查全零”，在这个常见的特例里反而简单。</li>
+<li><strong>符号检测</strong>：一般地，GSD 数的符号取决于它的<strong>全部数位</strong>——逐位传播判断慢，做快速超前判断电路又贵。即使在上述 <span class="math inline">\(\alpha,\beta &lt; r\)</span> 的特例下，符号等于最高非零数位的符号，仍要扫描所有数位才能找到它，最坏情况与一次完整进位传播同阶。</li>
+<li><strong>溢出处理</strong>：<span class="math inline">\(k\)</span> 位相加会产生传出数位 <span class="math inline">\(t_k\)</span>，而 <span class="math inline">\(t_k\)</span> 是在”入传递未知”的最坏假设下算出来的，因此 <span class="math inline">\(t_k \neq 0\)</span> <strong>并不代表真的溢出</strong>。要判断溢出是否真实、并在不溢出时给出正确的 <span class="math inline">\(k\)</span> 位结果，还得再做一次相当慢的检测与转换。</li>
+</ul>
+<p>对原码和 2 的补码而言，符号判断只是”看最高位”这么一句话；在冗余域里它变成了一个 <span class="math inline">\(O(k)\)</span> 的操作。<strong>这类”支持函数的退化”足以吃掉冗余带来的全部速度优势</strong>——这也是 GSD 至今主要活在专用系统与运算部件内部表示，而没有成为通用数据格式的根本原因。</p>
+<div class="callout callout-style-default callout-warning callout-titled" title="设计纪律">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">警告</span>设计纪律
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>让数据在冗余域里”尽量久地停留”</strong>。每一次冗余↔︎非冗余转换都要付出一次完整加法器的延迟，频繁转换会把冗余带来的速度优势吃得一干二净。</p>
+</div>
+</div>
+</section>
+<section id="本章小结" class="level2">
+<h2 class="anchored" data-anchor-id="本章小结">本章小结</h2>
+<ul>
+<li>冗余数系用编码空间换进位自由：无进位（<span class="math inline">\(O(1)\)</span>）或受限进位（走 1 位）加法。</li>
+<li>carry-save 是最实用的冗余表示，全加器即 3:2 压缩器。</li>
+<li>冗余域内运算快，但比较、符号判断、溢出检测贵；出入口各需一次转换。</li>
+<li>记住两句话：<strong>中间结果留在冗余域，最后一刻再转换</strong>。</li>
+</ul>
+</section>
+<section id="原书插图" class="level2">
+<h2 class="anchored" data-anchor-id="原书插图">原书插图</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_01.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 3.1 用数位集 <span class="math inline">\([0,18]\)</span> 做基数 10 加法的例子（位置和直接写下，不传播进位）</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_04.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 3.4 四个二进制数相加，和以存储进位（stored-carry）形式得到</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch03/fig03_10.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 3.10 两种混合冗余表示（分别对应基数 8 数位集 <span class="math inline">\([-4,7]\)</span> 与对称的 <span class="math inline">\([-4,4]\)</span>）的扩展点记号</figcaption>
+</figure>
+</div>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./ch02.html" class="pagination-link" aria-label="第2章 有符号数的表示（Representing Signed Numbers）">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./ch04.html" class="pagination-link" aria-label="第4章 剩余数系（Residue Number Systems）">
+        <span class="nav-page-text"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 第3章 冗余数系（Redundant Number Systems）</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章导读</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>第 2 章结尾埋的伏笔在这里展开：普通二进制加法慢的根源是**进位传播（carry propagation）**——最低位的进位最坏要穿过全部 $k$ 位。冗余数系（redundant number system）用"一个数有多种编码"的自由度，把进位链彻底斩断，实现**常数时间加法**。代价是编码浪费与转换、比较变复杂。它是乘法器部分积压缩（第 8、11 章）和 SRT 除法（第 14 章）的理论地基。</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## 3.1 进位问题（Coping with the Carry Problem）</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>进位传播是加法器的"光速限制"。应对策略无非三类：</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**加快进位本身**：超前进位（carry-lookahead）、进位跳过（carry-skip）等——第 6、7 章的主角，它们不改变数制，只是让进位传得更快；</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**检测进位完成**：异步设计里让加法器自己报告"我算完了"，平均延迟远小于最坏延迟（第 5.4 节）；</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**消灭进位传播**：换用冗余编码，让每个数位的和只依赖于相邻少数几位——本章的正题。</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>先看一个十进制例子，把"消灭进位"这件事讲具体。取基数 $r=10$、标准数位集 $<span class="co">[</span><span class="ot">0,9</span><span class="co">]</span>$，做加法时不去传播进位，只是把每位的**位置和（position sum）**$p_i = x_i + y_i$ 原样写下来：</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>\begin{array}{cccccc}</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>&amp; 5 &amp; 7 &amp; 8 &amp; 2 &amp; 4 &amp; 9<span class="sc">\\</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="ss">+ </span>&amp; 6 &amp; 2 &amp; 9 &amp; 3 &amp; 8 &amp; 9<span class="sc">\\</span> \hline</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>&amp; 11 &amp; 9 &amp; 17 &amp; 5 &amp; 12 &amp; 18</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>\end{array}</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>位置和落在 $<span class="co">[</span><span class="ot">0,18</span><span class="co">]</span>$。只要允许数位集取 $<span class="co">[</span><span class="ot">0,18</span><span class="co">]</span>$，这一次加法确实"无进位"。但**只能做一次**——下一次相加，位置和会跑到 $<span class="co">[</span><span class="ot">0,36</span><span class="co">]</span>$，数位集就不够用了。</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>出路是把 $<span class="co">[</span><span class="ot">0,36</span><span class="co">]</span>$ 拆成"传递（transfer）"与"中间和（interim sum）"两部分：</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">0, 36</span><span class="co">]</span> = 10 \times <span class="co">[</span><span class="ot">0, 2</span><span class="co">]</span> + <span class="co">[</span><span class="ot">0, 16</span><span class="co">]</span>,\qquad <span class="co">[</span><span class="ot">0,16</span><span class="co">]</span> + <span class="co">[</span><span class="ot">0,2</span><span class="co">]</span> = <span class="co">[</span><span class="ot">0,18</span><span class="co">]</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>即把位置和 $p_i$ 写成 $p_i = 10\,t_{i+1} + w_i$，其中传递数位 $t_{i+1} \in <span class="co">[</span><span class="ot">0,2</span><span class="co">]</span>$、中间和 $w_i \in <span class="co">[</span><span class="ot">0,16</span><span class="co">]</span>$；最终本位结果 $s_i = w_i + t_i$ 仍落在 $<span class="co">[</span><span class="ot">0,18</span><span class="co">]</span>$，**不再产生新的传递**。进位因此最多向左走一位，与字长无关。</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="al">![图 3.2 理想与实际可行的无进位加法方案：(a) 理想单级（对固定数位集的位置数制不可能）；(b) 实际可行的两级方案；(c) 用超前后等效压缩成的单级方案](images/ch03/fig03_02.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>需要强调的是：真正"单级完成、完全不看邻居"（图 3.2a）的加法，在固定数位集的位置数制里**在数学上不可能**——因为最高位的进位总要去某个地方。工程上能拿到的最好结果是图 3.2b 的"两级"方案，本书习惯上仍称它为**无进位（carry-free）加法**。若愿意付出稍复杂的组合逻辑，还可以把相邻两位的信息合并起来直接算出 $s_i$（图 3.2c），用逻辑复杂度换掉一级延迟。</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">图 3.3 用数位集 $[0,11]$ 做基数 10 加法：冗余度比 $[0,18]$ 小得多，却依然支持无进位相加</span><span class="co">](images/ch03/fig03_03.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>$<span class="co">[</span><span class="ot">0,18</span><span class="co">]</span>$ 显然浪费——19 个数位值里只有 10 个是必需的。事实上基数 10 只需数位集 $<span class="co">[</span><span class="ot">0,11</span><span class="co">]</span>$（仅多一个值）就够了，如图 3.3。于是自然的问题是：**无进位加法到底需要多少冗余？** 这个问题留到 3.5 节给出严格的充要条件。</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="解读"}</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>第三条路是"空间换时间"在数制层面的体现：信息论上，$k$ 位冗余编码能表示的状态数多于 $2^k$ 个不同的数，多出来的编码空间就是吸收进位的缓冲垫。</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="fu">## 3.2 计算机算术中的冗余（Redundancy in Computer Arithmetic）</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>冗余度可以用一个简单指标刻画：基数 $r$、数位集合含 $\alpha$ 个不同值，则编码空间为 $\alpha^k$，不同数值最多 $r^k$ 个，冗余比 $\approx (\alpha/r)^k$。最常见的例子：</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**进位保存（carry-save）表示**：数位集合 $<span class="sc">\{</span>0,1,2<span class="sc">\}</span>$（基数 2），一个数由 (sum, carry) 两串比特共同表示。它是第 8 章多操作数加法的基石；</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**带符号数字（signed-digit, SD）表示**：数位集合 $<span class="sc">\{</span>-\alpha,\dots,\alpha<span class="sc">\}</span>$，如基数 2 的 $<span class="sc">\{</span>\bar{1},0,1<span class="sc">\}</span>$。</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>进位保存表示最早由 Metze 在 1959 年提出，是冗余思想在工业界最成功的落地。用 2 比特编码数位集 $<span class="co">[</span><span class="ot">0,2</span><span class="co">]</span>$：</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>0:(0,0),\quad 1:(0,1)\ \text{或}\ (1,0),\quad 2:(1,1)</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>于是一个"存储进位（stored-carry）数"实质上是**两个二进制数**：所有编码低位组成的串，与所有编码高位组成的串。把第三个二进制数加进来时，只要按位独立地跑一排全加器，把和位留在原位、进位位左移一位，就又得到两个串——**进位被"保存"下来，而不是被传播掉**。这就是 carry-save 名字的由来。</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>关键收益在于**延迟的摊销**：累加 $n$ 个数，若每次都用普通进位传播加法器，要付 $n$ 次 $O(k)$ 的进位延迟；用 carry-save 则只需 $n$ 次 $O(1)$ 的全加器延迟，**最后一次**才做一次真正的进位传播加法（CPA）。这就是树形乘法器的基本算账方式（第 11 章）。</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>由于一排全加器把 3 个二进制数压成 2 个、且总和不变，它也被称作 **3:2 压缩器**或 **(3; 2) 计数器**——"计数器"这个名字很贴切：全加器就是在数三个输入里有多少个 1，并把结果写成 2 位二进制。</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a><span class="fu">## 3.3 数位集合与数位集合转换（Digit Sets and Digit-Set Conversions）</span></span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>**关键问题**：给定数位集合，加法的"进位"能被限制在多少位之内？答案取决于数位集合的大小。核心洞察：</span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>基数 $r$、数位集合为连续区间 $<span class="co">[</span><span class="ot">-\alpha, \beta</span><span class="co">]</span>$ 时，若 $\alpha + \beta \ge r + 1$（即数位集合足够冗余），则存在**完全无进位（carry-free）加法算法**；</span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>若 $\alpha + \beta = r$（如 carry-save 的 $<span class="sc">\{</span>0,1,2<span class="sc">\}</span>$：$0+2=2=r$），进位最多传播**一位**——称为**受限进位（limited-carry）**加法。</span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>严格的充要条件比上面这两条经验法则更细一些（3.5 节给出）：真正能支持无进位加法的，是 $r&gt;2$ 且冗余度 $\rho \ge 3$，或 $r&gt;2$、$\rho=2$ 且 $\alpha\neq1$、$\beta\neq1$；其余情形（$r=2$，或 $\rho=1$，或 $\rho=2$ 但 $\alpha$ 或 $\beta$ 等于 1）只能做到受限进位。**二进制是最难伺候的基数**——这也就是为什么实用的无进位加法多出现在高基除法（第 14 章）而非整数加法器里。</span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip title="工程意义"}</span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>"进位最多走一位"意味着所有数位的加法可以**同时**完成，总延迟与字长无关——$O(1)$ 对比行波进位的 $O(k)$。32 位、64 位、128 位，延迟一样。这就是冗余数系的价值。</span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a>数位集合转换（digit-set conversion）——把一种冗余编码翻译成另一种——通常可以用每位一个小的查找表/组合逻辑完成，是冗余运算部件之间的"插头标准件"。</span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>转换的基本套路是**从最低位开始的串行过程**：把旧数位改写成一个合法的新数位，外加一个向高位传递的转移量（transfer，可以是进位也可以是借位）。以基数 10、$<span class="co">[</span><span class="ot">0,18</span><span class="co">]</span> \to <span class="co">[</span><span class="ot">0,9</span><span class="co">]</span>$ 为例（原书例 3.1），反复把 $\ge 10$ 的数位写成 $10\times 1 + (\text{余数})$：</span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>1\,1\;\,9\;\,17\;\,10\;\,12\;\,18 \;\longrightarrow\; 1\,2\;\,0\;\,8\;\,1\;\,3\;\,8</span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a>注意每一步产生的进位可能让高位又越界，所以最坏情况下要一路扫到最高位——**转换本质上就是一次进位传播**。</span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a>但冗余数位集会给出惊喜。仍以基数 2 的 $<span class="co">[</span><span class="ot">0,2</span><span class="co">]</span> \to <span class="co">[</span><span class="ot">-1,1</span><span class="co">]</span>$ 为例（原书例 3.4）：把每个 2 写成 $2\times1 + 0$，把每个 1 写成 $2\times1 - 1$，于是**所有**中间数位都落在 $<span class="co">[</span><span class="ot">-1,0</span><span class="co">]</span>$，都能无条件吸收一个 incoming 进位 1：</span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a>\begin{array}{cccccc}</span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a>\text{原数} &amp; 1 &amp; 1 &amp; 2 &amp; 0 &amp; 2 &amp; 0<span class="sc">\\</span></span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>\text{中间数位}\in<span class="co">[</span><span class="ot">-1,0</span><span class="co">]</span> &amp; -1 &amp; -1 &amp; 0 &amp; 0 &amp; 0 &amp; 0<span class="sc">\\</span></span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a>\text{传递数位}\in<span class="co">[</span><span class="ot">0,1</span><span class="co">]</span> &amp; 1 &amp; 1 &amp; 1 &amp; 0 &amp; 1 &amp; 0<span class="sc">\\</span> \hline</span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>\text{结果}\in<span class="co">[</span><span class="ot">-1,1</span><span class="co">]</span> &amp; 1 &amp; 0 &amp; 0 &amp; 0 &amp; 1 &amp; 0</span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>\end{array}</span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>这个转换**没有进位传播**，一位延迟完成。判据很朴素：只要改写规则能保证中间数位留出足够的"吸收余量"，转换就能并行化。这正是冗余度 $\rho$ 的用处——它量化了余量有多大。</span>
+<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>另一个值得记住的性质：冗余数位集下**同一个数可能有多种合法表示**，转换结果不唯一（原书例 3.3 中就出现了两处可自由选择改写方式的地方）。这既是自由度的来源，也是"相等性判断变复杂"的根源（3.6 节）。</span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a><span class="fu">## 3.4 广义带符号数字表示（Generalized Signed-Digit Numbers）</span></span>
+<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a>把以上想法统一起来：GSD 表示 = 位置数制 + 允许带符号的数位集合 $D = <span class="sc">\{</span>-\alpha, \dots, \beta<span class="sc">\}</span>$。</span>
+<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>当 $\alpha = \beta = 0$：退化为普通无符号位置数制；</span>
+<span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>当数位集合关于 0 对称（$\alpha = \beta$）：得到对称 SD 表示，取负只需逐位取反，非常优雅；</span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**最小冗余 vs. 最大冗余**：满足无进位加法的最小集合（省编码位）与最大对称集合（算法最简单）之间存在连续谱系，设计时按需取材。</span>
+<span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>历史上，Avizienis 在 1960 年代初定义了**普通带符号数字（ordinary signed-digit, OSD）**表示：基数 $r&gt;2$、对称数位集 $<span class="co">[</span><span class="ot">-\alpha,\alpha</span><span class="co">]</span>$，其中 $\lfloor r/2\rfloor + 1 \le \alpha \le r-1$。它至少含 $2\lfloor r/2\rfloor + 3$ 个数位值，因而必然冗余。后来出现的 GSD 把数位集放宽到任意 $<span class="co">[</span><span class="ot">-\alpha,\beta</span><span class="co">]</span>$，把实践中所有冗余表示都纳入同一框架。</span>
+<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a>GSD 数系的核心参数是**冗余度（redundancy index）**：</span>
+<span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a>\rho = \alpha + \beta + 1 - r</span>
+<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a>即数位集大小超出非冗余所需 $r$ 个值的量。$\rho = 0$ 是非冗余，$\rho = 1$ 是最小冗余（binary stored-carry $<span class="co">[</span><span class="ot">0,2</span><span class="co">]</span>$ 与 BSD $<span class="co">[</span><span class="ot">-1,1</span><span class="co">]</span>$ 都在此列），$\rho \ge 2$ 是非最小冗余（如基数 4 的 $<span class="co">[</span><span class="ot">-7,7</span><span class="co">]</span>$、基数 2 的 $<span class="co">[</span><span class="ot">0,3</span><span class="co">]</span>$）。</span>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a><span class="al">![图 3.6 冗余与非冗余位置数系的分类谱系：从常规表示、非冗余带符号数字，到 GSD 及其最小冗余/非最小冗余、对称/非对称各子类](images/ch03/fig03_06.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a>有了数位集，还得给每个数位值选一套**二进制编码**，而这个选择会实实在在影响电路。以 BSD（$r=2$，数位集 $<span class="co">[</span><span class="ot">-1,1</span><span class="co">]</span>$）为例，至少需要 2 比特，可选编码包括：</span>
+<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**$(s, v)$ 码**：符号位 + 幅值位，直观但运算逻辑啰嗦；</span>
+<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**2 的补码**：把两位当成一个 2 位补码数，取值范围 $<span class="co">[</span><span class="ot">-2,1</span><span class="co">]</span>$；</span>
+<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**$(n, p)$ 码**：一根"负线"加一根"正线"，$(1,1)$ 视为 0 的替代表示或非法组合；</span>
+<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**1-out-of-3 码**：3 根线，多占一位但能检测部分存储/运算错误。</span>
+<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a>工程实践表明 **$(n,p)$ 编码能同时简化硬件并减少门级数**，是 BSD 运算部件的主流选择；1-out-of-3 则用面积换取可检错性（第 27 章容错算术会用到这种思路）。</span>
+<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a><span class="al">![图 3.8 扩展点记号新增的三种符号（doublebit、negadoublebit、unibit）及其用于可视化若干 BSD 编码](images/ch03/fig03_08.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a>为了在图上表达这些带权重的比特集合，本书扩展了点记号：posibit（值域 $<span class="sc">\{</span>0,1<span class="sc">\}</span>$）、negabit（$<span class="sc">\{</span>-1,0<span class="sc">\}</span>$）、doublebit（$<span class="sc">\{</span>0,2<span class="sc">\}</span>$）、negadoublebit（$<span class="sc">\{</span>-2,0<span class="sc">\}</span>$）、unibit（$<span class="sc">\{</span>-1,1<span class="sc">\}</span>$）。一个 negabit + 一个 posibit 就是 $(n,p)$ 编码的 BSD；一个 negadoublebit + 一个 posibit 就是 2 位补码编码的 BSD。这些**带权重的比特集合（weighted bit-set）**编码被证明在冗余数的高效表示与运算中非常有用。</span>
+<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a>**混合带符号数字（hybrid signed-digit）**表示走的是中间路线：只在**选定的若干位**引入冗余。例如每 3 位允许一个 BSD 位，其余位保持标准二进制。</span>
+<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a><span class="al">![图 3.9 混合带符号数字数的加法示例：BSD 位每隔两位出现一次，最坏进位传播被限制在一个分组内](images/ch03/fig03_09.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a>其加法过程是：先在标准二进制位上算 $<span class="co">[</span><span class="ot">0,2</span><span class="co">]</span>$ 的位置和、在 BSD 位上算 $<span class="co">[</span><span class="ot">-2,2</span><span class="co">]</span>$ 的位置和；再把 BSD 位置的和拆成中间和与传递数位（都在 $<span class="co">[</span><span class="ot">-1,1</span><span class="co">]</span>$）。选择中间和取 $1$（或 $-1$）的前提，是**确知**低位不可能（或必然）送来 $+1$ 的传递——判据只需看低一位的两个操作数比特是否都为 0。因此最坏进位传播被限制在**一个分组内**（从一个 BSD 位到下一个更高的 BSD 位）。</span>
+<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a>分组大小 $g$ 就是一个调节旋钮：$g$ 越大，BSD 位越少（BSD 位的加法单元比普通位复杂），硬件越省，但最坏进位传播距离越长。**这是"速度 ↔ 成本"在冗余数系内部的一次再平衡。**</span>
+<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a>把图 3.9 的 3 位分组从右往左看，它其实就是一个基数 8 的 GSD 系统，数位集为 $<span class="co">[</span><span class="ot">-4,7</span><span class="co">]</span>$（从 $(-1\,0\,0)_2$ 到 $(1\,1\,1)_2$）。换句话说，混合表示可以看作是某个高基 GSD 表示的**一种编码方式**（原书 Fig. 3.10 展示了这一点，以及去掉"非冗余位只允许 posibit"限制后得到的对称版本 $<span class="co">[</span><span class="ot">-4,4</span><span class="co">]</span>$）。</span>
+<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a>编码效率的代价：$k$ 位基数 2 的 SD 数需要 $2k$ 个比特存储（每位 SD 数字要 2 bit）。**冗余 = 双倍存储 + 双倍布线**，这就是为什么冗余表示只出现在运算部件内部，而不会用作存储格式。</span>
+<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a><span class="fu">## 3.5 无进位加法算法（Carry-Free Addition Algorithms）</span></span>
+<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a>无进位加法的标准套路是**两步走**（以 GSD 为例）：</span>
+<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**逐位求和并拆分**：对每位计算位置和 $p_i = x_i + y_i$，拆成"传递和（transfer sum）"与" interim sum"——即决定向高位传一个进位数字 $t_{i+1}$，本位保留 $w_i = p_i - r\cdot t_{i+1}$；</span>
+<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**最终相加**：$s_i = w_i + t_i$，保证不再产生新进位。</span>
+<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>第一步的选择规则（什么情况下传 +1、0 还是 -1）需要基于$p_i$ 的区间判断，这就是数位集合必须足够冗余的原因——判断区间之间要有"安全间隙"。</span>
+<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>把"不再产生新进位"写成不等式，就得到了数位集与传递数位范围之间的约束。设传递数位取自 $<span class="co">[</span><span class="ot">-\lambda, \mu</span><span class="co">]</span>$，则必须同时满足</span>
+<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a>-\alpha + \lambda \;\le\; p_i - r\,t_{i+1} \;\le\; \beta - \mu</span>
+<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a>左边是最小的中间和也仍能吸收一个 $-\lambda$ 的入传递，右边是最大的中间和仍能吸收一个 $+\mu$ 的入传递。化简即得传递数位范围的下界：</span>
+<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a>\lambda \ge \frac{\alpha}{r-1},\qquad \mu \ge \frac{\beta}{r-1}</span>
+<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>$\lambda$、$\mu$ 确定后，把位置和 $p_i$ 与一组常数 $C_j$（$-\lambda \le j \le \mu+1$）比较，$C_j \le p_i &lt; C_{j+1}$ 时取 $t_{i+1} = j$。</span>
+<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">图 3.11 用数位集 $[-5,9]$ 做基数 10 加法的完整例子（无进位加法算法）</span><span class="co">](images/ch03/fig03_11.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a>一个具体例子（原书例 3.5）：$r=10$、数位集 $<span class="co">[</span><span class="ot">-5,9</span><span class="co">]</span>$。由上式 $\lambda \ge 5/9$、$\mu \ge 1$，取最小整数值 $\lambda_{\min} = \mu_{\min} = 1$，即传递数位 $\in <span class="co">[</span><span class="ot">-1,1</span><span class="co">]</span>$。位置和 $p_i \in <span class="co">[</span><span class="ot">-10, 18</span><span class="co">]</span>$，比较常数允许取</span>
+<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>-4 \le C_0 \le -1,\qquad 6 \le C_1 \le 9</span>
+<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a>直观解释：$p_i = 6$ 时取传递 1，剩下的中间和是 $-4$，仍处在 $<span class="co">[</span><span class="ot">-5,9</span><span class="co">]</span>$ 内、能吸收任意 $<span class="co">[</span><span class="ot">-1,1</span><span class="co">]</span>$ 的入传递；而 $p_i \ge 9$ 时**必须**传 1，否则中间和会越界。中间地带的 $C_0$、$C_1$ 有多种合法取法，给逻辑综合留出了优化空间。若把 $p_i$ 表示为 6 位补码 $abcdef$，取 $C_0=-4$、$C_1=8$ 时生成逻辑为</span>
+<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a>g_{-1} = a(\bar{c} \lor \bar{d}),\qquad g_{1} = \bar{a}(b \lor c)</span>
+<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a>不过这套"完全无进位"算法并非万能。原书证明它**当且仅当**下面两组条件之一成立时可用：</span>
+<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a>\text{(a) } r&gt;2,\ \rho \ge 3;\qquad \text{(b) } r&gt;2,\ \rho = 2,\ \alpha \neq 1,\ \beta \neq 1</span>
+<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a>也就是说，$r = 2$、$\rho = 1$，以及 $\rho = 2$ 但 $\alpha$ 或 $\beta$ 等于 1 的情形（即绝大多数二进制冗余表示）**用不了**无进位算法，只能用下面的受限进位算法。</span>
+<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a>**受限进位加法算法**在无进位算法中间插了一步"范围估计"：</span>
+<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>计算位置和 $p_i = x_i + y_i$；</span>
+<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>把 $p_i$ 与一个常数比较，得出传递数位的**二值范围估计** $e_{i+1}$（"低"或"高"）；</span>
+<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>结合 $e_i$ 把 $p_i$ 拆成传递 $t_{i+1}$ 与中间和 $w_i = p_i - r t_{i+1}$；</span>
+<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>$s_i = w_i + t_i$。</span>
+<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a>多出来的第 2 步只增加一级比较器延迟，却让算法能覆盖 $\rho=1$ 的最小冗余表示。</span>
+<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a><span class="al">![图 3.12 受限进位加法的三种实现：(a) 三级进位估计；(b) 三级重复进位；(c) 两级并行进位](images/ch03/fig03_12.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a>三种实现各有取舍：图 3.12a 用"估计"提前一步预判入传递的范围，逻辑最直观；图 3.12b 干脆再跑一遍传递生成/相加，用面积换掉估计逻辑的不确定性；图 3.12c 则从 $i-2$ 级直接把 $t^{(1)}_{i+1}$、$t^{(2)}_{i+2}$ 两路传递并行送到第 $i$ 位，把三级压成两级——代价是第 $i$ 位的逻辑要同时看 $x_{i},y_{i},x_{i-1},y_{i-1},x_{i-2},y_{i-2}$ 六个输入，扇入与布线明显变重。</span>
+<span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">图 3.13 基数 2、数位集 $[-1,1]$ 的受限进位加法（进位估计法）：位置和为 $-1$ 在入传递属于 $[0,1]$ 时保持原样，在入传递属于 $[-1,0]$ 时改写为 1 并送出 $-1$ 传递</span><span class="co">](images/ch03/fig03_13.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a>BSD 的受限进位加法（原书例 3.6）：$r=2$、数位集 $<span class="co">[</span><span class="ot">-1,1</span><span class="co">]</span>$、$\rho=1$、$\lambda_{\min}=\mu_{\min}=1$。传递数位的"低/高"子区间分别是 $<span class="co">[</span><span class="ot">-1,0</span><span class="co">]</span>$ 与 $<span class="co">[</span><span class="ot">0,1</span><span class="co">]</span>$，判据是 $p_i \ge 0$ 时认为传递"高"。规则保证了 $t_i \neq w_i$（两者不会同时取到让和越界的组合），从而 $-1 \le s_i \le 1$ 恒成立。</span>
+<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">图 3.14 基数 2、数位集 $[0,3]$ 的受限进位加法（进位估计法）：位置和为 1 在入传递属于 $[0,2]$ 时保持原样，在入传递属于 $[1,3]$ 时改写为 $-1$ 并送出传递 1</span><span class="co">](images/ch03/fig03_14.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a>存储双进位（binary stored-double-carry）表示（原书例 3.7）：$r=2$、数位集 $<span class="co">[</span><span class="ot">0,3</span><span class="co">]</span>$、$\rho=2$、$\lambda_{\min}=0$、$\mu_{\min}=3$。传递的"低/高"子区间是 $<span class="co">[</span><span class="ot">0,2</span><span class="co">]</span>$ 与 $<span class="co">[</span><span class="ot">1,3</span><span class="co">]</span>$，判据为 $p_i \ge 4$。同一加法还可以用另外两种实现完成：</span>
+<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">图 3.15 基数 2、数位集 $[0,3]$ 的受限进位加法：重复进位（repeated-carry）实现</span><span class="co">](images/ch03/fig03_15.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">图 3.16 基数 2、数位集 $[0,3]$ 的受限进位加法：并行进位（parallel-carries）实现</span><span class="co">](images/ch03/fig03_16.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a>三种实现算的是同一个结果，差别只在"进位信息如何跨越两个数位级"。**选哪一种是典型的后端决策**：在门级延迟主导的工艺里，并行进位（少一级）胜出；在布线拥塞主导的场景里，估计法（连线最少、最规整）反而更优。</span>
+<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a>carry-save（受限进位）版本大家其实天天见：**全加器（full adder）本身就是一个 3:2 压缩器**——三个输入比特进来，(sum, carry) 两个比特出去，进位只给相邻高位，绝不远行。</span>
+<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a>最后，GSD 减法与加法几乎同构。对称数位集下，把减数的每一位取反就得到了 $-y$ 的表示，随后照常做无进位/受限进位加法即可；非对称数位集（$<span class="co">[</span><span class="ot"> -\beta, \alpha</span><span class="co">]</span> \leftrightarrow <span class="co">[</span><span class="ot">-\alpha,\beta</span><span class="co">]</span>$）的取负稍复杂，但同样有对应的无进位算法。</span>
+<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 3.5：用一排相互独立的二进制全加器实现进位保存加法](images/ch03/fig03_05.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a><span class="fu">## 3.6 转换与支持函数（Conversions and Support Functions）</span></span>
+<span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a>冗余数系的"阿喀琉斯之踵"：</span>
+<span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**冗余 → 非冗余转换**：逃不开一次完整的进位传播（把 carry 串真正加进 sum 串）。所以冗余表示适合**一长串运算的中间形态**，只在最后转换一次——这正是树形乘法器的工作方式（第 11 章）；</span>
+<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**符号检测与比较**：冗余编码下"这个数是正是负"不再等价于看最高位，需要一次完整加法或专门的符号检测逻辑；</span>
+<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**溢出检测**：同样变复杂，需要扫描最高若干位。</span>
+<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a>BSD ↔ 有符号二进制的转换是最常用的一种，做法很巧妙：把 BSD 数的正数位（$+1$）与负数位（$-1$）拆成两个普通的二进制数，再做一次减法。</span>
+<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a>\begin{array}{ccccc}</span>
+<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a>\text{BSD} &amp; 1 &amp; -1 &amp; 0 &amp; -1 &amp; 0<span class="sc">\\</span></span>
+<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>\text{正部} &amp; 1 &amp; 0 &amp; 0 &amp; 0 &amp; 0<span class="sc">\\</span></span>
+<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>\text{负部} &amp; 0 &amp; 1 &amp; 0 &amp; 1 &amp; 0<span class="sc">\\</span> \hline</span>
+<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>\text{差} &amp; &amp; &amp; &amp; &amp;</span>
+<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a>\end{array}</span>
+<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>若 BSD 数用的是 $(n,p)$ 编码，正部与负部就是现成的两根线，拆分零成本。**编码选对了，转换就几乎是免费的**——这是 3.4 节强调 $(n,p)$ 编码的又一个理由。</span>
+<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a>零检测、符号检测、溢出处理这三个"支持函数"在冗余域里各有各的麻烦：</span>
+<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**零检测**：GSD 下 0 可能有多种表示（基数 4 中 $0\,0\,0$ 与 $-1\,4\,0$ 都表示 0）。但若 $\alpha &lt; r$ 且 $\beta &lt; r$，0 由全 0 向量**唯一**表示，相等性判断就退化成"做一次减法再查全零"，在这个常见的特例里反而简单。</span>
+<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**符号检测**：一般地，GSD 数的符号取决于它的**全部数位**——逐位传播判断慢，做快速超前判断电路又贵。即使在上述 $\alpha,\beta &lt; r$ 的特例下，符号等于最高非零数位的符号，仍要扫描所有数位才能找到它，最坏情况与一次完整进位传播同阶。</span>
+<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**溢出处理**：$k$ 位相加会产生传出数位 $t_k$，而 $t_k$ 是在"入传递未知"的最坏假设下算出来的，因此 $t_k \neq 0$ **并不代表真的溢出**。要判断溢出是否真实、并在不溢出时给出正确的 $k$ 位结果，还得再做一次相当慢的检测与转换。</span>
+<span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a>对原码和 2 的补码而言，符号判断只是"看最高位"这么一句话；在冗余域里它变成了一个 $O(k)$ 的操作。**这类"支持函数的退化"足以吃掉冗余带来的全部速度优势**——这也是 GSD 至今主要活在专用系统与运算部件内部表示，而没有成为通用数据格式的根本原因。</span>
+<span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a>::: {.callout-warning title="设计纪律"}</span>
+<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a>**让数据在冗余域里"尽量久地停留"**。每一次冗余↔非冗余转换都要付出一次完整加法器的延迟，频繁转换会把冗余带来的速度优势吃得一干二净。</span>
+<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章小结</span></span>
+<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>冗余数系用编码空间换进位自由：无进位（$O(1)$）或受限进位（走 1 位）加法。</span>
+<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>carry-save 是最实用的冗余表示，全加器即 3:2 压缩器。</span>
+<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>冗余域内运算快，但比较、符号判断、溢出检测贵；出入口各需一次转换。</span>
+<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>记住两句话：**中间结果留在冗余域，最后一刻再转换**。</span>
+<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a><span class="fu">## 原书插图</span></span>
+<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">图 3.1 用数位集 $[0,18]$ 做基数 10 加法的例子（位置和直接写下，不传播进位）</span><span class="co">](images/ch03/fig03_01.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a><span class="al">![图 3.4 四个二进制数相加，和以存储进位（stored-carry）形式得到](images/ch03/fig03_04.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">图 3.10 两种混合冗余表示（分别对应基数 8 数位集 $[-4,7]$ 与对称的 $[-4,4]$）的扩展点记号</span><span class="co">](images/ch03/fig03_10.png)</span>{fig-align="center" width="85%"}</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

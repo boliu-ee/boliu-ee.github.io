@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第19章 误差与误差控制（Errors and Error Control） – 计算机算术：算法与硬件设计（中文解读版）</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./ch20.html" rel="next">
+<link href="./ch18.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-77d2b90c99eeff80c5837adab8b96ac7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch17.html">第五部分 实数运算 (Real Arithmetic)</a></li><li class="breadcrumb-item"><a href="./ch19.html"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">计算机算术：算法与硬件设计（中文解读版）</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第一部分 数的表示 (Number Representation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch01.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第二部分 加法与减法 (Addition/Subtraction)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第7章 快速加法器的变体（Variations in Fast Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第8章 多操作数加法（Multioperand Addition）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部分 乘法 (Multiplication)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第9章 基本乘法方案（Basic Multiplication Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第10章 高基数乘法器（High-Radix Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">第四部分 除法 (Division)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第14章 高基数除法器（High-Radix Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第15章 除法器的变体（Variations in Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第16章 收敛法除法（Division by Convergence）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">第五部分 实数运算 (Real Arithmetic)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第17章 浮点数表示（Floating-Point Representations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch19.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">第六部分 函数求值 (Function Evaluation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第23章 函数求值的变体（Variations in Function Evaluation）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第24章 查表算术（Arithmetic by Table Lookup）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">第七部分 实现专题 (Implementation Topics)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch26.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch27.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch28.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第28章 可重构算术（Reconfigurable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">附录 过去、现在与未来（Past, Present, and Future）</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#本章导读" id="toc-本章导读" class="nav-link active" data-scroll-target="#本章导读">本章导读</a></li>
+  <li><a href="#计算误差的来源sources-of-computational-errors" id="toc-计算误差的来源sources-of-computational-errors" class="nav-link" data-scroll-target="#计算误差的来源sources-of-computational-errors">19.1 计算误差的来源（Sources of Computational Errors)</a></li>
+  <li><a href="#失效的代数定律invalidated-laws-of-algebra" id="toc-失效的代数定律invalidated-laws-of-algebra" class="nav-link" data-scroll-target="#失效的代数定律invalidated-laws-of-algebra">19.2 失效的代数定律（Invalidated Laws of Algebra)</a></li>
+  <li><a href="#最坏情况误差累积worst-case-error-accumulation" id="toc-最坏情况误差累积worst-case-error-accumulation" class="nav-link" data-scroll-target="#最坏情况误差累积worst-case-error-accumulation">19.3 最坏情况误差累积（Worst-Case Error Accumulation)</a></li>
+  <li><a href="#误差分布与期望误差error-distribution-and-expected-errors" id="toc-误差分布与期望误差error-distribution-and-expected-errors" class="nav-link" data-scroll-target="#误差分布与期望误差error-distribution-and-expected-errors">19.4 误差分布与期望误差（Error Distribution and Expected Errors)</a></li>
+  <li><a href="#前向误差分析forward-error-analysis" id="toc-前向误差分析forward-error-analysis" class="nav-link" data-scroll-target="#前向误差分析forward-error-analysis">19.5 前向误差分析（Forward Error Analysis)</a></li>
+  <li><a href="#后向误差分析backward-error-analysis" id="toc-后向误差分析backward-error-analysis" class="nav-link" data-scroll-target="#后向误差分析backward-error-analysis">19.6 后向误差分析（Backward Error Analysis)</a></li>
+  <li><a href="#本章小结" id="toc-本章小结" class="nav-link" data-scroll-target="#本章小结">本章小结</a></li>
+  <li><a href="#原书插图" id="toc-原书插图" class="nav-link" data-scroll-target="#原书插图">原书插图</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch17.html">第五部分 实数运算 (Real Arithmetic)</a></li><li class="breadcrumb-item"><a href="./ch19.html"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="本章导读" class="level2">
+<h2 class="anchored" data-anchor-id="本章导读">本章导读</h2>
+<p>有限精度算术的本质是<strong>每次运算都在制造微小误差</strong>。本章建立误差的词汇表（绝对/相对误差、ulp）、打破代数直觉（浮点世界里结合律失效）、给出误差累积的分析框架（最坏情况 vs.&nbsp;统计期望、前向/后向分析）。这是连接”硬件实现”与”数值算法可信度”的桥梁章节。</p>
+<p>一句话概括本章的方法论：<strong>表示误差与运算误差都可以被界定，但”相减”会把它们放大到无法界定</strong>。后面所有的分析技巧（保护位、重排公式、补偿求和、前/后向分析），本质上都是在与”相减”这件事周旋。</p>
+</section>
+<section id="计算误差的来源sources-of-computational-errors" class="level2">
+<h2 class="anchored" data-anchor-id="计算误差的来源sources-of-computational-errors">19.1 计算误差的来源（Sources of Computational Errors)</h2>
+<p>误差四源头：</p>
+<ol type="1">
+<li><strong>表示误差</strong>：<span class="math inline">\(\pi\)</span>、0.1 这类数一开始就无法精确表示（1.5 节的进制转换问题）；</li>
+<li><strong>运算舍入</strong>：每次浮点运算结果要舍回有限位宽——相对误差不超过半个 ulp（就近舍入下 <span class="math inline">\(\le 2^{-24}\)</span> 单精度）；</li>
+<li><strong>算法截断</strong>：迭代法、级数截断引入的方法误差（与硬件无关，但与舍入误差竞争预算）；</li>
+<li><strong>输入扰动</strong>：测量/传感数据的固有不确定度。</li>
+</ol>
+<p><strong>ulp（unit in the last place）</strong>：最低位权重，是度量一切浮点误差的基本尺子。“误差在 0.5 ulp 内”即正确舍入的定义。注意 ulp 是<strong>相对的</strong>：单精度下 <span class="math inline">\(x\in[1,2)\)</span> 时 <span class="math inline">\(\mathrm{ulp}=2^{-23}\)</span>，而 <span class="math inline">\(x\in[1024,2048)\)</span> 时 <span class="math inline">\(\mathrm{ulp}=2^{-13}\)</span>——真正可比的是<strong>相对误差</strong> <span class="math inline">\(\eta = (x_{\text{fp}}-x)/x\)</span>。</p>
+<p>形式化地，浮点系统由基数 <span class="math inline">\(r\)</span>、精度 <span class="math inline">\(p\)</span> 与近似方案 <span class="math inline">\(A\)</span> 刻画，记作 <span class="math inline">\(\mathrm{FLP}(r,p,A)\)</span>，其中 <span class="math inline">\(A\in\{\text{chop},\text{round},\text{rtne},\text{chop}(g),\ldots\}\)</span>，<span class="math inline">\(g\)</span> 为中间结果保留的保护数字个数。规格化使 <span class="math inline">\(1/r \le s &lt; 1\)</span> 时 <span class="math inline">\(x_{\text{fp}} = (1+\eta)x\)</span>，且</p>
+<p><span class="math display">\[
+A=\text{chop}:\ -r\cdot\mathrm{ulp} &lt; \eta \le 0, \qquad
+A=\text{round}:\ |\eta| \le \frac{r\cdot\mathrm{ulp}}{2}, \qquad \mathrm{ulp} = r^{-p}
+\]</span></p>
+<p><strong>最坏相对表示误差随基数 <span class="math inline">\(r\)</span> 线性增长</strong>。<span class="math inline">\(\mathrm{FLP}(r{=}16,p{=}6,\text{chop})\)</span> 的 <span class="math inline">\(|\eta|\le 16^{-5}=2^{-20}\)</span>，占用 24 位二进制尾数；要在 <span class="math inline">\(\mathrm{FLP}(r{=}2,p,\text{chop})\)</span> 下达同样界限需 <span class="math inline">\(p=21\)</span>——<strong>同样的 24 位，十六进制最坏少约 3 位有效精度</strong>，这就是”精度抖动”的量化表达。</p>
+<p>运算误差怎么传播？设操作数的相对表示误差为 <span class="math inline">\(\sigma\)</span>、<span class="math inline">\(\tau\)</span>，忽略二阶小量后有</p>
+<p><span class="math display">\[
+x_{\text{fp}}\times_{\text{fp}} y_{\text{fp}} \approx (1+\eta+\sigma+\tau)xy, \qquad
+x_{\text{fp}}/_{\text{fp}} y_{\text{fp}} \approx (1+\eta+\sigma-\tau)\frac{x}{y}
+\]</span></p>
+<p>即<strong>乘除中相对误差相加</strong>，非常温和；加法的最坏相对误差也不超过 <span class="math inline">\(|\eta|+\max(|\sigma|,|\tau|)\)</span>。<strong>减法才是真麻烦</strong>：</p>
+<p><span class="math display">\[
+x_{\text{fp}} -_{\text{fp}} y_{\text{fp}} = (1+\eta)\left(1 + \frac{\sigma x - \tau y}{x-y}\right)(x-y)
+\]</span></p>
+<p><span class="math inline">\(x\)</span>、<span class="math inline">\(y\)</span> 大而 <span class="math inline">\(x-y\)</span> 小时，<span class="math inline">\(\frac{\sigma x-\tau y}{x-y}\)</span> 可任意大——<strong>同号相减的相对误差没有上界</strong>，这就是抵消（cancellation）/有效位丢失。</p>
+<p>由 <span class="math inline">\(\eta\)</span> 引起的那部分可用保护位治好：</p>
+<blockquote class="blockquote">
+<p><strong>定理 19.1</strong>：<span class="math inline">\(\mathrm{FLP}(r,p,\text{chop}(g))\)</span> 中 <span class="math inline">\(g\ge1\)</span> 时 <span class="math inline">\(x+_{\text{fp}}y = (1+\eta)(x+y)\)</span>，且 <span class="math inline">\(-r^{-p+1}&lt;\eta&lt;r^{-p-g+2}\)</span>。 <strong>推论</strong>：<span class="math inline">\(\mathrm{FLP}(r,p,\text{chop}(1))\)</span> 中 <span class="math inline">\(|\eta| &lt; r^{-p+1}\)</span>——<strong>一个保护位就足以让加减法的运算误差降到与表示误差同量级</strong>。</p>
+</blockquote>
+<p>以十进制 <span class="math inline">\(\mathrm{FLP}(10,6)\)</span> 为例：<span class="math inline">\(x=-0.100000000\times10^3\)</span>、<span class="math inline">\(y=-0.999999456\times10^2\)</span>，真值 <span class="math inline">\(x+y = 0.544\times10^{-4}\)</span>，无保护位算出 <span class="math inline">\(.100000\times10^{-2}\)</span>，<strong>相对误差约 17.38（结果偏大 1638% ）</strong>；加一个保护位后得 <span class="math inline">\(.100000\times10^{-3}\)</span>，相对误差降到 80.5%——虽然仍大，但要害在于<strong>相对于给定的两个操作数，这个结果是精确的</strong>，误差已全部归咎于输入而非算法。</p>
+</section>
+<section id="失效的代数定律invalidated-laws-of-algebra" class="level2">
+<h2 class="anchored" data-anchor-id="失效的代数定律invalidated-laws-of-algebra">19.2 失效的代数定律（Invalidated Laws of Algebra)</h2>
+<p>浮点世界里的”法律变更”：</p>
+<ul>
+<li><strong>结合律失效</strong>：<span class="math inline">\((a+b)+c \ne a+(b+c)\)</span>——大数先加会吞掉小数（吸收现象）；</li>
+<li><strong>分配律失效</strong>：<span class="math inline">\(a(b+c) \ne ab + ac\)</span> 逐比特意义下不成立；</li>
+<li><strong>消去律失效</strong>：<span class="math inline">\(a + c = b + c \nRightarrow a = b\)</span>；</li>
+<li><strong>灾难性抵消（catastrophic cancellation）</strong>：两个相近数相减，高位全消，剩下的是<strong>误差被放大到主位</strong>——相对误差爆炸的头号元凶。</li>
+</ul>
+<p>取 <span class="math inline">\(a = 0.12341\times10^5\)</span>、<span class="math inline">\(b = -0.12340\times10^5\)</span>、<span class="math inline">\(c = 0.14321\times10^1\)</span>（五位十进制尾数）：<span class="math inline">\(a+_{\text{fp}}(b+_{\text{fp}}c) = 0.20000\times10^1\)</span>，而 <span class="math inline">\((a+_{\text{fp}}b)+_{\text{fp}}c = 0.24321\times10^1\)</span>——<strong>相差约 20%</strong>。后果是实实在在的：优化编译器若为打散数据相关而重排浮点表达式，就可能改变程序结果，因此多数语言默认禁止（除非打开 <code>-ffast-math</code> 之类开关）。</p>
+<p>有意思的解药是<strong>不规格化算术</strong>：中间结果不做规格化左移。重算上例，两种顺序都得 <span class="math inline">\(0.00002\times10^5\)</span>——不仅一致，而且结果的<strong>前导零个数本身就是精度告警</strong>，明说只剩一位有效数字；相比之下 <span class="math inline">\(0.24321\times10^1\)</span> 装出五位精度，其实五位都不靠谱。</p>
+<div class="callout callout-style-default callout-warning callout-titled" title="工程守则">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">警告</span>工程守则
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>求和从<strong>小到大</strong>加（减小吸收）；大量数求和用 <strong>Kahan 补偿求和</strong>（误差从 <span class="math inline">\(O(n)\)</span> 降到 <span class="math inline">\(O(1)\)</span>）；</li>
+<li>公式变形避开相近数相减：<span class="math inline">\(1 - \cos x\)</span> 在 <span class="math inline">\(x\)</span> 小时改写为 <span class="math inline">\(2\sin^2(x/2)\)</span>；</li>
+<li>二次方程求根用 <span class="math inline">\(|q|\)</span> 大的根先算，另一个用韦达定理 <span class="math inline">\(x_1 x_2 = c/a\)</span> 推——教科书级避险动作。</li>
+</ul>
+</div>
+</div>
+<p>三条”变形避险”有共同数学动机：把”相近数相减”改写成”相近数相加或相乘”。<span class="math inline">\(1-\cos x\)</span> 中 <span class="math inline">\(\cos x\)</span> 的舍入误差被 <span class="math inline">\(x^2\)</span> 这个极小的分母放大成主误差，改写后减法消失；扁三角形的海伦公式同理。</p>
+</section>
+<section id="最坏情况误差累积worst-case-error-accumulation" class="level2">
+<h2 class="anchored" data-anchor-id="最坏情况误差累积worst-case-error-accumulation">19.3 最坏情况误差累积（Worst-Case Error Accumulation)</h2>
+<p><span class="math inline">\(n\)</span> 次运算的误差界：每次乘加引入相对误差 <span class="math inline">\(\le \epsilon\)</span>（机器精度），最坏情况误差约 <span class="math inline">\(n\epsilon\)</span> 级别。链越长，界越松——<strong>最坏情况分析保证可信但过于悲观</strong>，它给出的是”绝不会更差”的保险单，不是”典型表现”。量化地说：最坏绝对误差为 <span class="math inline">\(m\,\mathrm{ulp}\)</span> 等价于<strong>损失 <span class="math inline">\(\log_2 m\)</span> 位精度</strong>。</p>
+<p>以 1024 项内积 <span class="math inline">\(z=\sum x^{(i)}y^{(i)}\)</span> 为例：每次乘加引入 <span class="math inline">\(\mathrm{ulp}/2+\mathrm{ulp}/2 = \mathrm{ulp}\)</span>，累积 <strong>1024 ulp 即损失 10 位</strong>，24 位单精度算完只剩 14 位可信。改用 FMA（末尾只舍入一次）每步误差降到 <span class="math inline">\(\mathrm{ulp}/2\)</span>，总界 512 ulp——只挽回 1 位。</p>
+<p>真正有效的办法是<strong>保留双倍宽乘积</strong>：乘法完全不引入舍入误差，每次加法引入至多 <span class="math inline">\(\mathrm{ulp}^2/2\)</span>，总界 <span class="math inline">\(n\times\mathrm{ulp}^2/2\)</span>；只要 <span class="math inline">\(n &lt; r^p = 1/\mathrm{ulp}\)</span>，最终误差就在 ulp 以内。这就是 DSP 普遍内置高精度内积单元、IEEE 定义扩展格式的理由。</p>
+<p><strong>Kahan 补偿求和</strong>是软件侧的标准解法：把每次加法中被吸收掉的部分记进补偿项 <span class="math inline">\(c\)</span>，下一轮先减回去——<span class="math inline">\(y \leftarrow x^{(i)}-c\)</span>；<span class="math inline">\(z \leftarrow s+y\)</span>；<span class="math inline">\(c \leftarrow (z-s)-y\)</span>；<span class="math inline">\(s \leftarrow z\)</span>。误差从 <span class="math inline">\(O(n)\,\mathrm{ulp}\)</span> 降到 <span class="math inline">\(O(1)\,\mathrm{ulp}\)</span>，代价只是每步多两次加减。</p>
+<p>累积误差的另一面是<strong>步数本身的矛盾</strong>：数值积分中步长越小离散化误差越小，但步数越多舍入误差累积越大——于是存在使总误差最小的最优步长。这类”两头堵”的权衡在数值方法中反复出现。</p>
+</section>
+<section id="误差分布与期望误差error-distribution-and-expected-errors" class="level2">
+<h2 class="anchored" data-anchor-id="误差分布与期望误差error-distribution-and-expected-errors">19.4 误差分布与期望误差（Error Distribution and Expected Errors)</h2>
+<p>把舍入误差建模为随机变量（均匀分布、零均值——就近偶舍入的无偏性在此关键），<span class="math inline">\(n\)</span> 次运算的误差按 <span class="math inline">\(\sqrt{n}\,\epsilon\)</span> 增长（随机游走），而非 <span class="math inline">\(n\epsilon\)</span>。这解释了实践中”结果通常比最坏界好得多”的现象——但<strong>赌统计期望的算法在对抗性输入下会现原形</strong>（滤波器自激、迭代发散）。</p>
+<p>最坏相对表示误差（MRRE）为 <span class="math inline">\(\mathrm{MRRE}(\text{chop}) = r^{-p+1}\)</span>、<span class="math inline">\(\mathrm{MRRE}(\text{round}) = r^{-p+1}/2\)</span>。平均相对表示误差（ARRE）则是</p>
+<p><span class="math display">\[
+\mathrm{ARRE}(\mathrm{FLP}(r,p,A)) = \int_{1/r}^{1} \frac{|x_{\text{fp}}-x|}{x}\cdot\frac{dx}{x\ln r}
+\]</span></p>
+<p>其中 <span class="math inline">\(\frac{1}{x\ln r}\)</span> 是规格化尾数的概率密度（对数分布律）：尾数落在 <span class="math inline">\([x,x+dx]\)</span> 的概率为 <span class="math inline">\(dx/(x\ln r)\)</span>——<strong>小尾数比大尾数更可能出现</strong>。对 <span class="math inline">\(r=2\)</span>（尾数在 <span class="math inline">\([1/2,1)\)</span>），密度从 <span class="math inline">\(x=1/2\)</span> 处的 <span class="math inline">\(2/\ln2\approx2.885\)</span> 降到 <span class="math inline">\(x=1\)</span> 处的 <span class="math inline">\(1/\ln2\approx1.443\)</span>（图 19.1）；积分得尾数落在 <span class="math inline">\([1/2,3/4)\)</span> 的概率为 <span class="math inline">\(\ln(1.5)/\ln2\approx0.585\)</span>——<strong>近六成的数尾数首位是 0</strong>。这是本福特定律在浮点尾数上的近亲。</p>
+<p>代入后得 <span class="math inline">\(\mathrm{ARRE}(\text{chop}) \approx \frac{(r-1)r^{-p}}{2\ln r}\)</span>、<span class="math inline">\(\mathrm{ARRE}(\text{round}) \approx \frac{(r-1)r^{-p}}{4\ln r}\left(1+\frac1r\right)\)</span>。更严格的分布分析显示相对误差在小端<strong>均匀</strong>、大端呈<strong>倒数分布</strong>（<span class="math inline">\(\propto 1/z\)</span>），<span class="math inline">\(r=2\)</span> 时两者之比为</p>
+<p><span class="math display">\[
+\frac{\mathrm{ARRE}(\text{round})}{\mathrm{ARRE}(\text{chop})} = \frac{3}{4}
+\]</span></p>
+<p>注意这个数字：最坏情况比与粗略估计都是 <span class="math inline">\(1/2\)</span>，但严格的平均值之比是 <span class="math inline">\(3/4\)</span>——大误差端那条长尾把平均拉高了。<strong>舍入的实际优势没有最坏情况分析暗示的那么大。</strong></p>
+</section>
+<section id="前向误差分析forward-error-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="前向误差分析forward-error-analysis">19.5 前向误差分析（Forward Error Analysis)</h2>
+<p>沿计算图正向追踪：“输入误差 δ 经过这个运算后变成多少？”每个节点的误差 = 传递误差 + 本地新生误差。工具：条件数（condition number）——<span class="math inline">\(\kappa = |x f'(x) / f(x)|\)</span> 衡量问题本身对输入扰动的放大倍数。</p>
+<p>对 <span class="math inline">\(y = ax+b\)</span>，前向分析要估计 <span class="math inline">\(\eta\)</span> 使 <span class="math inline">\(y_{\text{fp}} = (1+\eta)y\)</span>。一般情形下<strong>这个界不存在</strong>：若 <span class="math inline">\(a_{\text{fp}}x_{\text{fp}}\)</span> 与 <span class="math inline">\(b_{\text{fp}}\)</span> 幅值相当、符号相反，最后那次加法会出现抵消，结果对输入的微小扰动极度敏感（19.1 节的例子正是如此）。只有对输入范围施加约束后界才可能存在。</p>
+<p>实践中有四种前向分析手段：<strong>自动误差分析</strong>（用更高精度重跑同一批用例比较结果，只能给”大概安全”，无任何保证）；<strong>有效位算术</strong>（不规格化中间结果，让前导零当精度告警）；<strong>噪声模式计算</strong>（规格化左移时填入随机数字而非 0，多次运行结果一致则说明抵消不严重）；<strong>区间算术</strong>（每个数带区间走完全程，20.5 节详述）。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="解读">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>解读
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>条件数是问题的属性，与算法无关</strong>——病态问题（<span class="math inline">\(\kappa\)</span> 大）任何算法都救不了（如 Hilbert 矩阵求逆，<span class="math inline">\(f(x)=\ln x\)</span> 在 <span class="math inline">\(x\to1\)</span> 时 <span class="math inline">\(\kappa = 1/|\ln x|\)</span> 爆炸）；良态问题配不稳定算法才会出错。前向分析告诉你”这个算法在这个问题上误差多大”。</p>
+</div>
+</div>
+</section>
+<section id="后向误差分析backward-error-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="后向误差分析backward-error-analysis">19.6 后向误差分析（Backward Error Analysis)</h2>
+<p>Wilkinson 的天才转身：不问”结果差多少”，改问”<strong>这个结果是对哪个扰动后的输入的精确解</strong>”。若答案所需扰动与输入固有误差同阶，则算法<strong>后向稳定</strong>——结果不可指责，误差归罪于问题本身。</p>
+<p>把 <span class="math inline">\(y_{\text{fp}} = (a_{\text{fp}}\times_{\text{fp}}x_{\text{fp}}) +_{\text{fp}} b_{\text{fp}}\)</span> 拆开（<span class="math inline">\(\mu\)</span>、<span class="math inline">\(\nu\)</span> 为加乘两级的运算误差，模均 <span class="math inline">\(&lt; r^{-p+1} = r\times\mathrm{ulp}\)</span>；<span class="math inline">\(\sigma,\delta,\gamma\)</span> 为输入的表示误差）：</p>
+<p><span class="math display">\[
+y_{\text{fp}} = (1+\mu)\big[(1+\nu)a_{\text{fp}}x_{\text{fp}} + b_{\text{fp}}\big]
+\approx (1+\sigma+\mu)a\cdot(1+\delta+\nu)x + (1+\gamma+\mu)b
+\]</span></p>
+<p>读作：<strong>浮点算出的结果，等于把 <span class="math inline">\(a\)</span>、<span class="math inline">\(b\)</span>、<span class="math inline">\(x\)</span> 各自扰动 <span class="math inline">\(r\times\mathrm{ulp}\)</span> 之后精确算出的结果</strong>。于是可以向用户保证——运算误差的后果不超过”每个输入多带 <span class="math inline">\(r\times\mathrm{ulp}\)</span> 相对误差”的后果；若输入本身的精度还不如这个量级，就完全不必为运算误差操心。</p>
+<p>一般化地说：给定 <span class="math inline">\(y_{\text{fp}} = f_{\text{fp}}(x^{(1)}_{\text{fp}},\ldots,x^{(n)}_{\text{fp}})\)</span>，后向分析要找的是使 <span class="math inline">\(y_{\text{fp}} = f(x^{(1)}_{\text{alt}},\ldots,x^{(n)}_{\text{alt}})\)</span> <strong>精确成立</strong>的那组扰动输入，并刻画它与 <span class="math inline">\(x^{(i)}_{\text{fp}}\)</span> 的距离。</p>
+<p>高斯消元法配部分主元的后向误差分析是数值分析史上最漂亮的成果之一；FFT 的出色精度（误差 <span class="math inline">\(O(\log n)\epsilon\)</span> 而非 <span class="math inline">\(O(n)\epsilon\)</span>）也只能用后向/结构化分析解释。另一个经典结论：Horner 法求多项式值在后向意义下等价于”系数各带一个 <span class="math inline">\((1+\eta^{(i)})\)</span> 扰动的精确多项式”——<strong>Horner 法是后向稳定的</strong>，这才解释了它为何在实践中远比前向误差界暗示的准确。</p>
+</section>
+<section id="本章小结" class="level2">
+<h2 class="anchored" data-anchor-id="本章小结">本章小结</h2>
+<ul>
+<li>ulp 是浮点误差的基本单位；正确舍入 = 误差 ≤ 0.5 ulp。</li>
+<li>结合律失效与灾难性抵消是数值 bug 的两大温床。</li>
+<li>最坏 <span class="math inline">\(n\epsilon\)</span> vs.&nbsp;期望 <span class="math inline">\(\sqrt{n}\epsilon\)</span>：保险单与天气预报的区别。</li>
+<li>前向看算法×问题，后向看”等价扰动”；条件数是问题的固有属性。</li>
+</ul>
+</section>
+<section id="原书插图" class="level2">
+<h2 class="anchored" data-anchor-id="原书插图">原书插图</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch19/fig19_01.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 19.1</figcaption>
+</figure>
+</div>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./ch18.html" class="pagination-link" aria-label="第18章 浮点运算（Floating-Point Operations）">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./ch20.html" class="pagination-link" aria-label="第20章 精确与可证算术（Precise and Certifiable Arithmetic）">
+        <span class="nav-page-text"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 第19章 误差与误差控制（Errors and Error Control）</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章导读</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>有限精度算术的本质是**每次运算都在制造微小误差**。本章建立误差的词汇表（绝对/相对误差、ulp）、打破代数直觉（浮点世界里结合律失效）、给出误差累积的分析框架（最坏情况 vs. 统计期望、前向/后向分析）。这是连接"硬件实现"与"数值算法可信度"的桥梁章节。</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>一句话概括本章的方法论：**表示误差与运算误差都可以被界定，但"相减"会把它们放大到无法界定**。后面所有的分析技巧（保护位、重排公式、补偿求和、前/后向分析），本质上都是在与"相减"这件事周旋。</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">## 19.1 计算误差的来源（Sources of Computational Errors)</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>误差四源头：</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**表示误差**：$\pi$、0.1 这类数一开始就无法精确表示（1.5 节的进制转换问题）；</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**运算舍入**：每次浮点运算结果要舍回有限位宽——相对误差不超过半个 ulp（就近舍入下 $\le 2^{-24}$ 单精度）；</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**算法截断**：迭代法、级数截断引入的方法误差（与硬件无关，但与舍入误差竞争预算）；</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>**输入扰动**：测量/传感数据的固有不确定度。</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>**ulp（unit in the last place）**：最低位权重，是度量一切浮点误差的基本尺子。"误差在 0.5 ulp 内"即正确舍入的定义。注意 ulp 是**相对的**：单精度下 $x\in[1,2)$ 时 $\mathrm{ulp}=2^{-23}$，而 $x\in[1024,2048)$ 时 $\mathrm{ulp}=2^{-13}$——真正可比的是**相对误差** $\eta = (x_{\text{fp}}-x)/x$。</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>形式化地，浮点系统由基数 $r$、精度 $p$ 与近似方案 $A$ 刻画，记作 $\mathrm{FLP}(r,p,A)$，其中 $A\in<span class="sc">\{</span>\text{chop},\text{round},\text{rtne},\text{chop}(g),\ldots<span class="sc">\}</span>$，$g$ 为中间结果保留的保护数字个数。规格化使 $1/r \le s &lt; 1$ 时 $x_{\text{fp}} = (1+\eta)x$，且</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>A=\text{chop}:\ -r\cdot\mathrm{ulp} &lt; \eta \le 0, \qquad</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>A=\text{round}:\ |\eta| \le \frac{r\cdot\mathrm{ulp}}{2}, \qquad \mathrm{ulp} = r^{-p}</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>**最坏相对表示误差随基数 $r$ 线性增长**。$\mathrm{FLP}(r{=}16,p{=}6,\text{chop})$ 的 $|\eta|\le 16^{-5}=2^{-20}$，占用 24 位二进制尾数；要在 $\mathrm{FLP}(r{=}2,p,\text{chop})$ 下达同样界限需 $p=21$——**同样的 24 位，十六进制最坏少约 3 位有效精度**，这就是"精度抖动"的量化表达。</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>运算误差怎么传播？设操作数的相对表示误差为 $\sigma$、$\tau$，忽略二阶小量后有</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>x_{\text{fp}}\times_{\text{fp}} y_{\text{fp}} \approx (1+\eta+\sigma+\tau)xy, \qquad</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>x_{\text{fp}}/_{\text{fp}} y_{\text{fp}} \approx (1+\eta+\sigma-\tau)\frac{x}{y}</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>即**乘除中相对误差相加**，非常温和；加法的最坏相对误差也不超过 $|\eta|+\max(|\sigma|,|\tau|)$。**减法才是真麻烦**：</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>x_{\text{fp}} -_{\text{fp}} y_{\text{fp}} = (1+\eta)\left(1 + \frac{\sigma x - \tau y}{x-y}\right)(x-y)</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>$x$、$y$ 大而 $x-y$ 小时，$\frac{\sigma x-\tau y}{x-y}$ 可任意大——**同号相减的相对误差没有上界**，这就是抵消（cancellation）/有效位丢失。</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>由 $\eta$ 引起的那部分可用保护位治好：</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; **定理 19.1**：$\mathrm{FLP}(r,p,\text{chop}(g))$ 中 $g\ge1$ 时 $x+_{\text{fp}}y = (1+\eta)(x+y)$，且 $-r^{-p+1}&lt;\eta&lt;r^{-p-g+2}$。</span></span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; **推论**：$\mathrm{FLP}(r,p,\text{chop}(1))$ 中 $|\eta| &lt; r^{-p+1}$——**一个保护位就足以让加减法的运算误差降到与表示误差同量级**。</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>以十进制 $\mathrm{FLP}(10,6)$ 为例：$x=-0.100000000\times10^3$、$y=-0.999999456\times10^2$，真值 $x+y = 0.544\times10^{-4}$，无保护位算出 $.100000\times10^{-2}$，**相对误差约 17.38（结果偏大 1638% ）**；加一个保护位后得 $.100000\times10^{-3}$，相对误差降到 80.5%——虽然仍大，但要害在于**相对于给定的两个操作数，这个结果是精确的**，误差已全部归咎于输入而非算法。</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="fu">## 19.2 失效的代数定律（Invalidated Laws of Algebra)</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>浮点世界里的"法律变更"：</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**结合律失效**：$(a+b)+c \ne a+(b+c)$——大数先加会吞掉小数（吸收现象）；</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**分配律失效**：$a(b+c) \ne ab + ac$ 逐比特意义下不成立；</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**消去律失效**：$a + c = b + c \nRightarrow a = b$；</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**灾难性抵消（catastrophic cancellation）**：两个相近数相减，高位全消，剩下的是**误差被放大到主位**——相对误差爆炸的头号元凶。</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>取 $a = 0.12341\times10^5$、$b = -0.12340\times10^5$、$c = 0.14321\times10^1$（五位十进制尾数）：$a+_{\text{fp}}(b+_{\text{fp}}c) = 0.20000\times10^1$，而 $(a+_{\text{fp}}b)+_{\text{fp}}c = 0.24321\times10^1$——**相差约 20%**。后果是实实在在的：优化编译器若为打散数据相关而重排浮点表达式，就可能改变程序结果，因此多数语言默认禁止（除非打开 <span class="in">`-ffast-math`</span> 之类开关）。</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>有意思的解药是**不规格化算术**：中间结果不做规格化左移。重算上例，两种顺序都得 $0.00002\times10^5$——不仅一致，而且结果的**前导零个数本身就是精度告警**，明说只剩一位有效数字；相比之下 $0.24321\times10^1$ 装出五位精度，其实五位都不靠谱。</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>::: {.callout-warning title="工程守则"}</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>求和从**小到大**加（减小吸收）；大量数求和用 **Kahan 补偿求和**（误差从 $O(n)$ 降到 $O(1)$）；</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>公式变形避开相近数相减：$1 - \cos x$ 在 $x$ 小时改写为 $2\sin^2(x/2)$；</span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>二次方程求根用 $|q|$ 大的根先算，另一个用韦达定理 $x_1 x_2 = c/a$ 推——教科书级避险动作。</span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>三条"变形避险"有共同数学动机：把"相近数相减"改写成"相近数相加或相乘"。$1-\cos x$ 中 $\cos x$ 的舍入误差被 $x^2$ 这个极小的分母放大成主误差，改写后减法消失；扁三角形的海伦公式同理。</span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a><span class="fu">## 19.3 最坏情况误差累积（Worst-Case Error Accumulation)</span></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>$n$ 次运算的误差界：每次乘加引入相对误差 $\le \epsilon$（机器精度），最坏情况误差约 $n\epsilon$ 级别。链越长，界越松——**最坏情况分析保证可信但过于悲观**，它给出的是"绝不会更差"的保险单，不是"典型表现"。量化地说：最坏绝对误差为 $m\,\mathrm{ulp}$ 等价于**损失 $\log_2 m$ 位精度**。</span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>以 1024 项内积 $z=\sum x^{(i)}y^{(i)}$ 为例：每次乘加引入 $\mathrm{ulp}/2+\mathrm{ulp}/2 = \mathrm{ulp}$，累积 **1024 ulp 即损失 10 位**，24 位单精度算完只剩 14 位可信。改用 FMA（末尾只舍入一次）每步误差降到 $\mathrm{ulp}/2$，总界 512 ulp——只挽回 1 位。</span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>真正有效的办法是**保留双倍宽乘积**：乘法完全不引入舍入误差，每次加法引入至多 $\mathrm{ulp}^2/2$，总界 $n\times\mathrm{ulp}^2/2$；只要 $n &lt; r^p = 1/\mathrm{ulp}$，最终误差就在 ulp 以内。这就是 DSP 普遍内置高精度内积单元、IEEE 定义扩展格式的理由。</span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>**Kahan 补偿求和**是软件侧的标准解法：把每次加法中被吸收掉的部分记进补偿项 $c$，下一轮先减回去——$y \leftarrow x^{(i)}-c$；$z \leftarrow s+y$；$c \leftarrow (z-s)-y$；$s \leftarrow z$。误差从 $O(n)\,\mathrm{ulp}$ 降到 $O(1)\,\mathrm{ulp}$，代价只是每步多两次加减。</span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>累积误差的另一面是**步数本身的矛盾**：数值积分中步长越小离散化误差越小，但步数越多舍入误差累积越大——于是存在使总误差最小的最优步长。这类"两头堵"的权衡在数值方法中反复出现。</span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a><span class="fu">## 19.4 误差分布与期望误差（Error Distribution and Expected Errors)</span></span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a>把舍入误差建模为随机变量（均匀分布、零均值——就近偶舍入的无偏性在此关键），$n$ 次运算的误差按 $\sqrt{n}\,\epsilon$ 增长（随机游走），而非 $n\epsilon$。这解释了实践中"结果通常比最坏界好得多"的现象——但**赌统计期望的算法在对抗性输入下会现原形**（滤波器自激、迭代发散）。</span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a>最坏相对表示误差（MRRE）为 $\mathrm{MRRE}(\text{chop}) = r^{-p+1}$、$\mathrm{MRRE}(\text{round}) = r^{-p+1}/2$。平均相对表示误差（ARRE）则是</span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>\mathrm{ARRE}(\mathrm{FLP}(r,p,A)) = \int_{1/r}^{1} \frac{|x_{\text{fp}}-x|}{x}\cdot\frac{dx}{x\ln r}</span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>其中 $\frac{1}{x\ln r}$ 是规格化尾数的概率密度（对数分布律）：尾数落在 $<span class="co">[</span><span class="ot">x,x+dx</span><span class="co">]</span>$ 的概率为 $dx/(x\ln r)$——**小尾数比大尾数更可能出现**。对 $r=2$（尾数在 $[1/2,1)$），密度从 $x=1/2$ 处的 $2/\ln2\approx2.885$ 降到 $x=1$ 处的 $1/\ln2\approx1.443$（图 19.1）；积分得尾数落在 $[1/2,3/4)$ 的概率为 $\ln(1.5)/\ln2\approx0.585$——**近六成的数尾数首位是 0**。这是本福特定律在浮点尾数上的近亲。</span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>代入后得 $\mathrm{ARRE}(\text{chop}) \approx \frac{(r-1)r^{-p}}{2\ln r}$、$\mathrm{ARRE}(\text{round}) \approx \frac{(r-1)r^{-p}}{4\ln r}\left(1+\frac1r\right)$。更严格的分布分析显示相对误差在小端**均匀**、大端呈**倒数分布**（$\propto 1/z$），$r=2$ 时两者之比为</span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a>\frac{\mathrm{ARRE}(\text{round})}{\mathrm{ARRE}(\text{chop})} = \frac{3}{4}</span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>注意这个数字：最坏情况比与粗略估计都是 $1/2$，但严格的平均值之比是 $3/4$——大误差端那条长尾把平均拉高了。**舍入的实际优势没有最坏情况分析暗示的那么大。**</span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a><span class="fu">## 19.5 前向误差分析（Forward Error Analysis)</span></span>
+<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a>沿计算图正向追踪："输入误差 δ 经过这个运算后变成多少？"每个节点的误差 = 传递误差 + 本地新生误差。工具：条件数（condition number）——$\kappa = |x f'(x) / f(x)|$ 衡量问题本身对输入扰动的放大倍数。</span>
+<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a>对 $y = ax+b$，前向分析要估计 $\eta$ 使 $y_{\text{fp}} = (1+\eta)y$。一般情形下**这个界不存在**：若 $a_{\text{fp}}x_{\text{fp}}$ 与 $b_{\text{fp}}$ 幅值相当、符号相反，最后那次加法会出现抵消，结果对输入的微小扰动极度敏感（19.1 节的例子正是如此）。只有对输入范围施加约束后界才可能存在。</span>
+<span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a>实践中有四种前向分析手段：**自动误差分析**（用更高精度重跑同一批用例比较结果，只能给"大概安全"，无任何保证）；**有效位算术**（不规格化中间结果，让前导零当精度告警）；**噪声模式计算**（规格化左移时填入随机数字而非 0，多次运行结果一致则说明抵消不严重）；**区间算术**（每个数带区间走完全程，20.5 节详述）。</span>
+<span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="解读"}</span>
+<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a>**条件数是问题的属性，与算法无关**——病态问题（$\kappa$ 大）任何算法都救不了（如 Hilbert 矩阵求逆，$f(x)=\ln x$ 在 $x\to1$ 时 $\kappa = 1/|\ln x|$ 爆炸）；良态问题配不稳定算法才会出错。前向分析告诉你"这个算法在这个问题上误差多大"。</span>
+<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a><span class="fu">## 19.6 后向误差分析（Backward Error Analysis)</span></span>
+<span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a>Wilkinson 的天才转身：不问"结果差多少"，改问"**这个结果是对哪个扰动后的输入的精确解**"。若答案所需扰动与输入固有误差同阶，则算法**后向稳定**——结果不可指责，误差归罪于问题本身。</span>
+<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a>把 $y_{\text{fp}} = (a_{\text{fp}}\times_{\text{fp}}x_{\text{fp}}) +_{\text{fp}} b_{\text{fp}}$ 拆开（$\mu$、$\nu$ 为加乘两级的运算误差，模均 $&lt; r^{-p+1} = r\times\mathrm{ulp}$；$\sigma,\delta,\gamma$ 为输入的表示误差）：</span>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>y_{\text{fp}} = (1+\mu)\big<span class="co">[</span><span class="ot">(1+\nu)a_{\text{fp}}x_{\text{fp}} + b_{\text{fp}}\big</span><span class="co">]</span></span>
+<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a>\approx (1+\sigma+\mu)a\cdot(1+\delta+\nu)x + (1+\gamma+\mu)b</span>
+<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a>读作：**浮点算出的结果，等于把 $a$、$b$、$x$ 各自扰动 $r\times\mathrm{ulp}$ 之后精确算出的结果**。于是可以向用户保证——运算误差的后果不超过"每个输入多带 $r\times\mathrm{ulp}$ 相对误差"的后果；若输入本身的精度还不如这个量级，就完全不必为运算误差操心。</span>
+<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a>一般化地说：给定 $y_{\text{fp}} = f_{\text{fp}}(x^{(1)}_{\text{fp}},\ldots,x^{(n)}_{\text{fp}})$，后向分析要找的是使 $y_{\text{fp}} = f(x^{(1)}_{\text{alt}},\ldots,x^{(n)}_{\text{alt}})$ **精确成立**的那组扰动输入，并刻画它与 $x^{(i)}_{\text{fp}}$ 的距离。</span>
+<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a>高斯消元法配部分主元的后向误差分析是数值分析史上最漂亮的成果之一；FFT 的出色精度（误差 $O(\log n)\epsilon$ 而非 $O(n)\epsilon$）也只能用后向/结构化分析解释。另一个经典结论：Horner 法求多项式值在后向意义下等价于"系数各带一个 $(1+\eta^{(i)})$ 扰动的精确多项式"——**Horner 法是后向稳定的**，这才解释了它为何在实践中远比前向误差界暗示的准确。</span>
+<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章小结</span></span>
+<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>ulp 是浮点误差的基本单位；正确舍入 = 误差 ≤ 0.5 ulp。</span>
+<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>结合律失效与灾难性抵消是数值 bug 的两大温床。</span>
+<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>最坏 $n\epsilon$ vs. 期望 $\sqrt{n}\epsilon$：保险单与天气预报的区别。</span>
+<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>前向看算法×问题，后向看"等价扰动"；条件数是问题的固有属性。</span>
+<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a><span class="fu">## 原书插图</span></span>
+<span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 19.1](images/ch19/fig19_01.png)</span>{fig-align="center" width="85%"}</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

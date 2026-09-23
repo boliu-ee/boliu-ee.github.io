@@ -1,0 +1,1056 @@
+<<<JP601>>>
+588
+Chapter 28 Reconﬁgurable Arithmetic
+in place in the form of fuses that can be blown open selectively by passing a sufﬁciently
+large current through them. In another type of programmable circuits, antifuse elements
+are used to establish connections where desired. In logic diagrams, the same convention
+is used for both types: a connection that is left in place, or is established, appears as
+a heavy dot on crossing lines, whereas for any connection that is blown open, or not
+established, there is no such dot.
+Programmable sequential logic parts consist of conﬁgurable arrays of gates with
+strategically placed memory elements to hold data from one clock cycle to the next.
+For example, a commonly used form of programmable array logic (PAL) with memory
+elements has a structure similar to a combinational PAL, but each OR gate output can be
+stored in a ﬂip-ﬂop and the device output is selectable from among the OR gate output,
+its complement, and the ﬂip-ﬂop outputs (Fig. 28.1a). Either the OR gate output or the
+ﬂip-ﬂop output can be fed back into the AND array through a 2-to-1 multiplexer (mux).
+The three signals controlling the multiplexers in Fig. 28.1a can be tied to logic 0 or 1
+via programmable connections. The most ﬂexible method of conﬁguring programmable
+devices is by means of storing conﬁguration data in static RAM (SRAM) memory cells.
+Figure 28.2 depicts some of the ways in which a conﬁguration bit stored in an SRAM
+cell can affect the ﬂow of data via controlling switches and interconnections.
+Among conﬁgurable logic devices, the ultimate in ﬂexibility is offered by ﬁeld-
+programmable gate arrays (FPGAs), depicted in simpliﬁed form in Fig. 28.1b. An FPGA
+is typically composed of a large number of logic blocks (LBs) in the center, surrounded
+by input/output (I/O) blocks (IOBs) at the edges. Each IOB in the FPGA of Fig. 28.1b is
+similar to the output macrocell in the lower half of Fig. 28.1a. Groups of LBs and IOBs
+(a) Portion of PAL with storable output
+(b) Generic structure of an FPGA
+8-input
+ANDs
+D
+C
+Q
+QFF
+Mux
+Mux
+0 1
+0 1
+I/O blocks 
+Configurable
+logic block 
+Programmable
+connections 
+CLB 
+CLB 
+CLB 
+CLB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+LB 
+Logic block
+(or LB cluster) 
+Programmable
+interconnects
+I/O block
+Figure 28.1 Examples of programmable sequential logic.
+
+<<<JP602>>>
+Programmable Logic Devices
+589
+0
+1
+Memory
+cell
+Memory
+cell
+Memory
+cell
+(a) Tristate buffer
+(b) Pass transistor
+(c) Multiplexer
+Figure 28.2 Some memory-controlled switches and interconnections in programmable
+logic devices.
+Inputs
+FF
+Logic
+or
+LUT
+0
+  1
+0      1
+0
+  1
+  2
+1
+0
+0
+1
+2
+ 3
+4
+1
+0
+1
+y0
+y1
+y2
+x0
+x1
+x2
+x3
+x4
+Carry-out
+Carry-in
+Outputs
+Figure 28.3 Structure of a simple logic block.
+can be linked together via programmable interconnects, which ﬁll the spaces between
+the blocks (the shaded region in Fig. 28.1b), to form complex digital circuits.
+Each LB is capable of realizing an arbitrary logic function of a small number of
+variables and also has one or more memory elements. Modern FPGA chips may have
+many thousands of LBs and hundreds of IOBs. Avery simple LB is depicted in Fig. 28.3.
+Inside the LB, a number of inputs are provided to the programmable logic or a lookup
+table (LUT), whose output can be stored in a ﬂip-ﬂop or directly sent to the block’s
+output. For example, the logic/LUT box on the left side of Fig. 28.3 may be a 16 × 1
+table that chooses the content of one of the memory cells as its output, depending on
+its 4-bit input pattern. This is akin to the way the bit-serial arithmetic/logic unit of
+the Connection Machine CM-2 was implemented (see Section 24.3). Because addition
+is the most frequently implemented arithmetic operation, dedicated carry logic cells
+are typically built into the LB to avoid the use of LB’s general-purpose logic and the
+programmable interconnect resources outside the LBs for constructing carry chains. This
+provision also renders carry chains faster. Alternatively, a 1-bit full adder may be used
+
+<<<JP603>>>
+590
+Chapter 28 Reconﬁgurable Arithmetic
+in lieu of the carry logic to relieve the programmable logic and interconnects from the
+sum formation function as well.
+Logic blocks may be clustered and interconnected with each other inside the clus-
+ters, as well as via the external programmable interconnects. If a cluster has two or four
+LBs, say, then a 2-bit or 4-bit adder may be implementable in one cluster, with several
+clusters strung together to form a wider adder. This clustering of LBs tends to reduce
+the interconnection length and thus makes them faster when a complex logic circuit is
+to be implemented. Also, LBs or clusters can be interconnected via their combinational
+outputs (the y0 and y1 output lines in Fig. 28.3) or via outputs that they store internally
+(y2). Combinationally chained LBs can form multilevel structures with complex func-
+tionalities. Interconnection via storage elements allows one or more LBs or clusters to
+form one stage in a pipeline.
+Note that, for the sake of simpler exposition, we have substantially simpliﬁed the LB
+structure in Fig. 28.3. In modern FPGAs, there are often richer cross connections and
+many more options for choosing each input to a block. Additionally, the FFs are more
+elaborate than the simple one depicted in Fig. 28.3, so as to facilitate pipelined operation
+and improve ﬂexibility. They often have set and reset inputs, can operate as simple
+latches, and be negative or positive edge-triggered, all under programmed control.
+Figure 28.4 depicts, in simpliﬁed form, a way of interconnecting the LBs or clusters
+of LBs to each other and to IOBs at the boundaries of an FPGA chip. Logic blocks can
+Horizontal
+wiring
+channels
+LB or
+cluster
+Vertical wiring channels
+Switch
+box
+Switch
+box
+Switch
+box
+Switch
+box
+LB or
+cluster
+LB or
+cluster
+LB or
+cluster
+LB or
+cluster
+LB or
+cluster
+LB or
+cluster
+LB or
+cluster
+LB or
+cluster
+Figure 28.4 A possible arrangement for programmable interconnects between LBs or LB
+clusters.
+
+<<<JP604>>>
+Programmable Logic Devices
+591
+take their inputs from horizontal or vertical wiring channels, and their outputs can be
+connected to the same channels. Thus, via appropriate programming of the interconnects
+(an SRAM bit associated with each of the heavy dots and additional bits controlling
+switch boxes), the output of one LB can feed the input of another LB or that of an IOB.
+Figure 28.4 does not show the dedicated carry lines (see Fig. 28.3) that may interconnect
+LBs or clusters.
+The memory elements (typically SRAM), which hold the connectivity pattern
+between cells, can be initialized from ROMs upon start-up to deﬁne the system’s func-
+tionality. They may also be loaded with new values at any time to effect run-time
+reconﬁguration. Special software packages, supplied by manufacturers of FPGAs and
+independent vendors allow automatic mapping onto FPGAs of algorithmically speciﬁed
+hardware functionality. While details of the LBs, IOBs, and programmable intercon-
+nects vary from one manufacturer to another, or even between different product families
+offered by the same manufacturer, such variations do not affect the basic methods that
+we will discuss in the rest of this chapter. Our discussion will begin with adders, pro-
+ceed with multipliers, distributed arithmetic, and function evaluation, brieﬂy touch upon
+ﬂoating-point arithmetic, and end with extensions to FPGA and FPGA-like structures
+for greater efﬁciency in performing complicated arithmetic operations.
+Incorporating FPGA devices in digital designs entails the use of a standard design
+ﬂow composed of the following eight stages:
+1. Speciﬁcation: Creating the design ﬁles, typically via a hardware description
+language such as Verilog, VHDL, or Abel.
+2. Synthesis: Converting the design ﬁles into interconnected networks of gates and
+other standard logic circuit elements.
+3. Partitioning: Assigning the logic elements of stage 2 to speciﬁc physical circuit
+elements that are capable of realizing them.
+4. Placement: Mappingofthephysicalcircuitelementsofstage3tospeciﬁcphysical
+locations of the target FPGA device.
+5. Routing: Mappingoftheinterconnectionsprescribedinstage2tospeciﬁcphysical
+wires on the target FPGA device.
+6. Conﬁguration: Generation of the requisite bit-stream ﬁle that holds conﬁguration
+bits for the target FPGA device.
+7. Programming: Uploading the bit-stream ﬁle of stage 6 to memory elements within
+the FPGA device.
+8. Veriﬁcation: Ensuring the correctness of the ﬁnal design, in terms of both function
+and timing, via simulation and testing.
+In practice, stages 2–6 of this design ﬂow may be mechanized with help from design
+automation software supplied by FPGA vendors. In this way, the most cumbersome
+aspects of the physical realization, including the choice of appropriate arithmetic build-
+ing blocks such as adders and multipliers, as well as the associated resource and time
+optimizations, are handled by the automated system. Users can thus focus on expressing
+their designs and on ensuring that the ﬁnal conﬁgured FPGA performs according to the
+speciﬁcations. Therefore, the arithmetic designs presented in Sections 28.2–28.5 of this
+chapter are of interest primarily to more advanced users who prefer to perform their
+own physical mappings or who participate in tool-building efforts for FPGA devices.
+
+<<<JP605>>>
+592
+Chapter 28 Reconﬁgurable Arithmetic
+Other readers can view the example designs as providing insight into the workings and
+characteristics of FPGA devices.
+It is worth noting that the ﬂexibility provided by FPGAs comes at a cost. One aspect
+of this cost is logic circuit redundancy (wasted chip area) in the form of stored conﬁgura-
+tion bits and many unused circuit elements. A second aspect is reduced speed compared
+with highly optimized application-speciﬁc integrated circuit implementations. Ironically,
+FPGAs have been found quite suitable for both low-cost and high-performance designs,
+despite the aforementioned very large-scale integration (VLSI) area and latency over-
+heads. One reason is that the high production volumes for popular FPGA devices help
+reduce their costs and also afford FPGA vendors incentives to optimize their designes
+to the fullest possible extent and to provide performance-enhancing features.
+28.2 ADDER DESIGNS FOR FPGAS
+Clearly, a ripple-carry adder can be mapped directly to the LBs of an FPGA, if the
+LBs are as depicted in Fig. 28.3. Even without the dedicated carry logic, it is an easy
+matter to conﬁgure a cluster with two LBs into a full adder. The full adders are then
+interconnected using the reconﬁgurable interconnects of Fig. 28.4. Note that the latter
+scheme requires two eight-entry LUTs, one for the sum bit and another for the carry
+bit. A ripple-carry adder must generally be laid out in a row or column of LBs, given
+the ﬁxed carry connections. Converting such a ripple-carry adder to a 2’s-complement
+adder/subtractor is straightforward, based on the design of Fig. 2.7.
+Simple ripple-carry adders are usually fast enough for many practical applications.
+Two adder types, however, provide some speedup at moderate cost. One is carry-skip
+adder (Section 7.1) and the other carry-select adder (Section 7.3). Narrow adders, with
+8- or 12-bit operands, say, are typically implemented in ripple-carry form. The crossover
+width, beyond which carry-skip, carry-select, and other fast adder designs become worth
+using, is highly technology- and application-dependent and thus cannot be foretold in
+general. It is seldom cost-effective to build logarithmic-time fast adders on FPGAs. One
+reason is that carry-lookahead and similar adders consume an inordinate amount of logic
+and interconnect resources, leading to excessive cost and power penalties. Furthermore,
+the gain in speed may not be commensurate with the size penalty. The large number of
+logic blocks needed for such adders arises from the carry acceleration logic and due to
+some LBs going to waste to render the design regular. It has been argued that simple
+modiﬁcations to the LBs could allow more efﬁcient realization of high-speed carry chains
+[Hauc00]. It is noteworthy that some FPGAs incorporate carry-lookahead circuits in a
+manner that is invisible to the user. In such cases, it is always preferable to use the
+FPGAs built-in carry chains.
+Figure 28.5 depicts a 16-bit carry-skip adder with two 5-bit end blocks and a 6-bit
+middle block that can be skipped. This particular carry-skip adder design was presented
+by V. Kantabutra in a 2001 FPGA design contest. It is reportedly 23% faster than a
+ripple-carry adder and achieves this improved performance at the cost of 37% more
+LBs on an Atmel FPGA. Somewhat better results were obtained for a 32-bit adder of
+similar design, using three blocks of widths 10, 12, and 10. Results achieved will differ
+
+<<<JP606>>>
+Adder Designs for FPGAs
+593
+5
+5
+ 5
+0
+1
+Skip
+logic
+ 5
+ 6
+ 6
+ 5
+ 5
+Adder
+Adder
+Adder
+cout
+cin
+Figure 28.5 Possible design of a 16-bit carry-skip adder on an FPGA.
+/ 2
+2 bits
+0
+1
+0
+1
+0
+1
+0
+1
+3 bits
+4 bits
+6 bits
+1 bit
+/ 3
+/ 4
+/ 6
+Figure 28.6 Possible design of a carry-select adder on an FPGA.
+on speciﬁc FPGAs, depending on the details of LB components and their connection
+ﬂexibility. However, the example shows that such fast adder designs are worth exploring
+for high-performance applications.
+Acarry-select adder can be designed in a similar manner. We present a sample design
+for a 16-bit hybrid ripple-carry/carry-select adder to illustrate the techniques used, the
+cost in FPGA resources, and the speed gained. The design consists of a single-bit adder
+cascaded with successively wider carry-select stages to its left, as shown in Fig. 28.6
+[Furt00]. Each carry-select stage consists of two ripple-carry adders of the same width,
+one with carry-in set to 0 and the other set to 1. Once carry into a speciﬁc stage becomes
+known, by means of right-to-left rippling through the multiplexers at the bottom of Fig.
+28.6, the appropriate sum bits and carry into the next stage can be selected. A factor
+of 3.5 increase in the number of LBs used along with a factor of about 2 reduction in
+latency (a doubling in clock frequency) have been reported for this design. Again, the
+results achieved, and optimal conﬁgurations, will differ on speciﬁc FPGAs.
+A carry-save adder can be easily constructed, given that it is merely a collection of
+full adders. Building multioperand adders with more than three inputs requires careful
+attentiontointerconnectingthevariouscarry-saveadderlevelsinordertoavoidexcessive
+resource requirements and interconnect delays. Such multioperand adders, which are
+needed for implementing both constant multipliers and fast tree multipliers (see Section
+28.3), also ﬁnd applications where various partial results must be added in the course
+of function evaluation (see, e.g., the piecewise and multipartite table-lookup methods
+of Sections 24.5 and 24.6). Although some fare better than others, existing FPGAs
+are rather inefﬁcient in supporting the set-up of reduction trees (parallel compressors)
+
+<<<JP607>>>
+594
+Chapter 28 Reconﬁgurable Arithmetic
+neededformultioperandaddition. Thishasmotivatedproposalsforbuildingsuchparallel
+compressors into FPGAs, in addition to or in lieu of general-purpose logic and LUTs
+[Bris07]. Preliminary studies have demonstrated modest speed gains and signiﬁcant
+savings in area resulting from such added resources. The capability for fast and efﬁcient
+multioperand addition would be a welcome feature in future FPGAs, given the rising
+importance of table-based function evaluation methods.
+28.3 MULTIPLIER AND DIVIDER DESIGNS
+A sequential bit-at-a-time multiplier, which essentially works via a sequence of addition
+operations, can be readily implemented in an FPGA. Modiﬁed (radix-4) Booth recoding
+can be applied to cut the number of cycles in half. It is also possible to use radix-4
+multiplication by precomputing 3a (see Fig. 10.2). In some FPGAs, the carry-chain
+logic has been augmented to allow the addition of two multiples of the multiplicand in
+order to produce the required multiples with fewer LBs.
+Among the parallel multiplier architectures studied in Part III, array multipliers
+(Section 11.5) are the most suitable for direct mapping onto FPGAs. If the required
+resources for a complete array multiplier are deemed excessive, it is possible to imple-
+ment half or a quarter of a square array multiplier, say by performing an 8 × 16 or a
+4 × 16 multiplication. Then, the implemented portion can be used two or four times
+to perform a full-width multiplication. When several multiplications are needed in the
+course of a particular computation, a single array multiplier can be readily pipelined to
+perform several multiplications in the time normally needed for one.
+Like carry-lookahead adders, Wallace- or Dadda-tree multipliers are usually not
+cost-effective for FPGAs. They not only consume large numbers of LBs, but also lead to
+long and wasteful interconnections. Trees of ripple-carry adders (Figs. 8.4 and 8.5) are
+likely the best choices for fast multipliers, as they tend to be more compact and highly
+competitive in terms of speed. Truncated multipliers of Section 11.4 can be used to trade
+off accuracy for lower resource complexity.
+The divide-and-conquer multiplication strategy of Sections 12.1 and 12.2 can be used
+for designing small, fast multipliers. For example, one can build a 4 × 4 multiplier from
+2 × 2 multipliers realized by LUTs. Four four-input LUTs can supply the 4-bit products
+of pairs of 2-bit numbers. The resulting four 4-bit partial products can be combined via
+a 4-bit adder and a 6-bit adder, as shown in Fig. 28.7. This process can be repeated to
+build wider multipliers. For example, four copies of the circuit shown in Fig. 28.7, along
+with an 8-bit adder and a 12-bit adder can yield an 8 × 8 multiplier.
+Other options for multiplication on FPGAs include the two serial-parallel multipliers
+of Fig. 12.7 or 12.10, and the bit-serial multiplier whose design is depicted in Figs. 12.11
+and 12.12. The former are suitable when one operand is stored internally (perhaps to be
+multiplied by a sequence of input values), while the latter is the appropriate choice when
+the multiplicand and multiplier are both supplied 1 bit at a time. Intermediate designs
+with several bits of the operands arriving at once are also possible.
+Multiplication by constants (see Section 9.5) can be performed in two distinct ways.
+One is to store precomputed bits of the desired multiple in LUTs. To multiply an 8-bit
+
+<<<JP608>>>
+Multiplier and Divider Designs
+595
+a3
+a2
+x1
+x0
+a1
+a0
+x1
+x0
+4 LUTs
+a1
+a0
+x3
+x2
+a3
+a2
+x3
+x2
+0
+6-bit adder
+p2
+p0
+p1
+p3
+p4
+p5
+p6
+p7
+cout
+4-bit adder
+Figure 28.7 Divide-and-conquer 4 × 4 multiplier design using 4-input lookup tables and
+ripple-carry adders.
+8 LUTs
+0
+8 LUTs
+4
+/
+/
+4
+/
+8
+8-bit adder
+xL
+xH
+13xL
+13xH
+13x
+Figure 28.8 Multiplication of an 8-bit input by 13,using LUTs.
+input x, say, by the constant a = 13, yielding a 12-bit result, we can use eight four-input
+LUTs to store the 8-bit product 13xH for all possible values of xH, where xH represents
+the upper 4 bits of x. We can use a different set of tables, which are accessed in parallel
+with the ﬁrst set (as in Fig. 28.8), to obtain 13xL, or we can reuse the same tables in
+
+<<<JP609>>>
+596
+Chapter 28 Reconﬁgurable Arithmetic
+a separate cycle for this purpose. The two 8-bit numbers thus obtained must then be
+added after shifting 13xH to the left by 4 bits. It is easy to generalize from the example
+just described. Assuming h-input LUTs, a k-bit number x can be multiplied by an m-bit
+constant a using k(m/h + 1) LUTs and k/h −1 multibit adders. The latter adders can be
+arranged into a tree, as noted in our discussion of multioperand addition in Section 28.2.
+The second constant multiplication method, suitable for constants with a small num-
+ber of nonzero digits in their binary signed-digit representation, is to use an adder tree
+directly. For example, multiplication by the constant 115 = (1 0 0 -1 0 0 1 1)two can be
+performed by adding x, 2x, −16x, and 128x. Thus, to multiply a number by 115, we need
+three multibit adders (cascaded, or arranged as a two-level tree). Low-weight constants
+have been of interest in digital signal processor (DSP) implementations for many years. It
+is often the case that constants in structures such as digital ﬁlters can be slightly adjusted
+without affecting the proper functioning of the system. In such cases, designers aim
+for constants that have few nonzero digits in their binary signed-digit representations.
+Such implementations that replace each constant multiplication by a few additions are
+characterized as “multiplierless” in the DSP literature.
+In some applications, multiplication by one of several predetermined constants may
+be required, where the constant to be used is chosen by additional inputs. For example,
+if one of four supplied constants is to be used, a 2-bit input would indicate the selection.
+Both of these methods can be adapted to this case. Working out the details is left as an
+exercise.
+ManyrecentFPGAsincorporatehardwiredmultipliersamongtheresourcesavailable
+on the chip. For example, an FPGA chip may include dozens to hundreds of 18 × 18
+integer multipliers, scattered in between the ordinary LBs. The use of these built-in
+resources, when possible, leads to more compact, faster, and often lower-power designs.
+Multipliers that are wider than the ones provided on an FPGA chip can be synthesized
+using the divide-and-conquer method of Sections 12.1 and 12.2. For example, four
+18 × 18 multipliers can be combined with adders to synthesize a 32 × 32 or a 36 × 36
+multiplier.
+Given the similarity of sequential bit-at-a-time multipliers and dividers, consider-
+ations for implementing binary dividers on FPGAs are similar to those of multipliers.
+The only additional element in a sequential binary divider is a small amount of logic
+for quotient-digit selection. In fact, it is quite feasible to implement a combined multi-
+ply/divide unit on an FPGA (see Section 15.6). Both restroing and nonrestoring division
+algorithms can be used in a divider or multiplier/divider design. High-radix and related
+fast division schemes, though feasible, are not cost-effective for FPGA implementation
+in most application contexts. Instead, one can unroll the bit-at-a-time binary division
+recurrence, leading to a combinational circuit for determining several bits of the quotient
+at once. In the extreme, a fully unrolled division recurrence leads to a combinational
+circuit that forms all the quotient bits in 1 (albeit wider) clock cycle. For additional
+details, the reader is referred to Chapter 13 in [Desc06].
+Because division is not as frequent as multiplication in many applications (particu-
+larly in DSP), FPGA devices typically do not provide built-in dividers. However, given
+the presence of many dedicated multipliers on modern FPGAs, as discussed earlier, divi-
+sion through repeated multiplications, or via reciprocation, have become particularly
+attractive (see Sections 16.2 and 16.3).
+
+<<<JP610>>>
+Tabular and Distributed Arithmetic
+597
+28.4 TABULAR AND DISTRIBUTED ARITHMETIC
+We have already seen an example of tabular arithmetic in the design of constant mul-
+tipliers. Essentially, we took advantage of the fact that the product ax, with constant
+a, is a function of only one variable, thus allowing the use of smaller tables. As we
+saw in Fig. 24.4, where the expression ax + by was evaluated, the same idea can be
+extended to evaluation of more complicated expressions involving multiplications by
+constants and additions. Here, we discuss FPGAimplementation of a very common class
+of computations in digital signal processing.
+Consider a second-order digital ﬁlter characterized by the equation
+y(i) = a(0)x(i) + a(1)x(i−1) + a(2)x(i−2) −b(1)y(i−1) −b(2)y(i−2)
+where the a(j) and b(j) terms are constants, x(j) is the ﬁlter input at time step j, and y(j) is
+the ﬁlter output at time step j. Such a ﬁlter is useful in itself and may also be a component
+in a more complex ﬁlter.
+Expanding the equation for y(i) in terms of the individual bits of the 2’s-complement
+operands x = (x0.x−1x−2 · · · x−l)two and y = (y0.y−1y−2 · · · y−l)two, we get
+y(i) = a(0)
+
+−x(i)
+0 +
+−1
+
+j=−l
+2jx(i)
+j
+
++ a(1)
+
+−x(i−1)
+0
++
+−1
+
+j=−l
+2jx(i−1)
+j
+
+
++ a(2)
+
+−x(i−2)
+0
++
+−1
+
+j=−l
+2jx(i−2)
+j
+
+−b(1)
+
+−y(i−1)
+0
++
+−1
+
+j=−l
+2jy(i−1)
+j
+
+
+−b(2)
+
+−y(i−2)
+0
++
+−1
+
+j=−l
+2jy(i−2)
+j
+
+
+Deﬁne f (s, t, u, v, w) = a(0)s + a(1)t + a(2)u −b(1)v −b(2)w, where s, t, u, v, and w
+are 1-bit variables. If the coefﬁcients are m-bit constants, then each of the 32 possible
+values for f is representable in m + 3 bits, as it is the sum of ﬁve m-bit operands. These
+32 values can be precomputed and stored in a 32 × (m + 3)-bit table. Note that we are
+essentially using the same bit rearrangement method here as we used in the last example
+of Section 24.3.
+Using the function f , we can rewrite the expression for y(i) as follows:
+y(i) =
+−1
+
+j=−l
+2jf
+
+x(i)
+j , x(i−1)
+j
+, x(i−2)
+j
+, y(i−1)
+j
+, y(i−2)
+j
+
+−f
+
+x(i)
+0 , x(i−1)
+0
+, x(i−2)
+0
+, y(i−1)
+0
+, y(i−2)
+0
+
+Figure 28.9 shows a hardware unit for computing this last expression with bit-serial input
+and output. The value of y(i) is accumulated in the p register as y(i−1) is output from the
+output shift register. At the end of the cycle, the result in the p register is loaded into the
+
+<<<JP611>>>
+598
+Chapter 28 Reconﬁgurable Arithmetic
+f
+x
+x
+x
+(i)
+(i–1)
+(i–2)
+j
+j
+j
+y (i–1)
+j
+y (i–2)
+j
+LSB first
+y (i)
+±
+Input
+32-entry
+lookup
+table
+ Output 
+  shift 
+register
+(m + 3)-bit 
+ register
+Data out
+Address in
+p
+Right shift
+LSB first
+Output
+Shift
+reg.
+Shift
+reg.
+Shift
+reg.
+Shift
+reg.
+Register
+Figure 28.9 Bit-serial tabular realization of a second-order ﬁlter.
+output shift register, p is reset to 0, and a new accumulation cycle begins. The output
+bit y(i−1)
+j
+is supplied to the ROM as an address bit. A second shift register at the output
+side supplies the corresponding bit y(i−2)
+j
+of the preceding output. At the input side, x(i)
+is processed on the ﬂy, and two shift registers are used to supply the corresponding bits
+of the two preceding inputs, x(i−1) and x(i−2), to the 32-entry table.
+Structures similar to that shown in Fig. 28.9 are useful for computing many other
+functions. For example, if (x + y + z) mod m is to be computed for integer-valued
+operands x, y, z and a modulus m, then the residues of 2i, 2×2i, and 3×2i can be stored
+in a table for different values of i. The bits xi, yi, zi, and the index i are used to derive
+an address from which the value of 2i(xi + yi + zi) mod m is read out and added to the
+modulo-m running total.
+When a structure similar to Fig. 28.9 is unrolled in time, so that the single table and
+the adder are replaced by multiple tables and adders, one set for each bit position in
+the operands, a scheme known as distributed arithmetic results [Whit89]. Distributed
+arithmetic, which essentially takes advantage of grouping and processing of equally
+weighted bits from multiple operands or partial results together, is particularly efﬁcient
+for implementing arithmetic circuits on FPGAs.
+28.5 FUNCTION EVALUATION ON FPGAS
+The coordinate rotations digital computer (CORDIC) algorithms of Chapter 22 can
+be easily mapped onto FPGAs, given that they require only additions, shifting, and
+fairly small LUTs. For example, the three-adder CORDIC processor of Fig. 22.3 can
+be readily mapped onto most FPGAs. A more economical implementation, but with
+correspondingly lower speed, can be derived by using bit-serial additions, or by time-
+sharing a single adder. Conversely, the CORDIC iterations can be unrolled in time, so that
+
+<<<JP612>>>
+Function Evaluation on FPGAs
+599
+Add/Sub
+Add/Sub
+Add/Sub
+Add /Sub
+>> 1
+>> 1
+Add/Sub
+Add/Sub
+>> 2
+>> 2
+Add/Sub
+Add/Sub
+>> 3
+>> 3
+Add/Sub
+Add /Sub
+Add/Sub
+Add/Sub
+Sign logic
+Sign logic
+Sign logic
+Sign logic
+x
+y
+z
+ x(1)
+ x(2)
+ x(3)
+ x (4)
+y (1)
+y (2)
+y (3)
+y (4)
+ z(1)
+ z(2)
+ z (3)
+ z (4)
+e(0)
+e(1)
+e(2)
+e(3)
+Figure 28.10 The ﬁrst four stages of an unrolled CORDIC processor.
+multiple copies of the processor of Fig. 22.3 perform the iterations. In the extreme, there
+will be one processor dedicated to each iteration (Fig. 28.10). This complete unrolling
+results in a number of simpliﬁcations in the processors: each processor always uses
+the same shift amount (that can be hardwired), and it uses the same constant angle e(i)
+as one input. Thus, one of the three adders is a constant adder that can be simpliﬁed.
+The resulting unrolled design can be pipelined for very high throughput. Clearly, partial
+unrolling can be used to provide a performance that falls between the sequential design
+of Fig. 22.3 and the fully unrolled design of Fig. 28.10. In the latter case, the input e(i)
+is chosen from among a small set of constants.
+Many of the additive and multiplicative (particularly the shift-add variety) conver-
+gence methods of Chapter 23 are suitable for FPGAimplementation. Figure 28.11 shows
+the generic structure of such computations, when the convergence steps are unrolled to
+improve speed. For instance, the structure shown in Fig. 28.11 can be used for comput-
+ing the reciprocal of a value d, with the LUT providing an initial approximation and the
+subsequent blocks reﬁning the value. Recall from our discussion in Section 16.4 that we
+can aim for increasing the precision by a certain number of bits, rather than doubling it,
+in each iteration. In this way, the design of the convergence-step blocks in Fig. 28.11
+
+<<<JP613>>>
+600
+Chapter 28 Reconﬁgurable Arithmetic
+Lookup
+table
+x
+Convergence
+step
+y (0)
+y (1)
+y (2)
+Convergence
+step
+Convergence
+step
+≈ f(x)
+Figure 28.11 Generic convergence structure for function evaluation.
+can be made uniform, which would make them more suitable for mapping onto FPGAs.
+As a speciﬁc example, if the LUT provides 7 bits of precision for the reciprocal, and
+each subsequent block increases the precision by 3 bits, the end result for the reciprocal
+function with three convergence steps will be accurate to 16 bits.
+An alternative to the convergence-based approach exempliﬁed by Fig. 28.11 is the use
+of interpolating memory (see Fig. 24.6). In particular, we noted at the end of Section 24.4
+that the use of nonuniform intervals can reduce the table sizes signiﬁcantly compared
+with straight interpolation based on the most-signiﬁcant bits of the argument. Recall
+that if we use the h most-signiﬁcant bits of the argument x for the initial approximation,
+we have effectively divided the range of our function evaluation into 2h equal-width
+intervals. With nonuniform intervals, a segment translation block will precede the tables,
+adders, and multipliers that perform the linear or higher-order interpolation. The mapping
+required from the bits of the input operand to one of several intervals of varying widths
+can be implemented in combinational logic. However, it has been observed that a cascade
+of reasonable size tables can accomplish this translation quite effectively [Sasa07].
+Until very recently, ﬂoating-point arithmetic was deemed too complicated for imple-
+mentation on FPGAs, with the need for alignment and normalization shifts cited as a
+main problem. This is because barrel shifters consume a substantial number of LBs and
+interconnect resources. So, the use of FPGAs was limited to applications where the range
+of parameter variations was limited or highly predictable. With dramatic increases in the
+number of LBs and interconnect resources, as well as special arithmetic accelerators to
+be discussed in Section 28.6, it is now practical to implement single-precision or even
+double-precision ﬂoating-point arithmetic on FPGAs. With appropriate resources and
+design strategies, FPGA performance is deemed to be competitive with high-end pro-
+cessors in ﬂoating-point arithmetic [Stre07]. Several designs and design strategies have
+emerged over the past few years [Detr07], [Hemm07], and new approaches are being
+continually published in the literature.
+With ﬂoating-point operands and results, convergence and piecewise table methods
+for function evaluation remain substantially the same in their overall structure. They
+simply use ﬂoating-point arithmetic, instead of integer or ﬁxed-point format.
+28.6 BEYOND FINE-GRAINED DEVICES
+Despite their great ﬂexibility, the structure and logic capabilities of FPGAs are ill-
+matched to certain arithmetic computations. This mismatch, which stems from the
+ﬁne-grained composition of logic and interconnents, has historical reasons, given that
+
+<<<JP614>>>
+Beyond Fine-Grained Devices
+601
+FPGAs were originally intended as replacements for random control (“glue”) logic. It
+is also a matter of economics, because FPGA vendors must aim for a wide array of
+applications, not just arithmetic-intensive ones, to beneﬁt from economy of scale. Even
+with the aforementioned mismatch, however, signiﬁcant performance gain and power
+economy have been reported for a wide array of applications. Gaining a factor of 100,
+perhaps even 1000, in performance, and realizing energy savings of 50% or more, over
+microprocessor-based realizations are not at all unusual [Todm05]. The advantages of
+reconﬁgurable arithmetic over processor-based design stem from:
+•
+Parallel processing and pipelining
+•
+Adjusting number widths to precision requirements
+•
+Matching data ﬂow to computation
+•
+Mitigating the memory bottleneck
+An alternative to FPGA- and processor-based implementation is mapping the desired
+functionalities on custom VLSI chips. This is usually the plan of last resort, given the
+labor-intensive nature, and thus the high cost and long turnaround time, of custom VLSI
+design. Other than cost, the beneﬁts of using FPGAs over custom VLSI design include
+ﬂexibility and adaptability, with speed and power consumption constituting potential
+drawbacks.
+We have already mentioned the ideas of incorporating carry chains, multipliers, and
+parallel counters into FPGAs to streamline or speed up arithmetic-intensive compu-
+tations. These modiﬁcations and augmentations often also have implications for power
+dissipation, as they tend to reduce the number of LBs and interconnects that are needed to
+realize a particular computation. In the rest of this section, we contemplate the inclusion
+of more ﬂexible building blocks, such as signal processors or general-purpose processor
+cores, and cover a few FPGA-like devices that are more directly optimized for arithmetic.
+General-purpose processors, and their DSP variants, offer great ﬂexibility for pro-
+gramming complicated computations. On the other hand, FPGAs have an edge in
+performance. It is thus quite natural to think of combining the two resources, so as
+to beneﬁt from the strengths of both. This idea has been pursued in both directions:
+incorporating general-purpose or DSP processors on FPGA chips, and augmenting con-
+ventional processors with FPGAs as special-purpose coprocessors to speed up certain
+computations. Examples of the ﬁrst approach can be found in product lines of all major
+FPGA manufacturers. Options range from a single processor on the side of a conven-
+tional FPGA, to several “cores” intermixed with the LBs and placed in locations to be
+readily accessible. Anotable example of the second approach is the inclusion of a Xilinx
+Virtex-4 FPGA within every processing node of Cray’s XD1 supercomputer. The FPGA
+acts as an accelerator in certain target applications [Stre07].
+The trade-off to be considered when including units such as multipliers, ﬂoating-
+point units, DSP slices, and processor cores on FPGAs is whether they are likely to
+be used in typical designs. If such units go unused, either because of the applica-
+tion class or due to the inability of design tools to take proper advantage of them, the
+associated chip area will be wasted. Even worse, these added elements may hurt perfor-
+mance if we have to route around them to interconnect the other chip resources. When
+such units are in fact used, they tend to shrink the performance gap between reconﬁg-
+urable and custom VLSI designs. Clearly, effective use of such heterogeneous resources
+
+<<<JP615>>>
+602
+Chapter 28 Reconﬁgurable Arithmetic
+Figure 28.12
+The design space for
+arithmetic-intensive
+applications.
+Word width (bits)
+1 
+4 
+64 
+16 
+256
+1
+4
+64
+16
+256
+1024
+Instruction depth
+FPGA
+DPGA 
+GP
+micro 
+Our approach 
+MPP 
+SP
+processor 
+General-
+purpose
+processor
+Special-
+purpose
+processor
+Field-programmable
+arithmetic array
+1024
+depends upon how high-level design tools are made aware of their presence and potential
+beneﬁts.
+ItisalsopossibletoincorporateintoanFPGA-likestructureanarrayofarithmeticele-
+ments that deal with entire numbers, rather than with bits. An example of this approach is
+the use of additive multiply modules as the basic building blocks of a ﬁeld-programmable
+arithmetic array [Parh00]. Compared with FPGAs, the coarser-grain dynamically pro-
+grammable gate arrays (DPGAs), massively parallel processing (MPP), and the use of
+general-purpose or special-purpose programmable processors, arithmetic arrays would
+occupy a different part in the design space of Fig. 28.12. Here, instruction depth refers
+to the rough number of instructions expected to be stored in each computation element.
+In FPGAs, the data ﬂow is hardwired, which corresponds to an instruction depth of
+one, whereas in general-purpose processors hundreds or even thousands of instruc-
+tions are needed to direct the ﬂow of computation through a general-purpose data path.
+Special-purpose processors occupy a position between these two extremes with regard
+to instruction depth. It is generally acknowledged that instruction processing and distri-
+bution are bottlenecks of current computing methodologies. So, a reduced instruction
+depth is good for performance.
+PROBLEMS
+28.1 Designing with FPGAs
+Implement the following arithmetic circuits, using logic blocks of the type
+depicted in Fig. 28.3.
+a. A 4-bit binary counter.
+b. An 8-bit ripple-carry adder.
+c. The carry-skip adder of Fig. 28.5.
+d. The carry-select adder of Fig. 28.6.
+
+<<<JP616>>>
+Problems
+603
+e. The 4 × 4 multiplier of Fig. 28.7.
+f. A 4-bit squarer.
+g. An 8-input even-parity checker.
+h. An 8-bit comparator, indicating equality or inequality.
+i. A 4-bit unsigned comparator, indicating x > y, x = y, or x < y.
+j. A 4-bit 2’s-complement comparator, indicating x > y, x = y, or x < y.
+28.2 Real FPGA chips
+TaketworealFPGAchipsfromdifferentmanufacturersthatyouchoose. Evaluate
+and compare the two chips with regard to:
+a. Logic block structure, in comparison with the simple block of Fig. 28.3.
+b. Number of LBs needed to realize an 8-bit ripple-carry adder.
+c. Fraction of the total logic resources used in the design of part b.
+d. Number of LBs needed (in the worst case) to realize an arbitrary 6-variable
+Boolean function.
+e. Computational resources, other than LBs, that are provided on the chip.
+f. Total on-chip memory and the overall chip complexity in terms of transistor
+count.
+28.3 Real FPGA chips
+Take a real FPGA chip from a manufacturer that you choose and implement the
+following designs on it.
+a. The carry-skip adder of Fig. 28.5.
+b. The carry-select adder of Fig. 28.6.
+c. The 4 × 4 multiplier of Fig. 28.7.
+d. A 4-bit squarer of your own design.
+e. An 8-bit up/down counter.
+28.4 A simpler LB
+Consider the following LB with a simpler structure than the one in Fig. 28.3.
+Compare the two designs, note the differences, and speculate on why each addi-
+tional element was included in the LB of Fig. 28.3. In particular, try to design an
+8-bit ripple-carry adder, with cin and cout, using each type of block and compare
+the resulting circuits.
+Carry-out
+Logic
+or
+LUT
+Inputs
+Carry-in
+0
+0
+0
+1
+1
+2
+1
+FF
+Outputs
+
+<<<JP617>>>
+604
+Chapter 28 Reconﬁgurable Arithmetic
+28.5 Saturating adders
+The design of saturating adders was discussed in Section 5.2.
+a. Present the design of a saturating ripple-carry adder, with unsigned 16-bit
+inputs and outputs, on an FPGA. Comment on the additional complexity due
+to the saturation property.
+b. Repeat part a for the carry-skip design of Fig. 28.5.
+c. Repeat part a for the carry-select design of Fig. 28.6.
+28.6 Priority encoder
+a. Show how a 16-input priority encoder can be designed on an FPGA using its
+built-in carry chain.
+b. Design a priority encoder using the same carry-skip idea as in Fig. 28.5.
+c. Does it make sense to apply the carry-select method of Fig. 28.6 to the design
+of a priority encoder?
+28.7 Adder designs for FPGAs
+a. In the carry-skip adder design of Fig. 28.5, only three blocks and one skip
+logic circuit are used. Why do you think this is the case? In other words,
+why aren’t narrower blocks and more skip circuits used, as suggested by the
+analysis at the end of Section 7.1?
+b. How does the performance and cost of a 32-bit carry-skip adder formed by
+putting two copies of the design in Fig. 28.5 back to back (connecting cout
+of one copy to cin of the other) compare with a 32-bit carry-skip adder with
+block widths 10, 12, and 10?
+c. Explain why the hybrid ripple-carry/carry-select adder of Fig. 28.6 uses
+blocks of different widths. Why are the particular widths chosen for the
+various blocks?
+28.8 Multioperand addition
+a. Design an n-operand adder on an FPGA that receives 16-bit unsigned inputs,
+one per clock cycle, and computes their sum in stored-carry form. Ignore
+overﬂow; i.e., form the sum modulo 216.
+b. Complete the design of part a so that the ﬁnal sum is obtained in standard
+binary format.
+c. How would the design of part a change if it were to perform signed
+multioperand addition?
+d. Convert the design of part a into a modulo-(216 −1) unsigned multioperand
+adder.
+28.9 Array multiplier
+Design a 4 × 4 array multiplier for an FPGA with LBs of the type shown in Fig.
+28.3. Compare the resulting implementation to the multiplier shown in Fig. 28.7
+and discuss the pros and cons of each design.
+
+<<<JP618>>>
+Problems
+605
+28.10 Multiplier design for FPGAs
+Show all the required modiﬁcations to the design of Fig. 28.7, if 6-input LUTs
+were to be used to build a 6 × 6 multiplier.
+28.11 Multiplier design for FPGAs
+In Section 28.3, the expressions for the number of LUTs and number of adders
+were derived with the implicit assumption that both k and m are divisible by h.
+How do these expressions change if k and/or m are not divisible by h?
+28.12 Multiplication via squaring
+In Section 24.2, we presented a squaring-based table-lookup method for multi-
+plication. Draw the block diagram of a 4 × 4 multiplier based on this method in
+a manner similar to Fig. 28.7. Then, compare the resulting design with the 4 × 4
+multiplier of Fig. 28.7 in terms of the total table size, total width of the adders
+used, and latency.
+28.13 Constant multipliers
+For each of the following constants, design a constant multiplier using the design
+of Fig. 28.8 and the design based on adder trees, as described near the end of
+Section 28.3. In each case, compare the two designs with respect to latency
+and cost.
+a. 43
+b. 129
+c. 135
+d. 189
+e. 211
+f. 867
+g. 8.75 (the result is to be rounded down to an integer)
+28.14 Built-in FPGA multipliers
+Choose an FPGA with built-in multipliers. Obtain data about the chip area occu-
+pied by each multiplier as a multiple of the area taken by an LB. Compare your
+resultwiththeareaneededtosynthesizeanarraymultiplierwiththesameoperand
+widths using LBs. Also, compare the latencies of the two multipliers.
+28.15 Squarer designs for FPGAs
+Study the approximate squaring scheme presented in [Lang06] and answer the
+following questions.
+a. How do you explain the counterintuitive claims of linear complexity and
+constant latency?
+b. What makes the method suitable for FPGA implementation?
+c. Can the method be extended to signed inputs? How, or why not?

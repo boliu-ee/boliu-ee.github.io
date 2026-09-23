@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第13章 基本除法方案（Basic Division Schemes） – 计算机算术：算法与硬件设计（中文解读版）</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./ch14.html" rel="next">
+<link href="./ch12.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-77d2b90c99eeff80c5837adab8b96ac7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch13.html">第四部分 除法 (Division)</a></li><li class="breadcrumb-item"><a href="./ch13.html"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">计算机算术：算法与硬件设计（中文解读版）</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第一部分 数的表示 (Number Representation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch01.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第二部分 加法与减法 (Addition/Subtraction)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第7章 快速加法器的变体（Variations in Fast Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第8章 多操作数加法（Multioperand Addition）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部分 乘法 (Multiplication)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第9章 基本乘法方案（Basic Multiplication Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第10章 高基数乘法器（High-Radix Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">第四部分 除法 (Division)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch13.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第14章 高基数除法器（High-Radix Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第15章 除法器的变体（Variations in Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第16章 收敛法除法（Division by Convergence）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">第五部分 实数运算 (Real Arithmetic)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第17章 浮点数表示（Floating-Point Representations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">第六部分 函数求值 (Function Evaluation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第23章 函数求值的变体（Variations in Function Evaluation）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第24章 查表算术（Arithmetic by Table Lookup）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">第七部分 实现专题 (Implementation Topics)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch26.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch27.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch28.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第28章 可重构算术（Reconfigurable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">附录 过去、现在与未来（Past, Present, and Future）</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#本章导读" id="toc-本章导读" class="nav-link active" data-scroll-target="#本章导读">本章导读</a></li>
+  <li><a href="#移位减除法算法shiftsubtract-division-algorithms" id="toc-移位减除法算法shiftsubtract-division-algorithms" class="nav-link" data-scroll-target="#移位减除法算法shiftsubtract-division-algorithms">13.1 移位/减除法算法（Shift/Subtract Division Algorithms）</a></li>
+  <li><a href="#程序化除法programmed-division" id="toc-程序化除法programmed-division" class="nav-link" data-scroll-target="#程序化除法programmed-division">13.2 程序化除法（Programmed Division）</a></li>
+  <li><a href="#恢复余数除法器restoring-hardware-dividers" id="toc-恢复余数除法器restoring-hardware-dividers" class="nav-link" data-scroll-target="#恢复余数除法器restoring-hardware-dividers">13.3 恢复余数除法器（Restoring Hardware Dividers）</a></li>
+  <li><a href="#不恢复余数与有符号除法nonrestoring-and-signed-division" id="toc-不恢复余数与有符号除法nonrestoring-and-signed-division" class="nav-link" data-scroll-target="#不恢复余数与有符号除法nonrestoring-and-signed-division">13.4 不恢复余数与有符号除法（Nonrestoring and Signed Division）</a></li>
+  <li><a href="#除以常数division-by-constants" id="toc-除以常数division-by-constants" class="nav-link" data-scroll-target="#除以常数division-by-constants">13.5 除以常数（Division by Constants)</a></li>
+  <li><a href="#基数-2-srt-除法radix-2-srt-division" id="toc-基数-2-srt-除法radix-2-srt-division" class="nav-link" data-scroll-target="#基数-2-srt-除法radix-2-srt-division">13.6 基数 2 SRT 除法（Radix-2 SRT Division)</a></li>
+  <li><a href="#rtl-实践rtlch13_4_nonrestoring_divider" id="toc-rtl-实践rtlch13_4_nonrestoring_divider" class="nav-link" data-scroll-target="#rtl-实践rtlch13_4_nonrestoring_divider">RTL 实践：<code>rtl/ch13_4_nonrestoring_divider</code></a></li>
+  <li><a href="#本章小结" id="toc-本章小结" class="nav-link" data-scroll-target="#本章小结">本章小结</a></li>
+  <li><a href="#原书插图" id="toc-原书插图" class="nav-link" data-scroll-target="#原书插图">原书插图</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch13.html">第四部分 除法 (Division)</a></li><li class="breadcrumb-item"><a href="./ch13.html"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="本章导读" class="level2">
+<h2 class="anchored" data-anchor-id="本章导读">本章导读</h2>
+<p>除法是四则运算中最”别扭”的一个：乘法是”生成部分积再加”，除法却是”猜一位商、试减、看正负、错了还得回退”。这个<strong>试商-回退</strong>的串行依赖决定了除法器的基本结构。本章讲恢复余数（restoring）、不恢复余数（nonrestoring）与 SRT 除法，它们的核心区别就在于<strong>如何处理”试错了”这件事</strong>。</p>
+<p>还有一条贯穿全章的视角值得先立起来：<strong>除法与乘法都是多操作数加法问题</strong>。乘法要加的是 <span class="math inline">\(k\)</span> 个部分积，除法要加的是 <span class="math inline">\(k\)</span> 个带符号的 <span class="math inline">\(\pm q_j 2^j d\)</span>。因此提速只有两条路——<strong>减少操作数个数</strong>（走高位基数，第 14 章）或<strong>把加操作本身做快</strong>（用进位保存形式表示部分余数，第 14.2 节）。唯一的额外麻烦是：除法的这些操作数<strong>不是先验已知的</strong>，它们由商数字决定，而商数字又依赖中间部分余数的相对大小——这个”鸡生蛋”的依赖，正是除法比乘法难的根本原因。</p>
+</section>
+<section id="移位减除法算法shiftsubtract-division-algorithms" class="level2">
+<h2 class="anchored" data-anchor-id="移位减除法算法shiftsubtract-division-algorithms">13.1 移位/减除法算法（Shift/Subtract Division Algorithms）</h2>
+<p>纸笔除法的机械化：<span class="math inline">\(z / d\)</span>，逐位确定商 <span class="math inline">\(q\)</span>。维护<strong>部分余数（partial remainder）</strong> <span class="math inline">\(s\)</span>，每拍：</p>
+<ol type="1">
+<li><span class="math inline">\(s \leftarrow 2s\)</span>（左移，补入被除数下一位）；</li>
+<li>试减：<span class="math inline">\(s - d\)</span>；</li>
+<li>若结果 <span class="math inline">\(\ge 0\)</span>，商本位为 1，保留差值；否则商本位为 0，<strong>恢复</strong>原值。</li>
+</ol>
+<p><span class="math inline">\(k\)</span> 位商需 <span class="math inline">\(k\)</span> 次迭代，每拍一次加减法 + 一次符号判断——符号判断在关键路径上。</p>
+<p>用位点（dot notation）表示能看清这个过程的几何形状。被除数 <span class="math inline">\(z\)</span> 的 8 位散在 8 列中，除数 <span class="math inline">\(2^k d\)</span>（在 8 位除 4 位的例子里 <span class="math inline">\(k=4\)</span>，故除数为 160）按列对齐后逐次右移一位，每次与部分余数相减，所得差值的符号决定商位——这就是图 13.1（见本章插图区）的图形，它与阵列乘法器的位点图恰好互为”倒影”。要注意被减数（部分余数）的位宽比除数大，所以第 9.3 节关于”借位传播”的讨论在这里同样适用；部分余数寄存器通常上 <span class="math inline">\(k\)</span> 位参与运算、下 <span class="math inline">\(k\)</span> 位留作商寄存器。</p>
+</section>
+<section id="程序化除法programmed-division" class="level2">
+<h2 class="anchored" data-anchor-id="程序化除法programmed-division">13.2 程序化除法（Programmed Division）</h2>
+<p>软件实现除法循环的历史与乘法一样长。有趣的是商 0 恢复的处理：软件里自然是”先存旧值再试减”；硬件上则可以并行算 <span class="math inline">\(s\)</span> 与 <span class="math inline">\(s - d\)</span> 再选择（carry-select 思想又出现了）。</p>
+<p>程序化除法里有一个容易被忽略的技巧：符号判断可以借机器现有的标志位完成，而且不需要为无符号与有符号各写一套循环。把部分余数移位后存入 <span class="math inline">\(R_s\)</span>、除数存入 <span class="math inline">\(R_d\)</span>，用一条减法指令得 <span class="math inline">\(R_s - R_d\)</span>，再查进位标志：进位为 1 表示 <span class="math inline">\(R_s \ge R_d\)</span>（商位取 1），进位为 0 表示 <span class="math inline">\(R_s &lt; R_d\)</span>（商位取 0）。此时正确的中间结果应保留 <span class="math inline">\((2^k + R_s) - R_d\)</span>，其中 <span class="math inline">\(2^k\)</span> 是移入进位标志的部分余数最高位。由于</p>
+<p><span class="math display">\[
+(2^k + R_s) - R_d = R_s + (2^k - R_d) = R_s + R_d \text{ 的 2 的补码}
+\]</span></p>
+<p><strong>即使做的是无符号除法，用 2 的补码减法指令也能在两种情形下都得到正确结果</strong>。寄存器用法上，除法与乘法几乎对称：与乘数可以放在部分积寄存器的低半部分一样，商与被除数一起向高位流动而腾出的低位空间可以共享，因此商寄存器与部分余数寄存器可以是同一个。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch13/fig13_03.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 13.3 程序化除法的寄存器使用方式</figcaption>
+</figure>
+</div>
+<p>除去取操作数与存结果的指令（任何实现都需要），一个除法指令由 <strong><span class="math inline">\(6k+3\)</span> 到 <span class="math inline">\(8k+3\)</span> 条机器指令</strong>完成；更精确地说，若商的二进制表示中有 <span class="math inline">\(w\)</span> 个 1，则执行 <span class="math inline">\(6k + 2w + 3\)</span> 条指令——因为商位为 0 的迭代里减法与自增指令被跳过，这是运行时间依赖 <span class="math inline">\(w\)</span> 的原因。<strong>对 32 位操作数，平均要 200 多条指令</strong>；即使有专用指令承担循环内的部分功能，循环体也至少需要 32 条指令。这就解释了硬件除法器对数值密集型应用的必要性。至于没有硬件除法器的微程序处理器，则会用一个与图 13.4 极其相似的微例程，出于与第 9.2 节末尾相同的理由，它显著快于等价的机器语言程序，但仍远慢于硬连线实现。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch13/fig13_04.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 13.4 顺序除法所需程序的结构：所示指令在多数处理器上都是常见的</figcaption>
+</figure>
+</div>
+</section>
+<section id="恢复余数除法器restoring-hardware-dividers" class="level2">
+<h2 class="anchored" data-anchor-id="恢复余数除法器restoring-hardware-dividers">13.3 恢复余数除法器（Restoring Hardware Dividers）</h2>
+<p>恢复（restoring）方案忠实复刻纸笔流程：试减为负 → 加回除数恢复 → 移位继续。缺点明显：<strong>每拍最坏两次加法</strong>（减一次、加回一次），且恢复操作使迭代节奏不均匀。硬件数据通路：部分余数寄存器（<span class="math inline">\(2k\)</span> 位，与商寄存器共用移位）、加减法器、符号判断控制——与乘法器同构，只是控制方向相反。</p>
+<p>图 13.5 给出了无符号整数顺序除法的硬件实现。每个周期 <span class="math inline">\(j\)</span> 开始时，部分余数 <span class="math inline">\(s^{(j-1)}\)</span> 左移、其最高位被移入一个专用触发器；随后计算试探差 <span class="math inline">\(2s^{(j-1)} - q_{k-j}(2^k d)\)</span>。<strong>注意那个 <span class="math inline">\(2^k\)</span> 因子</strong>：它意味着除数只与部分余数的<strong>高 <span class="math inline">\(k\)</span> 位</strong>对齐参与试探减，低半部分不受影响。商位的判定规则是：若移出的最高位为 1，<strong>或</strong>试探差为正（<span class="math inline">\(c_{out}=1\)</span>），则 <span class="math inline">\(q_{k-j} = 1\)</span> 并把试探差载入部分余数寄存器的高半部；否则 <span class="math inline">\(q_{k-j}=0\)</span>、部分余数保持不变。这里有一个实现选择值得指出：我们<strong>本可以</strong>总是把试探差载入寄存器、需要时再用一次补偿加法恢复回来——但那样硬件更慢，所以图 13.5 的 mux 方案（选择”载入试探差”还是”保持原值”）才是正解。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch13/fig13_05.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 13.5</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-warning callout-titled" title="时序陷阱">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">警告</span>时序陷阱
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>恢复除法对时序非常敏感。每个周期必须依次完成：寄存器移位 → 信号通过加法器传播 → 存储商位，因此<strong>试探差的符号必须在周期末（例如时钟下降沿）采样</strong>。这种”信号要跑到周期末尾才有效”的模式会拉长时钟周期，是促使人们转向不恢复除法的主要动机之一（13.4 节）。</p>
+</div>
+</div>
+<p>下面用一组具体数字走一遍。取 <span class="math inline">\(z = (0111\,0101)_2 = 117\)</span>，<span class="math inline">\(d = (1010)_2 = 10\)</span>，商 4 位，<span class="math inline">\(2^kd = 160\)</span>。首先判断溢出：<span class="math inline">\(z\)</span> 的高 4 位 <span class="math inline">\((0111)_2 = 7 &lt; (1010)_2 = 10\)</span>，故无溢出。</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>周期 <span class="math inline">\(j\)</span></th>
+<th>初始/移位后</th>
+<th>试减 <span class="math inline">\(\pm 2^kd\)</span></th>
+<th>新部分余数 <span class="math inline">\(s^{(j)}\)</span></th>
+<th>商位</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>—</td>
+<td><span class="math inline">\(s^{(0)} = 117\)</span></td>
+<td>—</td>
+<td><span class="math inline">\(117\)</span></td>
+<td>—</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td><span class="math inline">\(2s^{(0)} = 234\)</span></td>
+<td><span class="math inline">\(-160\)</span></td>
+<td><span class="math inline">\(74\)</span>（正）</td>
+<td><span class="math inline">\(q_3 = 1\)</span></td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td><span class="math inline">\(2s^{(1)} = 148\)</span></td>
+<td><span class="math inline">\(-160\)</span></td>
+<td><span class="math inline">\(-12\)</span>（负）→ <strong>恢复为 148</strong></td>
+<td><span class="math inline">\(q_2 = 0\)</span></td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td><span class="math inline">\(2s^{(2)} = 296\)</span></td>
+<td><span class="math inline">\(-160\)</span></td>
+<td><span class="math inline">\(136\)</span>（正）</td>
+<td><span class="math inline">\(q_1 = 1\)</span></td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td><span class="math inline">\(2s^{(3)} = 272\)</span></td>
+<td><span class="math inline">\(-160\)</span></td>
+<td><span class="math inline">\(112\)</span>（正）</td>
+<td><span class="math inline">\(q_0 = 1\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>最终部分余数寄存器中的值是 <span class="math inline">\(112\)</span>，它是真实余数的 <span class="math inline">\(2^k = 16\)</span> 倍，故余数 <span class="math inline">\(s = 112/16 = 7\)</span>；商 <span class="math inline">\(q = (1011)_2 = 11\)</span>。验算：<span class="math inline">\(11\times10 + 7 = 117\)</span>，正确。第 2 个周期那一步就是<strong>恢复操作</strong>——为了它多付了一次加法。</p>
+<p>对带符号操作数，基本除法方程 <span class="math inline">\(z = d\times q + s\)</span> 加上两条约束 <span class="math inline">\(\text{sign}(s) = \text{sign}(z)\)</span> 与 <span class="math inline">\(|s| &lt; |d|\)</span> 就唯一确定了商与余数。看四组符号组合：<span class="math inline">\(5/3 \Rightarrow q=1, s=2\)</span>；<span class="math inline">\(5/(-3) \Rightarrow q=-1, s=2\)</span>；<span class="math inline">\((-5)/3 \Rightarrow q=-1, s=-2\)</span>；<span class="math inline">\((-5)/(-3) \Rightarrow q=1, s=-2\)</span>。可以看出 <strong><span class="math inline">\(q\)</span> 与 <span class="math inline">\(s\)</span> 的绝对值只由操作数的绝对值决定</strong>，而符号可以事后修正（商的符号 = 被除数符号 <span class="math inline">\(\oplus\)</span> 除数符号，余数符号跟随被除数）。因此恢复除法处理带符号数的首选办法是”间接算法”——先转成无符号运算，最后按符号规则调整符号位或做取补。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="解读">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>解读
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><span class="math inline">\(s = z \bmod d\)</span> 在这里采用的是<strong>截断（truncation）语义</strong>——C 语言族的选择，也是硬件最自然的实现。它与数学上的地板（flooring）语义不同：<span class="math inline">\(-5/3\)</span> 按截断是 <span class="math inline">\(q=-1, s=-2\)</span>，按地板则是 <span class="math inline">\(q=-2, s=1\)</span>。做除法器前必须先确认目标语义，否则与软件栈的行为对不上。</p>
+</div>
+</div>
+</section>
+<section id="不恢复余数与有符号除法nonrestoring-and-signed-division" class="level2">
+<h2 class="anchored" data-anchor-id="不恢复余数与有符号除法nonrestoring-and-signed-division">13.4 不恢复余数与有符号除法（Nonrestoring and Signed Division）</h2>
+<p><strong>不恢复余数（nonrestoring）</strong>的洞察：恢复 + 移位 + 再减 = 移位 + 加。代数上 <span class="math inline">\(2(s - d) + d = 2s - d\)</span>，所以试减失败后不用加回，<strong>下一拍改成加 <span class="math inline">\(d\)</span></strong> 即可。每拍固定一次加减：</p>
+<ul>
+<li>当前部分余数 <span class="math inline">\(\ge 0\)</span>：商本位 1，下一拍<strong>减</strong> <span class="math inline">\(d\)</span>；</li>
+<li>部分余数 <span class="math inline">\(&lt; 0\)</span>：商本位 0，下一拍<strong>加</strong> <span class="math inline">\(d\)</span>。</li>
+</ul>
+<p>迭代节奏完全均匀（每拍一次加法），控制极简。代价：结束时若余数为负需一次最终修正（加回 <span class="math inline">\(d\)</span>），商的最低位可能需要舍入修正。</p>
+<p>把这套推理写严格一点。设本周期开始时的移位后部分余数为 <span class="math inline">\(u\)</span>。若（按恢复法）把 <span class="math inline">\(u - 2^kd\)</span> 恢复为正确的 <span class="math inline">\(u\)</span>，下一拍应得 <span class="math inline">\(2u - 2^kd\)</span>。若不恢复、直接带着错误值 <span class="math inline">\(u - 2^kd\)</span> 往下走，继续移位再减会得到 <span class="math inline">\(2(u-2^kd) - 2^kd = 2u - 3\times 2^kd\)</span>，显然不对；但只要<strong>改成加</strong>，就得到 <span class="math inline">\(2(u - 2^kd) + 2^kd = 2u - 2^kd\)</span>——与恢复后所得完全相同。所以规则是：<strong>部分余数变负时保留这个”错误”的值，记下正确的商位，并在下一拍做加法而非减法</strong>。同一个例子换成不恢复算法，差别就在第 2 周期没有回退、第 3 周期用的是 <span class="math inline">\(-24\)</span> 这个”临时错误值”：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>周期 <span class="math inline">\(j\)</span></th>
+<th>初始/移位后</th>
+<th>本拍操作</th>
+<th>新部分余数 <span class="math inline">\(s^{(j)}\)</span></th>
+<th>商位</th>
+<th>下拍动作</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>—</td>
+<td><span class="math inline">\(s^{(0)} = 117\)</span></td>
+<td>—</td>
+<td><span class="math inline">\(117\)</span></td>
+<td>—</td>
+<td>减</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td><span class="math inline">\(2s^{(0)} = 234\)</span></td>
+<td><span class="math inline">\(-160\)</span></td>
+<td><span class="math inline">\(74\)</span>（正）</td>
+<td><span class="math inline">\(q_3 = 1\)</span></td>
+<td>减</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td><span class="math inline">\(2s^{(1)} = 148\)</span></td>
+<td><span class="math inline">\(-160\)</span></td>
+<td><span class="math inline">\(-12\)</span>（负）</td>
+<td><span class="math inline">\(q_2 = 0\)</span></td>
+<td><strong>加</strong></td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td><span class="math inline">\(2s^{(2)} = -24\)</span></td>
+<td><span class="math inline">\(+160\)</span></td>
+<td><span class="math inline">\(136\)</span>（正）</td>
+<td><span class="math inline">\(q_1 = 1\)</span></td>
+<td>减</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td><span class="math inline">\(2s^{(3)} = 272\)</span></td>
+<td><span class="math inline">\(-160\)</span></td>
+<td><span class="math inline">\(112\)</span>（正）</td>
+<td><span class="math inline">\(q_0 = 1\)</span></td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>结果与恢复法一致：<span class="math inline">\(s = 112/16 = 7\)</span>，<span class="math inline">\(q = (1011)_2 = 11\)</span>；图 13.8 把两种算法的轨迹画在同一张”部分余数—时间”图上，恢复式在负值处有一个向上的回退折线，不恢复式则是一条连续折线（<span class="math inline">\(117 \to 234 \to 74 \to 148 \to -12 \to -24 \to 136 \to 272 \to 112\)</span>）——<strong>恢复法多付的那一次加法，在这张图里看得见</strong>。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch13/fig13_08.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 13.8 恢复除法与不恢复除法中部分余数的变化轨迹对比：每拍对移位后的部分余数加/减 <span class="math inline">\(2^kd = 160\)</span>。(a) 恢复式，第 2 拍出现回退；(b) 不恢复式，第 2 拍保留负值，第 3 拍改加</figcaption>
+</figure>
+</div>
+<p>不恢复除法的硬件实现（图 13.10）比恢复式更简洁：每个周期开始把 <span class="math inline">\(s^{(j-1)}\)</span> 左移、最高位移入专用触发器；商位由<strong>除数符号与部分余数符号之补</strong>异或得到（部分余数符号之补即 <span class="math inline">\(c_{out}\)</span>，因为构成新部分余数的两项总是异号）。全部 <span class="math inline">\(k\)</span> 位商算完后还需 <strong>2~4 个额外周期</strong>修正商与最终余数。把它的行为画成 Robertson 图（新部分余数 <span class="math inline">\(s^{(j)}\)</span> 关于移位后旧部分余数 <span class="math inline">\(2s^{(j-1)}\)</span>），商数字的选取规则一目了然：radix-2 不恢复除法的商数字只有 <span class="math inline">\(\{1,-1\}\)</span>，判据就是 <span class="math inline">\(2s^{(j-1)}\)</span> 的符号——一条穿过原点的水平分界线，简单到极致（图 13.11）。一旦允许商数字取 0（<span class="math inline">\(q_{-j} \in \{-1,0,1\}\)</span>），分界线就不再是一条而是<strong>两条</strong>，中间夹出一条”什么都不做”的零带（图 13.12）——这条零带正是冗余的来源，也是 SRT 与高基数除法的几何起点。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch13/fig13_10.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 13.10 移位/减法顺序不恢复除法器</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch13/fig13_11.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 13.11 radix-2 不恢复除法中新部分余数 <span class="math inline">\(s^{(j)}\)</span> 随移位后旧部分余数 <span class="math inline">\(2s^{(j-1)}\)</span> 的变化关系</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch13/fig13_12.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 13.12 商数字取 <span class="math inline">\(q_{-j} \in \{-1, 0, 1\}\)</span> 时新部分余数随移位后旧部分余数的变化关系</figcaption>
+</figure>
+</div>
+<p>有符号除法的商数字选取规则也随之改写为：<strong>若 <span class="math inline">\(\text{sign}(s) = \text{sign}(d)\)</span> 则 <span class="math inline">\(q_{k-j} = 1\)</span>，否则 <span class="math inline">\(q_{k-j} = -1\)</span></strong>，即”让部分余数的符号向被除数的符号靠拢”。这条规则带来两个必须收尾的问题。其一，<strong>商要从 <span class="math inline">\(\{1,-1\}\)</span> 数字集转换回标准二进制</strong>：先把所有 <span class="math inline">\(-1\)</span> 替换为 0 得到 <span class="math inline">\(p\)</span>（由 <span class="math inline">\(q_i = 2p_i-1\)</span> 的关系），再把 <span class="math inline">\(p\)</span> 的最高位取反、整体左移 1 位并在 LSB 补 1，所得即 2 的补码商；其正确性可由 <span class="math inline">\(\sum_{i=0}^{k-1}2^i = 2^k-1\)</span> 直接验证。其二，<strong>最终余数符号若与被除数相反必须修正</strong>：给余数加减 <span class="math inline">\(2^kd\)</span>、同时给商减/加 1——究其根本，数字集 <span class="math inline">\(\{1,-1\}\)</span> 只能表示<strong>奇数</strong>，商如果是偶数，修正就不可避免。好在这个转换可以<strong>即时（on-the-fly）完成</strong>：在初始周期设定商的符号位，此后每次减法产生 1、每次加法产生 0，最后一个数字前再产生一个 1，不需要事后的长链进位传播。图 13.9（见本章插图区）给出了一个 2 的补码操作数的完整示例，涵盖余数修正与商转换/修正的全部环节。</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="解读">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>解读
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>不恢复余数的真正价值不在省那一次恢复加法，而在<strong>它把商数字集合扩展到 <span class="math inline">\(\{-1, +1\}\)</span></strong>——允许”负的商位”，这正是 SRT 除法（13.6 节）与冗余表示合流的入口。</p>
+</div>
+</div>
+</section>
+<section id="除以常数division-by-constants" class="level2">
+<h2 class="anchored" data-anchor-id="除以常数division-by-constants">13.5 除以常数（Division by Constants)</h2>
+<p>除以常数 <span class="math inline">\(d\)</span> 可以变成<strong>乘法</strong>：<span class="math inline">\(z / d \approx z \times \lceil 2^m / d \rceil / 2^m\)</span>，预计算”魔数（magic number）“<span class="math inline">\(\lceil 2^m / d \rceil\)</span>，一次乘法 + 移位即得商。编译器每天都在做这个变换（<code>x / 10</code> 变成乘 <code>0xCCCCCCCD</code> 再右移）。误差分析要保证对所有输入商完全正确——魔数与移位量的选择有一套成熟的理论（Granlund-Montgomery 算法）。</p>
+<p>讨论除以常数的理由与第 9.5 节”乘以常数”类似，但<strong>收益更明显</strong>——因为除法本来就比乘法慢得多。这里只考虑奇数除数：偶除数可以先除以一个奇数再右移，例如除以 20 就是先除以 5、再把结果右移 2 位。如果感兴趣的常数只有少数几个，最省事的办法是<strong>预计算它们的倒数</strong>、以适当精度存表，于是”除以常数”就变成”乘以常数倒数”。对许多小奇数除数还有一条更漂亮的路子：<strong>每个奇整数 <span class="math inline">\(d\)</span> 都存在奇整数 <span class="math inline">\(m\)</span>，使 <span class="math inline">\(d \times m = 2^n - 1\)</span></strong>，于是</p>
+<p><span class="math display">\[
+\frac{1}{d} = \frac{m}{2^n-1} = \frac{m}{2^n(1-2^{-n})} = \frac{m}{2^n}(1+2^{-n})(1+2^{-2n})(1+2^{-4n})\cdots
+\]</span></p>
+<p><span class="math inline">\(1/(1-2^{-n})\)</span> 的展开含无穷多个形如 <span class="math inline">\(1+2^{-2^i n}\)</span> 的因子，所以把 <span class="math inline">\(z\)</span> 除以 <span class="math inline">\(d\)</span> 就变成”先乘预计算的常数 <span class="math inline">\(m/2^n\)</span>，再依次乘若干 <span class="math inline">\(1+2^{-j}\)</span> 因子”——<strong>因子个数与字宽的对数成正比</strong>，而乘每个因子只需一次移位加一次加法。</p>
+<p>看 <span class="math inline">\(d = 5\)</span> 这个例子：由 <span class="math inline">\(5 \times 3 = 15 = 2^4-1\)</span> 得 <span class="math inline">\(m=3\)</span>、<span class="math inline">\(n=4\)</span>，取 24 位精度时</p>
+<p><span class="math display">\[
+\frac{z}{5} = \frac{3z}{2^4-1} = \frac{3z}{16(1-2^{-4})} = \frac{3z}{16}(1+2^{-4})(1+2^{-8})(1+2^{-16})
+\]</span></p>
+<p>三个因子就够了，整个流程是”一次乘法 + 三次移位加”，全程没有除法指令。这类方案还有对应的硬件实现（用一个 <span class="math inline">\(s \in [0,2]\)</span> 的两比特状态从高位向低位传播的线性阵列），延迟与面积与行波加法器同阶。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="适用边界">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>适用边界
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>“除以常数 = 乘魔数”的代价是<strong>必须为每个常数单独验证正确性</strong>：<span class="math inline">\(2^m/d\)</span> 的舍入方向、移位量的选择、以及边界值（<span class="math inline">\(z\)</span> 取最大值、<span class="math inline">\(z\)</span> 恰为 <span class="math inline">\(d\)</span> 的倍数）都可能踩坑。这也是为什么现代编译器里”常量除法优化”是一个有大量测试用例的独立模块，而不是一行随手写死的移位。</p>
+</div>
+</div>
+</section>
+<section id="基数-2-srt-除法radix-2-srt-division" class="level2">
+<h2 class="anchored" data-anchor-id="基数-2-srt-除法radix-2-srt-division">13.6 基数 2 SRT 除法（Radix-2 SRT Division)</h2>
+<p>SRT（Sweeney-Robertson-Tocher）把不恢复思想与冗余商表示结合：</p>
+<ul>
+<li>商数字集合 <span class="math inline">\(\{-1, 0, +1\}\)</span>——<strong>允许”跳过”</strong>：部分余数接近 0 时商本位选 0，连加减都不用做；</li>
+<li>选择规则只需看部分余数的<strong>最高几位</strong>（无需完整符号判断）：<span class="math inline">\(s \ge 1/2\)</span> 选 <span class="math inline">\(+1\)</span>，<span class="math inline">\(s \le -1/2\)</span> 选 <span class="math inline">\(-1\)</span>，否则选 0；</li>
+<li>商以冗余形式产生，最后做一次”即时转换（on-the-fly conversion）“变成普通二进制——不需要最终减法。</li>
+</ul>
+<p>三者的几何关系并排看最清楚：不恢复除法（图 13.11）只有一条原点分界线；允许 <span class="math inline">\(q \in \{-1,0,1\}\)</span> 后（图 13.12）分出三条线、中间多出零带；到了 SRT（图 13.13），选择规则进一步化简为<strong>两条固定阈值线</strong> <span class="math inline">\(\pm d\)</span> 与 <span class="math inline">\(\pm d/2\)</span>——选择只需比较部分余数与除数的简单倍数，<strong>而不需要做减法</strong>。请注意”跳过”这条规则的真正收益：在进位保存部分余数出现之后，跳过一次加法其实并不省什么（进位保存加法本身就非常快，判断”是否该跳过”的逻辑延迟与之相当）。SRT 的历史价值在于<strong>它把商数字选择从”精确比较”降级为”看几个高位”</strong>，从而为高基数、进位保存的除法器打开了大门。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch13/fig13_13.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 13.13 radix-2 SRT 除法中新部分余数与旧部分余数的关系</figcaption>
+</figure>
+</div>
+<p>下面用一个完整的数值例子走一遍。取归一化小数 <span class="math inline">\(d = (0.1100)_2 = 0.75\)</span>，被除数 <span class="math inline">\(z = (0.1000)_2 = 0.5\)</span>（<span class="math inline">\(d \in [1/2,1)\)</span> 满足归一化要求，<span class="math inline">\(z&lt;d\)</span> 故无溢出，真值 <span class="math inline">\(z/d = 2/3\)</span>），商数字 <span class="math inline">\(q \in \{-1,0,1\}\)</span>，选择阈值取 <span class="math inline">\(|2s| \ge 1/2\)</span>。</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>周期</th>
+<th><span class="math inline">\(2s^{(j-1)}\)</span></th>
+<th>商数字</th>
+<th>新部分余数 <span class="math inline">\(s^{(j)}\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td><span class="math inline">\(1.0\)</span></td>
+<td><span class="math inline">\(q_{-1} = +1\)</span></td>
+<td><span class="math inline">\(1.0 - 0.75 = 0.25\)</span></td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td><span class="math inline">\(0.5\)</span></td>
+<td><span class="math inline">\(q_{-2} = +1\)</span></td>
+<td><span class="math inline">\(0.5 - 0.75 = -0.25\)</span></td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td><span class="math inline">\(-0.5\)</span></td>
+<td><span class="math inline">\(q_{-3} = -1\)</span></td>
+<td><span class="math inline">\(-0.5 + 0.75 = 0.25\)</span></td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td><span class="math inline">\(0.5\)</span></td>
+<td><span class="math inline">\(q_{-4} = +1\)</span></td>
+<td><span class="math inline">\(-0.25\)</span></td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td><span class="math inline">\(-0.5\)</span></td>
+<td><span class="math inline">\(q_{-5} = -1\)</span></td>
+<td><span class="math inline">\(0.25\)</span></td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td><span class="math inline">\(0.5\)</span></td>
+<td><span class="math inline">\(q_{-6} = +1\)</span></td>
+<td><span class="math inline">\(-0.25\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>商数字序列 <span class="math inline">\(+1,+1,-1,+1,-1,+1\)</span> 的值为 <span class="math inline">\(2^{-1}+2^{-2}-2^{-3}+2^{-4}-2^{-5}+2^{-6} = 0.671875\)</span>，与真值 <span class="math inline">\(0.666\ldots\)</span> 的偏差在 <span class="math inline">\(2^{-6}\)</span> 以内。可以看到<strong>商数字中出现了 <span class="math inline">\(-1\)</span></strong>——这正是冗余表示的具体形态，也是它不能用普通二进制移位直接读出的原因。现在做即时转换：把所有 <span class="math inline">\(-1\)</span> 替换为 0 得 <span class="math inline">\(p = 110101\)</span>，把 <span class="math inline">\(p\)</span> 的最高位取反得 0，再左移一位、LSB 补 1，得到 <span class="math inline">\(0101011\)</span>；<span class="math inline">\((0101011)_{\text{2的补码}} = 43\)</span>，而 <span class="math inline">\(43/2^6 = 0.671875\)</span>，与按数字加权求和的结果完全一致——<strong>转换全程没有做一次减法，也没有等待进位传播</strong>。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch13/fig13_15.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 13.15 乘法与除法都是多操作数加法问题：乘法加的是各 <span class="math inline">\(x_ia2^i\)</span>，除法减的是各 <span class="math inline">\(q_j d 2^j\)</span></figcaption>
+</figure>
+</div>
+<p>图 13.15 把乘法与除法的位点图并排放在一起，是本章最好的收束：<strong>乘法加的是 <span class="math inline">\(x_i a 2^i\)</span>（系数先验已知），除法减的是 <span class="math inline">\(q_j d 2^j\)</span>（系数由迭代决定）</strong>。结构同构、难度不同——差别全在”操作数是否先验已知”这一条上。</p>
+<div class="callout callout-style-default callout-important callout-titled" title="承上启下">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">重要</span>承上启下
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>基数 2 SRT 的两个关键思想——<strong>冗余商数字</strong>与<strong>只看高位做选择</strong>——正是第 14 章高基数 SRT 的种子。Pentium FDIV bug（1.2 节）就出在 radix-4 SRT 的商数字选择表上，到时候会再提。</p>
+</div>
+</div>
+</section>
+<section id="rtl-实践rtlch13_4_nonrestoring_divider" class="level2">
+<h2 class="anchored" data-anchor-id="rtl-实践rtlch13_4_nonrestoring_divider">RTL 实践：<code>rtl/ch13_4_nonrestoring_divider</code></h2>
+<p>16/8 无符号不恢复余数除法器：部分余数为带符号 9 位，每拍固定一次加减，8 拍出商，结尾按需修正余数：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">wire</span> <span class="kw">signed</span> [<span class="dv">8</span>:<span class="dv">0</span>] rem_shift = {rem[<span class="dv">7</span>:<span class="dv">0</span>], quos[<span class="dv">7</span>]};   <span class="co">// 左移补入被除数下一位</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">wire</span> <span class="kw">signed</span> [<span class="dv">8</span>:<span class="dv">0</span>] rem_next  = (rem &gt;= <span class="dv">0</span>) ? rem_shift - <span class="kw">$signed</span>({<span class="bn">1'b0</span>, d})</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                                         : rem_shift + <span class="kw">$signed</span>({<span class="bn">1'b0</span>, d});</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">// 商位 = (rem_next &gt;= 0)；结束时 rem_next &lt; 0 则 r = rem_next + d</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>设计要点：</p>
+<ul>
+<li><strong>节奏均匀</strong>：不恢复式把恢复式的”减、（可能）加回”两步变成固定的一步加减，控制状态机极简；</li>
+<li><strong>前置条件</strong>：被除数高 8 位必须小于除数（商才能装进 8 位）——testbench 的随机激励用 <code>$random % (d*256)</code> 保证这一约束，这也是硬件除法器规格书里的经典条款；</li>
+<li><strong>最终修正</strong>：迭代结束若部分余数为负，加回除数得到真正的余数。</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> rtl/ch13_4_nonrestoring_divider</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> run_iverilog.sh    <span class="co"># 或 bash run_verilator.sh</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="本章小结" class="level2">
+<h2 class="anchored" data-anchor-id="本章小结">本章小结</h2>
+<ul>
+<li>除法 = 试商-试减-修正的串行迭代，符号判断是关键路径。</li>
+<li>恢复式忠实但节奏不均（117/10 例中第 2 拍要回退）；不恢复式每拍一次加减、均匀可控。</li>
+<li>除常数 → 魔数乘法（<span class="math inline">\(1/5 = \frac{3}{16}(1+2^{-4})(1+2^{-8})(1+2^{-16})\)</span>），编译器日常操作。</li>
+<li>SRT：冗余商数字 <span class="math inline">\(\{-1,0,+1\}\)</span> + 固定阈值 <span class="math inline">\(\pm d/2\)</span> 粗判，即时转换免去最终减法。</li>
+<li>除法与乘法同为多操作数加法，区别只在操作数是否先验已知。</li>
+</ul>
+</section>
+<section id="原书插图" class="level2">
+<h2 class="anchored" data-anchor-id="原书插图">原书插图</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch13/fig13_01.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 13.1</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch13/fig13_09.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 13.9</figcaption>
+</figure>
+</div>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./ch12.html" class="pagination-link" aria-label="第12章 乘法器的变体（Variations in Multipliers）">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./ch14.html" class="pagination-link" aria-label="第14章 高基数除法器（High-Radix Dividers）">
+        <span class="nav-page-text"><span class="chapter-title">第14章 高基数除法器（High-Radix Dividers）</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 第13章 基本除法方案（Basic Division Schemes）</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章导读</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>除法是四则运算中最"别扭"的一个：乘法是"生成部分积再加"，除法却是"猜一位商、试减、看正负、错了还得回退"。这个**试商-回退**的串行依赖决定了除法器的基本结构。本章讲恢复余数（restoring）、不恢复余数（nonrestoring）与 SRT 除法，它们的核心区别就在于**如何处理"试错了"这件事**。</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>还有一条贯穿全章的视角值得先立起来：**除法与乘法都是多操作数加法问题**。乘法要加的是 $k$ 个部分积，除法要加的是 $k$ 个带符号的 $\pm q_j 2^j d$。因此提速只有两条路——**减少操作数个数**（走高位基数，第 14 章）或**把加操作本身做快**（用进位保存形式表示部分余数，第 14.2 节）。唯一的额外麻烦是：除法的这些操作数**不是先验已知的**，它们由商数字决定，而商数字又依赖中间部分余数的相对大小——这个"鸡生蛋"的依赖，正是除法比乘法难的根本原因。</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="fu">## 13.1 移位/减除法算法（Shift/Subtract Division Algorithms）</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>纸笔除法的机械化：$z / d$，逐位确定商 $q$。维护**部分余数（partial remainder）** $s$，每拍：</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>$s \leftarrow 2s$（左移，补入被除数下一位）；</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>试减：$s - d$；</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>若结果 $\ge 0$，商本位为 1，保留差值；否则商本位为 0，**恢复**原值。</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>$k$ 位商需 $k$ 次迭代，每拍一次加减法 + 一次符号判断——符号判断在关键路径上。</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>用位点（dot notation）表示能看清这个过程的几何形状。被除数 $z$ 的 8 位散在 8 列中，除数 $2^k d$（在 8 位除 4 位的例子里 $k=4$，故除数为 160）按列对齐后逐次右移一位，每次与部分余数相减，所得差值的符号决定商位——这就是图 13.1（见本章插图区）的图形，它与阵列乘法器的位点图恰好互为"倒影"。要注意被减数（部分余数）的位宽比除数大，所以第 9.3 节关于"借位传播"的讨论在这里同样适用；部分余数寄存器通常上 $k$ 位参与运算、下 $k$ 位留作商寄存器。</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="fu">## 13.2 程序化除法（Programmed Division）</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>软件实现除法循环的历史与乘法一样长。有趣的是商 0 恢复的处理：软件里自然是"先存旧值再试减"；硬件上则可以并行算 $s$ 与 $s - d$ 再选择（carry-select 思想又出现了）。</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>程序化除法里有一个容易被忽略的技巧：符号判断可以借机器现有的标志位完成，而且不需要为无符号与有符号各写一套循环。把部分余数移位后存入 $R_s$、除数存入 $R_d$，用一条减法指令得 $R_s - R_d$，再查进位标志：进位为 1 表示 $R_s \ge R_d$（商位取 1），进位为 0 表示 $R_s &lt; R_d$（商位取 0）。此时正确的中间结果应保留 $(2^k + R_s) - R_d$，其中 $2^k$ 是移入进位标志的部分余数最高位。由于</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>(2^k + R_s) - R_d = R_s + (2^k - R_d) = R_s + R_d \text{ 的 2 的补码}</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>**即使做的是无符号除法，用 2 的补码减法指令也能在两种情形下都得到正确结果**。寄存器用法上，除法与乘法几乎对称：与乘数可以放在部分积寄存器的低半部分一样，商与被除数一起向高位流动而腾出的低位空间可以共享，因此商寄存器与部分余数寄存器可以是同一个。</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="al">![图 13.3 程序化除法的寄存器使用方式](images/ch13/fig13_03.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>除去取操作数与存结果的指令（任何实现都需要），一个除法指令由 **$6k+3$ 到 $8k+3$ 条机器指令**完成；更精确地说，若商的二进制表示中有 $w$ 个 1，则执行 $6k + 2w + 3$ 条指令——因为商位为 0 的迭代里减法与自增指令被跳过，这是运行时间依赖 $w$ 的原因。**对 32 位操作数，平均要 200 多条指令**；即使有专用指令承担循环内的部分功能，循环体也至少需要 32 条指令。这就解释了硬件除法器对数值密集型应用的必要性。至于没有硬件除法器的微程序处理器，则会用一个与图 13.4 极其相似的微例程，出于与第 9.2 节末尾相同的理由，它显著快于等价的机器语言程序，但仍远慢于硬连线实现。</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="al">![图 13.4 顺序除法所需程序的结构：所示指令在多数处理器上都是常见的](images/ch13/fig13_04.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="fu">## 13.3 恢复余数除法器（Restoring Hardware Dividers）</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>恢复（restoring）方案忠实复刻纸笔流程：试减为负 → 加回除数恢复 → 移位继续。缺点明显：**每拍最坏两次加法**（减一次、加回一次），且恢复操作使迭代节奏不均匀。硬件数据通路：部分余数寄存器（$2k$ 位，与商寄存器共用移位）、加减法器、符号判断控制——与乘法器同构，只是控制方向相反。</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>图 13.5 给出了无符号整数顺序除法的硬件实现。每个周期 $j$ 开始时，部分余数 $s^{(j-1)}$ 左移、其最高位被移入一个专用触发器；随后计算试探差 $2s^{(j-1)} - q_{k-j}(2^k d)$。**注意那个 $2^k$ 因子**：它意味着除数只与部分余数的**高 $k$ 位**对齐参与试探减，低半部分不受影响。商位的判定规则是：若移出的最高位为 1，**或**试探差为正（$c_{out}=1$），则 $q_{k-j} = 1$ 并把试探差载入部分余数寄存器的高半部；否则 $q_{k-j}=0$、部分余数保持不变。这里有一个实现选择值得指出：我们**本可以**总是把试探差载入寄存器、需要时再用一次补偿加法恢复回来——但那样硬件更慢，所以图 13.5 的 mux 方案（选择"载入试探差"还是"保持原值"）才是正解。</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 13.5](images/ch13/fig13_05.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>::: {.callout-warning title="时序陷阱"}</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>恢复除法对时序非常敏感。每个周期必须依次完成：寄存器移位 → 信号通过加法器传播 → 存储商位，因此**试探差的符号必须在周期末（例如时钟下降沿）采样**。这种"信号要跑到周期末尾才有效"的模式会拉长时钟周期，是促使人们转向不恢复除法的主要动机之一（13.4 节）。</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>下面用一组具体数字走一遍。取 $z = (0111\,0101)_2 = 117$，$d = (1010)_2 = 10$，商 4 位，$2^kd = 160$。首先判断溢出：$z$ 的高 4 位 $(0111)_2 = 7 &lt; (1010)_2 = 10$，故无溢出。</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 周期 $j$ <span class="pp">|</span> 初始/移位后 <span class="pp">|</span> 试减 $\pm 2^kd$ <span class="pp">|</span> 新部分余数 $s^{(j)}$ <span class="pp">|</span> 商位 <span class="pp">|</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|---|---|</span></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> — <span class="pp">|</span> $s^{(0)} = 117$ <span class="pp">|</span> — <span class="pp">|</span> $117$ <span class="pp">|</span> — <span class="pp">|</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 1 <span class="pp">|</span> $2s^{(0)} = 234$ <span class="pp">|</span> $-160$ <span class="pp">|</span> $74$（正） <span class="pp">|</span> $q_3 = 1$ <span class="pp">|</span></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 2 <span class="pp">|</span> $2s^{(1)} = 148$ <span class="pp">|</span> $-160$ <span class="pp">|</span> $-12$（负）→ **恢复为 148** <span class="pp">|</span> $q_2 = 0$ <span class="pp">|</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 3 <span class="pp">|</span> $2s^{(2)} = 296$ <span class="pp">|</span> $-160$ <span class="pp">|</span> $136$（正） <span class="pp">|</span> $q_1 = 1$ <span class="pp">|</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 4 <span class="pp">|</span> $2s^{(3)} = 272$ <span class="pp">|</span> $-160$ <span class="pp">|</span> $112$（正） <span class="pp">|</span> $q_0 = 1$ <span class="pp">|</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>最终部分余数寄存器中的值是 $112$，它是真实余数的 $2^k = 16$ 倍，故余数 $s = 112/16 = 7$；商 $q = (1011)_2 = 11$。验算：$11\times10 + 7 = 117$，正确。第 2 个周期那一步就是**恢复操作**——为了它多付了一次加法。</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>对带符号操作数，基本除法方程 $z = d\times q + s$ 加上两条约束 $\text{sign}(s) = \text{sign}(z)$ 与 $|s| &lt; |d|$ 就唯一确定了商与余数。看四组符号组合：$5/3 \Rightarrow q=1, s=2$；$5/(-3) \Rightarrow q=-1, s=2$；$(-5)/3 \Rightarrow q=-1, s=-2$；$(-5)/(-3) \Rightarrow q=1, s=-2$。可以看出 **$q$ 与 $s$ 的绝对值只由操作数的绝对值决定**，而符号可以事后修正（商的符号 = 被除数符号 $\oplus$ 除数符号，余数符号跟随被除数）。因此恢复除法处理带符号数的首选办法是"间接算法"——先转成无符号运算，最后按符号规则调整符号位或做取补。</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="解读"}</span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>$s = z \bmod d$ 在这里采用的是**截断（truncation）语义**——C 语言族的选择，也是硬件最自然的实现。它与数学上的地板（flooring）语义不同：$-5/3$ 按截断是 $q=-1, s=-2$，按地板则是 $q=-2, s=1$。做除法器前必须先确认目标语义，否则与软件栈的行为对不上。</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a><span class="fu">## 13.4 不恢复余数与有符号除法（Nonrestoring and Signed Division）</span></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>**不恢复余数（nonrestoring）**的洞察：恢复 + 移位 + 再减 = 移位 + 加。代数上 $2(s - d) + d = 2s - d$，所以试减失败后不用加回，**下一拍改成加 $d$** 即可。每拍固定一次加减：</span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>当前部分余数 $\ge 0$：商本位 1，下一拍**减** $d$；</span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>部分余数 $&lt; 0$：商本位 0，下一拍**加** $d$。</span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>迭代节奏完全均匀（每拍一次加法），控制极简。代价：结束时若余数为负需一次最终修正（加回 $d$），商的最低位可能需要舍入修正。</span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>把这套推理写严格一点。设本周期开始时的移位后部分余数为 $u$。若（按恢复法）把 $u - 2^kd$ 恢复为正确的 $u$，下一拍应得 $2u - 2^kd$。若不恢复、直接带着错误值 $u - 2^kd$ 往下走，继续移位再减会得到 $2(u-2^kd) - 2^kd = 2u - 3\times 2^kd$，显然不对；但只要**改成加**，就得到 $2(u - 2^kd) + 2^kd = 2u - 2^kd$——与恢复后所得完全相同。所以规则是：**部分余数变负时保留这个"错误"的值，记下正确的商位，并在下一拍做加法而非减法**。同一个例子换成不恢复算法，差别就在第 2 周期没有回退、第 3 周期用的是 $-24$ 这个"临时错误值"：</span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 周期 $j$ <span class="pp">|</span> 初始/移位后 <span class="pp">|</span> 本拍操作 <span class="pp">|</span> 新部分余数 $s^{(j)}$ <span class="pp">|</span> 商位 <span class="pp">|</span> 下拍动作 <span class="pp">|</span></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|---|---|---|</span></span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> — <span class="pp">|</span> $s^{(0)} = 117$ <span class="pp">|</span> — <span class="pp">|</span> $117$ <span class="pp">|</span> — <span class="pp">|</span> 减 <span class="pp">|</span></span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 1 <span class="pp">|</span> $2s^{(0)} = 234$ <span class="pp">|</span> $-160$ <span class="pp">|</span> $74$（正） <span class="pp">|</span> $q_3 = 1$ <span class="pp">|</span> 减 <span class="pp">|</span></span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 2 <span class="pp">|</span> $2s^{(1)} = 148$ <span class="pp">|</span> $-160$ <span class="pp">|</span> $-12$（负） <span class="pp">|</span> $q_2 = 0$ <span class="pp">|</span> **加** <span class="pp">|</span></span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 3 <span class="pp">|</span> $2s^{(2)} = -24$ <span class="pp">|</span> $+160$ <span class="pp">|</span> $136$（正） <span class="pp">|</span> $q_1 = 1$ <span class="pp">|</span> 减 <span class="pp">|</span></span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 4 <span class="pp">|</span> $2s^{(3)} = 272$ <span class="pp">|</span> $-160$ <span class="pp">|</span> $112$（正） <span class="pp">|</span> $q_0 = 1$ <span class="pp">|</span> — <span class="pp">|</span></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>结果与恢复法一致：$s = 112/16 = 7$，$q = (1011)_2 = 11$；图 13.8 把两种算法的轨迹画在同一张"部分余数—时间"图上，恢复式在负值处有一个向上的回退折线，不恢复式则是一条连续折线（$117 \to 234 \to 74 \to 148 \to -12 \to -24 \to 136 \to 272 \to 112$）——**恢复法多付的那一次加法，在这张图里看得见**。</span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a><span class="al">![图 13.8 恢复除法与不恢复除法中部分余数的变化轨迹对比：每拍对移位后的部分余数加/减 $2^kd = 160$。(a) 恢复式，第 2 拍出现回退；(b) 不恢复式，第 2 拍保留负值，第 3 拍改加](images/ch13/fig13_08.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>不恢复除法的硬件实现（图 13.10）比恢复式更简洁：每个周期开始把 $s^{(j-1)}$ 左移、最高位移入专用触发器；商位由**除数符号与部分余数符号之补**异或得到（部分余数符号之补即 $c_{out}$，因为构成新部分余数的两项总是异号）。全部 $k$ 位商算完后还需 **2~4 个额外周期**修正商与最终余数。把它的行为画成 Robertson 图（新部分余数 $s^{(j)}$ 关于移位后旧部分余数 $2s^{(j-1)}$），商数字的选取规则一目了然：radix-2 不恢复除法的商数字只有 $\{1,-1\}$，判据就是 $2s^{(j-1)}$ 的符号——一条穿过原点的水平分界线，简单到极致（图 13.11）。一旦允许商数字取 0（$q_{-j} \in \{-1,0,1\}$），分界线就不再是一条而是**两条**，中间夹出一条"什么都不做"的零带（图 13.12）——这条零带正是冗余的来源，也是 SRT 与高基数除法的几何起点。</span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a><span class="al">![图 13.10 移位/减法顺序不恢复除法器](images/ch13/fig13_10.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a><span class="al">![图 13.11 radix-2 不恢复除法中新部分余数 $s^{(j)}$ 随移位后旧部分余数 $2s^{(j-1)}$ 的变化关系](images/ch13/fig13_11.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a><span class="al">![图 13.12 商数字取 $q_{-j} \in \{-1, 0, 1\}$ 时新部分余数随移位后旧部分余数的变化关系](images/ch13/fig13_12.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a>有符号除法的商数字选取规则也随之改写为：**若 $\text{sign}(s) = \text{sign}(d)$ 则 $q_{k-j} = 1$，否则 $q_{k-j} = -1$**，即"让部分余数的符号向被除数的符号靠拢"。这条规则带来两个必须收尾的问题。其一，**商要从 $\{1,-1\}$ 数字集转换回标准二进制**：先把所有 $-1$ 替换为 0 得到 $p$（由 $q_i = 2p_i-1$ 的关系），再把 $p$ 的最高位取反、整体左移 1 位并在 LSB 补 1，所得即 2 的补码商；其正确性可由 $\sum_{i=0}^{k-1}2^i = 2^k-1$ 直接验证。其二，**最终余数符号若与被除数相反必须修正**：给余数加减 $2^kd$、同时给商减/加 1——究其根本，数字集 $\{1,-1\}$ 只能表示**奇数**，商如果是偶数，修正就不可避免。好在这个转换可以**即时（on-the-fly）完成**：在初始周期设定商的符号位，此后每次减法产生 1、每次加法产生 0，最后一个数字前再产生一个 1，不需要事后的长链进位传播。图 13.9（见本章插图区）给出了一个 2 的补码操作数的完整示例，涵盖余数修正与商转换/修正的全部环节。</span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip title="解读"}</span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a>不恢复余数的真正价值不在省那一次恢复加法，而在**它把商数字集合扩展到 $\{-1, +1\}$**——允许"负的商位"，这正是 SRT 除法（13.6 节）与冗余表示合流的入口。</span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a><span class="fu">## 13.5 除以常数（Division by Constants)</span></span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a>除以常数 $d$ 可以变成**乘法**：$z / d \approx z \times \lceil 2^m / d \rceil / 2^m$，预计算"魔数（magic number）"$\lceil 2^m / d \rceil$，一次乘法 + 移位即得商。编译器每天都在做这个变换（<span class="in">`x / 10`</span> 变成乘 <span class="in">`0xCCCCCCCD`</span> 再右移）。误差分析要保证对所有输入商完全正确——魔数与移位量的选择有一套成熟的理论（Granlund-Montgomery 算法）。</span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a>讨论除以常数的理由与第 9.5 节"乘以常数"类似，但**收益更明显**——因为除法本来就比乘法慢得多。这里只考虑奇数除数：偶除数可以先除以一个奇数再右移，例如除以 20 就是先除以 5、再把结果右移 2 位。如果感兴趣的常数只有少数几个，最省事的办法是**预计算它们的倒数**、以适当精度存表，于是"除以常数"就变成"乘以常数倒数"。对许多小奇数除数还有一条更漂亮的路子：**每个奇整数 $d$ 都存在奇整数 $m$，使 $d \times m = 2^n - 1$**，于是</span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a>\frac{1}{d} = \frac{m}{2^n-1} = \frac{m}{2^n(1-2^{-n})} = \frac{m}{2^n}(1+2^{-n})(1+2^{-2n})(1+2^{-4n})\cdots</span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a>$1/(1-2^{-n})$ 的展开含无穷多个形如 $1+2^{-2^i n}$ 的因子，所以把 $z$ 除以 $d$ 就变成"先乘预计算的常数 $m/2^n$，再依次乘若干 $1+2^{-j}$ 因子"——**因子个数与字宽的对数成正比**，而乘每个因子只需一次移位加一次加法。</span>
+<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a>看 $d = 5$ 这个例子：由 $5 \times 3 = 15 = 2^4-1$ 得 $m=3$、$n=4$，取 24 位精度时</span>
+<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a>\frac{z}{5} = \frac{3z}{2^4-1} = \frac{3z}{16(1-2^{-4})} = \frac{3z}{16}(1+2^{-4})(1+2^{-8})(1+2^{-16})</span>
+<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a>三个因子就够了，整个流程是"一次乘法 + 三次移位加"，全程没有除法指令。这类方案还有对应的硬件实现（用一个 $s \in <span class="co">[</span><span class="ot">0,2</span><span class="co">]</span>$ 的两比特状态从高位向低位传播的线性阵列），延迟与面积与行波加法器同阶。</span>
+<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="适用边界"}</span>
+<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a>"除以常数 = 乘魔数"的代价是**必须为每个常数单独验证正确性**：$2^m/d$ 的舍入方向、移位量的选择、以及边界值（$z$ 取最大值、$z$ 恰为 $d$ 的倍数）都可能踩坑。这也是为什么现代编译器里"常量除法优化"是一个有大量测试用例的独立模块，而不是一行随手写死的移位。</span>
+<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a><span class="fu">## 13.6 基数 2 SRT 除法（Radix-2 SRT Division)</span></span>
+<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a>SRT（Sweeney-Robertson-Tocher）把不恢复思想与冗余商表示结合：</span>
+<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>商数字集合 $<span class="sc">\{</span>-1, 0, +1<span class="sc">\}</span>$——**允许"跳过"**：部分余数接近 0 时商本位选 0，连加减都不用做；</span>
+<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>选择规则只需看部分余数的**最高几位**（无需完整符号判断）：$s \ge 1/2$ 选 $+1$，$s \le -1/2$ 选 $-1$，否则选 0；</span>
+<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>商以冗余形式产生，最后做一次"即时转换（on-the-fly conversion）"变成普通二进制——不需要最终减法。</span>
+<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a>三者的几何关系并排看最清楚：不恢复除法（图 13.11）只有一条原点分界线；允许 $q \in <span class="sc">\{</span>-1,0,1<span class="sc">\}</span>$ 后（图 13.12）分出三条线、中间多出零带；到了 SRT（图 13.13），选择规则进一步化简为**两条固定阈值线** $\pm d$ 与 $\pm d/2$——选择只需比较部分余数与除数的简单倍数，**而不需要做减法**。请注意"跳过"这条规则的真正收益：在进位保存部分余数出现之后，跳过一次加法其实并不省什么（进位保存加法本身就非常快，判断"是否该跳过"的逻辑延迟与之相当）。SRT 的历史价值在于**它把商数字选择从"精确比较"降级为"看几个高位"**，从而为高基数、进位保存的除法器打开了大门。</span>
+<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a><span class="al">![图 13.13 radix-2 SRT 除法中新部分余数与旧部分余数的关系](images/ch13/fig13_13.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a>下面用一个完整的数值例子走一遍。取归一化小数 $d = (0.1100)_2 = 0.75$，被除数 $z = (0.1000)_2 = 0.5$（$d \in [1/2,1)$ 满足归一化要求，$z&lt;d$ 故无溢出，真值 $z/d = 2/3$），商数字 $q \in <span class="sc">\{</span>-1,0,1<span class="sc">\}</span>$，选择阈值取 $|2s| \ge 1/2$。</span>
+<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 周期 <span class="pp">|</span> $2s^{(j-1)}$ <span class="pp">|</span> 商数字 <span class="pp">|</span> 新部分余数 $s^{(j)}$ <span class="pp">|</span></span>
+<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|---|</span></span>
+<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 1 <span class="pp">|</span> $1.0$ <span class="pp">|</span> $q_{-1} = +1$ <span class="pp">|</span> $1.0 - 0.75 = 0.25$ <span class="pp">|</span></span>
+<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 2 <span class="pp">|</span> $0.5$ <span class="pp">|</span> $q_{-2} = +1$ <span class="pp">|</span> $0.5 - 0.75 = -0.25$ <span class="pp">|</span></span>
+<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 3 <span class="pp">|</span> $-0.5$ <span class="pp">|</span> $q_{-3} = -1$ <span class="pp">|</span> $-0.5 + 0.75 = 0.25$ <span class="pp">|</span></span>
+<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 4 <span class="pp">|</span> $0.5$ <span class="pp">|</span> $q_{-4} = +1$ <span class="pp">|</span> $-0.25$ <span class="pp">|</span></span>
+<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 5 <span class="pp">|</span> $-0.5$ <span class="pp">|</span> $q_{-5} = -1$ <span class="pp">|</span> $0.25$ <span class="pp">|</span></span>
+<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 6 <span class="pp">|</span> $0.5$ <span class="pp">|</span> $q_{-6} = +1$ <span class="pp">|</span> $-0.25$ <span class="pp">|</span></span>
+<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a>商数字序列 $+1,+1,-1,+1,-1,+1$ 的值为 $2^{-1}+2^{-2}-2^{-3}+2^{-4}-2^{-5}+2^{-6} = 0.671875$，与真值 $0.666\ldots$ 的偏差在 $2^{-6}$ 以内。可以看到**商数字中出现了 $-1$**——这正是冗余表示的具体形态，也是它不能用普通二进制移位直接读出的原因。现在做即时转换：把所有 $-1$ 替换为 0 得 $p = 110101$，把 $p$ 的最高位取反得 0，再左移一位、LSB 补 1，得到 $0101011$；$(0101011)_{\text{2的补码}} = 43$，而 $43/2^6 = 0.671875$，与按数字加权求和的结果完全一致——**转换全程没有做一次减法，也没有等待进位传播**。</span>
+<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a><span class="al">![图 13.15 乘法与除法都是多操作数加法问题：乘法加的是各 $x_ia2^i$，除法减的是各 $q_j d 2^j$](images/ch13/fig13_15.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a>图 13.15 把乘法与除法的位点图并排放在一起，是本章最好的收束：**乘法加的是 $x_i a 2^i$（系数先验已知），除法减的是 $q_j d 2^j$（系数由迭代决定）**。结构同构、难度不同——差别全在"操作数是否先验已知"这一条上。</span>
+<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a>::: {.callout-important title="承上启下"}</span>
+<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a>基数 2 SRT 的两个关键思想——**冗余商数字**与**只看高位做选择**——正是第 14 章高基数 SRT 的种子。Pentium FDIV bug（1.2 节）就出在 radix-4 SRT 的商数字选择表上，到时候会再提。</span>
+<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a><span class="fu">## RTL 实践：`rtl/ch13_4_nonrestoring_divider`</span></span>
+<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a>16/8 无符号不恢复余数除法器：部分余数为带符号 9 位，每拍固定一次加减，8 拍出商，结尾按需修正余数：</span>
+<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a><span class="in">```systemverilog</span></span>
+<span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a><span class="in">wire signed [8:0] rem_shift = {rem[7:0], quos[7]};   // 左移补入被除数下一位</span></span>
+<span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a><span class="in">wire signed [8:0] rem_next  = (rem &gt;= 0) ? rem_shift - $signed({1'b0, d})</span></span>
+<span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a><span class="in">                                         : rem_shift + $signed({1'b0, d});</span></span>
+<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a><span class="in">// 商位 = (rem_next &gt;= 0)；结束时 rem_next &lt; 0 则 r = rem_next + d</span></span>
+<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a>设计要点：</span>
+<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**节奏均匀**：不恢复式把恢复式的"减、（可能）加回"两步变成固定的一步加减，控制状态机极简；</span>
+<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**前置条件**：被除数高 8 位必须小于除数（商才能装进 8 位）——testbench 的随机激励用 <span class="in">`$random % (d*256)`</span> 保证这一约束，这也是硬件除法器规格书里的经典条款；</span>
+<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**最终修正**：迭代结束若部分余数为负，加回除数得到真正的余数。</span>
+<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> rtl/ch13_4_nonrestoring_divider</span>
+<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> run_iverilog.sh    <span class="co"># 或 bash run_verilator.sh</span></span>
+<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-185"><a href="#cb3-185" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章小结</span></span>
+<span id="cb3-186"><a href="#cb3-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-187"><a href="#cb3-187" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>除法 = 试商-试减-修正的串行迭代，符号判断是关键路径。</span>
+<span id="cb3-188"><a href="#cb3-188" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>恢复式忠实但节奏不均（117/10 例中第 2 拍要回退）；不恢复式每拍一次加减、均匀可控。</span>
+<span id="cb3-189"><a href="#cb3-189" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>除常数 → 魔数乘法（$1/5 = \frac{3}{16}(1+2^{-4})(1+2^{-8})(1+2^{-16})$），编译器日常操作。</span>
+<span id="cb3-190"><a href="#cb3-190" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>SRT：冗余商数字 $<span class="sc">\{</span>-1,0,+1<span class="sc">\}</span>$ + 固定阈值 $\pm d/2$ 粗判，即时转换免去最终减法。</span>
+<span id="cb3-191"><a href="#cb3-191" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>除法与乘法同为多操作数加法，区别只在操作数是否先验已知。</span>
+<span id="cb3-192"><a href="#cb3-192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-193"><a href="#cb3-193" aria-hidden="true" tabindex="-1"></a><span class="fu">## 原书插图</span></span>
+<span id="cb3-194"><a href="#cb3-194" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-195"><a href="#cb3-195" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 13.1](images/ch13/fig13_01.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-196"><a href="#cb3-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-197"><a href="#cb3-197" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 13.9](images/ch13/fig13_09.png)</span>{fig-align="center" width="85%"}</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

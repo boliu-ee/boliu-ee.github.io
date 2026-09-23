@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第25章 高吞吐算术（High-Throughput Arithmetic） – 计算机算术：算法与硬件设计（中文解读版）</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./ch26.html" rel="next">
+<link href="./ch24.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-77d2b90c99eeff80c5837adab8b96ac7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch25.html">第七部分 实现专题 (Implementation Topics)</a></li><li class="breadcrumb-item"><a href="./ch25.html"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">计算机算术：算法与硬件设计（中文解读版）</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第一部分 数的表示 (Number Representation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch01.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第二部分 加法与减法 (Addition/Subtraction)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第7章 快速加法器的变体（Variations in Fast Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第8章 多操作数加法（Multioperand Addition）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部分 乘法 (Multiplication)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第9章 基本乘法方案（Basic Multiplication Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第10章 高基数乘法器（High-Radix Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">第四部分 除法 (Division)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第14章 高基数除法器（High-Radix Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第15章 除法器的变体（Variations in Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第16章 收敛法除法（Division by Convergence）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">第五部分 实数运算 (Real Arithmetic)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第17章 浮点数表示（Floating-Point Representations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">第六部分 函数求值 (Function Evaluation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第23章 函数求值的变体（Variations in Function Evaluation）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第24章 查表算术（Arithmetic by Table Lookup）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">第七部分 实现专题 (Implementation Topics)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch25.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch26.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch27.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch28.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第28章 可重构算术（Reconfigurable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">附录 过去、现在与未来（Past, Present, and Future）</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#本章导读" id="toc-本章导读" class="nav-link active" data-scroll-target="#本章导读">本章导读</a></li>
+  <li><a href="#算术函数的流水化pipelining-of-arithmetic-functions" id="toc-算术函数的流水化pipelining-of-arithmetic-functions" class="nav-link" data-scroll-target="#算术函数的流水化pipelining-of-arithmetic-functions">25.1 算术函数的流水化（Pipelining of Arithmetic Functions）</a></li>
+  <li><a href="#时钟速率与吞吐clock-rate-and-throughput" id="toc-时钟速率与吞吐clock-rate-and-throughput" class="nav-link" data-scroll-target="#时钟速率与吞吐clock-rate-and-throughput">25.2 时钟速率与吞吐（Clock Rate and Throughput）</a></li>
+  <li><a href="#earle-锁存器the-earle-latch" id="toc-earle-锁存器the-earle-latch" class="nav-link" data-scroll-target="#earle-锁存器the-earle-latch">25.3 Earle 锁存器（The Earle Latch）</a></li>
+  <li><a href="#并行与数字串行流水线parallel-and-digit-serial-pipelines" id="toc-并行与数字串行流水线parallel-and-digit-serial-pipelines" class="nav-link" data-scroll-target="#并行与数字串行流水线parallel-and-digit-serial-pipelines">25.4 并行与数字串行流水线（Parallel and Digit-Serial Pipelines）</a></li>
+  <li><a href="#在线数字流水算术on-line-or-digit-pipelined-arithmetic" id="toc-在线数字流水算术on-line-or-digit-pipelined-arithmetic" class="nav-link" data-scroll-target="#在线数字流水算术on-line-or-digit-pipelined-arithmetic">25.5 在线/数字流水算术（On-Line or Digit-Pipelined Arithmetic）</a></li>
+  <li><a href="#脉动算术单元systolic-arithmetic-units" id="toc-脉动算术单元systolic-arithmetic-units" class="nav-link" data-scroll-target="#脉动算术单元systolic-arithmetic-units">25.6 脉动算术单元（Systolic Arithmetic Units）</a></li>
+  <li><a href="#本章小结" id="toc-本章小结" class="nav-link" data-scroll-target="#本章小结">本章小结</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch25.html">第七部分 实现专题 (Implementation Topics)</a></li><li class="breadcrumb-item"><a href="./ch25.html"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="本章导读" class="level2">
+<h2 class="anchored" data-anchor-id="本章导读">本章导读</h2>
+<p>第七部分从”算法”转向”系统”。吞吐量（throughput）才是现代芯片的第一指标——GPU 的单精度算力、交换芯片的包转发率，靠的都是流水线。本章讲算术部件的流水化原则、时钟与吞吐的关系、以及脉动阵列（systolic array）——今天 AI 加速器的体系结构原型。</p>
+</section>
+<section id="算术函数的流水化pipelining-of-arithmetic-functions" class="level2">
+<h2 class="anchored" data-anchor-id="算术函数的流水化pipelining-of-arithmetic-functions">25.1 算术函数的流水化（Pipelining of Arithmetic Functions）</h2>
+<p><strong>流水线（pipeline）</strong>：在组合逻辑中插入寄存器，把一次长延迟计算切成 <span class="math inline">\(\sigma\)</span> 级，每级一个时钟周期。效果：</p>
+<ul>
+<li>时钟周期 ≈ 原延迟的 <span class="math inline">\(1/\sigma\)</span>（+寄存器开销）；</li>
+<li>延迟（latency）不变甚至略增，但<strong>吞吐提升近 <span class="math inline">\(\sigma\)</span> 倍</strong>——每拍可吞入一个新任务。</li>
+</ul>
+<p>算术部件的流水切分原则：</p>
+<ul>
+<li><strong>均衡级延迟</strong>：关键路径决定时钟，切分不均等于白送频率；</li>
+<li><strong>寄存器开销</strong>：算术数据通路宽，流水寄存器面积可占 20-40%——级数不是越多越好；</li>
+<li><strong>Hazard 设计</strong>：迭代型算法（除法、CORDIC）反馈环内不能随意插寄存器——这是”可流水”与”不可流水”算法的分水岭。</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch25/fig25_01.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 25.1 σ 级算术流水线的结构：组合逻辑被 σ−1 排流水寄存器切成 σ 级，每级一个时钟周期，每个时钟周期可接纳一组新操作数</figcaption>
+</figure>
+</div>
+<p>一组具体数字有助于建立直觉。设某乘加单元 <span class="math inline">\(t = 40\,\mathrm{ns}\)</span>、<span class="math inline">\(g\)</span> 折合 500 个门，锁存器时间开销 <span class="math inline">\(\tau = 2\,\mathrm{ns}\)</span>、成本开销 <span class="math inline">\(\gamma = 25\)</span> 门。不流水时吞吐为 <span class="math inline">\(1/40\,\mathrm{ns} = 25\)</span> Mops；切成 4 级后每级 <span class="math inline">\(10\,\mathrm{ns}\)</span>，时钟周期 <span class="math inline">\(12\,\mathrm{ns}\)</span>，吞吐升到约 83 Mops（3.3 倍），端到端延迟从 40 ns 变为 48 ns，成本增加约 20%。若进一步切成 8 级，周期降到 <span class="math inline">\(7\,\mathrm{ns}\)</span>、吞吐约 143 Mops（5.7 倍），但此时寄存器开销已与原逻辑的一半相当，且 <span class="math inline">\(\tau\)</span> 已占去周期的近三成——继续切下去，每一刀换来的频率越来越少。</p>
+<p>流水线的<strong>效率（efficiency）</strong>定义为加速比与级数之比 <span class="math inline">\(E = S/\sigma\)</span>：级间延迟完全均衡且 <span class="math inline">\(\tau = 0\)</span> 时 <span class="math inline">\(E = 1\)</span>；上例中 4 级流水的加速比为 3.3，效率 0.83，8 级时降到 0.71。<span class="math inline">\(\tau\)</span> 固定时令级数继续加大，效率单调下滑。效率曲线与吞吐曲线放到同一张图上看，合理的工作点通常落在”吞吐尚未饱和、效率尚可接受”的拐角附近——这也是为什么实际设计很少用到理论最优级数，而是停在它的一半到三分之二处。</p>
+<p><strong>定量模型</strong>。设原功能单元成本为 <span class="math inline">\(g\)</span>、延迟为 <span class="math inline">\(t\)</span>，每级锁存的时间开销为 <span class="math inline">\(\tau\)</span>、成本开销为 <span class="math inline">\(\gamma\)</span>，且函数能被切成 <span class="math inline">\(\sigma\)</span> 个延迟相等的级，则流水线版本的三项指标为</p>
+<p><span class="math display">\[
+T = t + \sigma\tau, \qquad
+R = \frac{1}{T/\sigma} = \frac{1}{t/\sigma + \tau}, \qquad
+G = g + \sigma\gamma
+\]</span></p>
+<p><span class="math inline">\(R \to 1/\tau\)</span> 是理论天花板。但工程上把级内逻辑压到约 4 级门（<span class="math inline">\(4\delta\)</span>）就停手——再切下去，级间信号条数增加带来的 <span class="math inline">\(\gamma\)</span> 增长、以及时钟树的功耗，会把频率收益全部吃掉。取级延迟恰为 <span class="math inline">\(4\delta\)</span>（即 <span class="math inline">\(\sigma = t/4\delta\)</span>）时，三式化为</p>
+<p><span class="math display">\[
+T = t\left(1 + \frac{\tau}{4\delta}\right), \qquad
+R = \frac{1}{4\delta + \tau}, \qquad
+G = g\left(1 + \frac{t\gamma}{4g\delta}\right)
+\]</span></p>
+<p>括号里那两项就是”为极限吞吐付出的延迟税与面积税”——它们只依赖工艺与寄存器结构，与被流水化的函数无关。</p>
+<p><strong>最优级数</strong>。吞吐不是唯一目标时，一个自然的品质因数是”单位成本的吞吐”</p>
+<p><span class="math display">\[
+E = \frac{R}{G} = \frac{\sigma}{(t + \sigma\tau)(g + \sigma\gamma)}
+\]</span></p>
+<p>令 <span class="math inline">\(\mathrm{d}E/\mathrm{d}\sigma = 0\)</span>，得到</p>
+<p><span class="math display">\[
+\sigma_{opt} = \sqrt{\frac{tg}{\tau\gamma}}
+\]</span></p>
+<p>结论朴素而有用：<strong>原函数越慢越复杂（<span class="math inline">\(t, g\)</span> 大）、锁存越快越便宜（<span class="math inline">\(\tau, \gamma\)</span> 小），级数就该越多</strong>。举个具体数字：<span class="math inline">\(t = 40\delta\)</span>、<span class="math inline">\(g = 500\)</span> 门、<span class="math inline">\(\tau = 4\delta\)</span>、<span class="math inline">\(\gamma = 50\)</span> 门，得 <span class="math inline">\(\sigma_{opt} = 10\)</span>——代价是成本与延迟各翻一倍，换来吞吐提升 5 倍。把流水线冒险（数据相关、条件执行迫使排空）算进去之后，实际最优级数会明显小于这个解析值。</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="工程解读">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>工程解读
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>这组公式的用处不在于给出精确级数，而在于给出<strong>校正方向</strong>：换更快的锁存器（降 <span class="math inline">\(\tau\)</span>）或更窄的接口（降 <span class="math inline">\(\gamma\)</span>），最优级数立刻右移；反过来，若切分点选在函数内部的”胖”边界上（几十条信号要过寄存器），<span class="math inline">\(\gamma\)</span> 暴涨，级数必须收敛。这也解释了为什么深流水总伴随着”寻找自然边界”的人工匠心——自动切分工具必须先学会估算每个切点的信号条数。</p>
+</div>
+</div>
+<p>什么时候不能流水？只要算法内部存在携带反馈的递推 <span class="math inline">\(s^{(j)} = F(s^{(j-1)})\)</span>——除法的部分余数递推、IIR 滤波器的输出回授、CORDIC 的迭代——寄存器就只能插在递推环路之外，环路延迟照旧限制迭代速率。对付这类结构的办法不是硬插流水，而是<strong>变换算法本身</strong>：第 26.5 节的循环展开、第 16 章把除法递推改造成乘法链的收敛法，都是把”不可流水的递推”变成”可流水的直馈”的范例。</p>
+<p>反过来看，哪些算术单元天然适合深流水？凡是可以写成<strong>直馈数据流图</strong>的结构都行：阵列/树形乘法器（部分积阵列一层就是一级）、FIR 滤波器（每个抽头一级）、查表 + 乘加的函数求值链。这些结构的共同点是”数据只朝一个方向走”，寄存器可以插在任意位置而不改变功能——这也正是第 26.5 节重定时变换合法的前提。</p>
+</section>
+<section id="时钟速率与吞吐clock-rate-and-throughput" class="level2">
+<h2 class="anchored" data-anchor-id="时钟速率与吞吐clock-rate-and-throughput">25.2 时钟速率与吞吐（Clock Rate and Throughput）</h2>
+<p>吞吐 = 每拍任务数 × 时钟频率。提升路径只有两条：<strong>更深流水</strong>（缩短周期）与<strong>更宽并行</strong>（每拍更多任务）。物理现实：</p>
+<ul>
+<li>流水深度有收益拐点（寄存器延迟占比、时钟树功耗、分支/依赖惩罚）；</li>
+<li>并行度受面积/功耗墙约束——这就是”功耗墙”时代转向专用加速器（NPU/TPU）的根本逻辑：用<strong>领域定制的并行</strong>取代通用高频。</li>
+</ul>
+<p>两条路径还可以组合：超宽数据通路 + 深流水。GPU 的 SIMT 是”每拍更多任务”的极限形态（一个 warp 32 个线程共用同一条流水线），超标量 CPU 则是”更深流水 + 乱序填坑”的代表。选择哪边取决于负载的<strong>规则性</strong>：数据级并行度越高、控制流越平直，越应该走宽度方向（宽而慢，能效还好）；依赖链长、分支密集的标量代码，只能往深里切并承担冒险惩罚。</p>
+<p><strong>时钟周期的严格下界</strong>必须把<strong>时钟偏斜（clock skew）</strong>算进来。若随机偏斜的上界为 <span class="math inline">\(\pm\varepsilon\)</span>，最坏情形下输入锁存晚到 <span class="math inline">\(\varepsilon\)</span>、输出锁存早到 <span class="math inline">\(\varepsilon\)</span>，可用于计算的时间被扣掉 <span class="math inline">\(2\varepsilon\)</span>：</p>
+<p><span class="math display">\[
+\Delta t \ge t_{stage} + \tau + 2\varepsilon
+\]</span></p>
+<p>当级数很多、<span class="math inline">\(\Delta t\)</span> 很小时，<span class="math inline">\(\varepsilon\)</span> 所占比例上升——这就是为什么深流水通常要配更昂贵的时钟分配网络（H 树、网格、去偏斜电路）。</p>
+<p>代入数字感受更深：2 GHz 设计（周期 500 ps）中，若锁存开销 50 ps、随机偏斜 ±50 ps，级内可用于逻辑的预算只剩 300 ps——偏斜一项吃掉两成预算。频率升到 4 GHz，同样的 50 ps 偏斜占比立刻翻倍；而偏斜绝对值并不随工艺同步缩小，这就是 GHz 级深流水芯片里时钟网络动辄占去两三成总功耗的原因。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch25/fig25_02.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 25.2 波流水让多个计算波前共存于同一流水级内，快波前在前、慢波前在后，级延迟之外只需留出锁存与偏斜的余量</figcaption>
+</figure>
+</div>
+<p><strong>波流水（wave pipelining）</strong>是一个反直觉的技巧。级延迟并非常数，最快路径为 <span class="math inline">\(t_{min}\)</span>、最慢路径为 <span class="math inline">\(t_{max}\)</span>；既然两者之间存在时差，为什么不干脆让多个”计算波前”同时在一个流水级里穿行？只要相邻两组输入的信号在<strong>空间上</strong>（沿逻辑深度方向）彼此分开，它们在<strong>时间上</strong>重叠并无害处：</p>
+<p><span class="math display">\[
+\Delta t \ge t_{max} - t_{min} + \tau
+\]</span></p>
+<p>于是提高吞吐有两条路：传统的<strong>减小 <span class="math inline">\(t_{max}\)</span></strong>，以及反直觉的<strong>抬高 <span class="math inline">\(t_{min}\)</span></strong>——即延迟均衡化。极端情形下 <span class="math inline">\(t_{max} - t_{min} = 0\)</span>，<span class="math inline">\(\Delta t\)</span> 只要大于等于 <span class="math inline">\(\tau\)</span> 即可，此时必须在输出锁存处人为注入<strong>受控时钟偏斜（controlled clock skew）</strong>才能正确采样第 <span class="math inline">\(i\)</span> 级的结果：</p>
+<p><span class="math display">\[
+S^{(i)} = \left(\sum_{j=1}^{i} \bigl(t^{(j)}_{max} + \tau\bigr)\right) \bmod \Delta t
+\]</span></p>
+<p>例：<span class="math inline">\(t_{max} + \tau = 12\,\mathrm{ns}\)</span>、<span class="math inline">\(\Delta t = 5\,\mathrm{ns}\)</span>，则输出锁存相对输入锁存需要 <span class="math inline">\(+2\)</span> ns 的偏斜。波流水的代价是对随机偏斜更敏感：<span class="math inline">\(\Delta t \ge t_{max} - t_{min} + \tau + 4\varepsilon\)</span>——输入、输出两端各有 <span class="math inline">\(2\varepsilon\)</span> 的最坏损失，而分母如今已经很小了。</p>
+<p>波流水的思想可以追溯到 1960 年代末 Cotton 对”最大速率流水”的研究，1990 年代一度成为研究热点（当时期望用它把时钟频率推过传统流水线的极限）。它最终没有进入主流 EDA 流程，根本原因在于延迟均衡必须对<strong>工艺、电压、温度（PVT）全域</strong>成立——仿真里对齐的两条路径，到了硅片上、到了高温角落里就会错开，而波流水恰恰把性能押在这个错开量上。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch25/fig25_03.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 25.3 用时间-空间图对比普通流水与波流水的吞吐：普通流水每级同一时刻只有一个波前，波流水中同一级内可有多个相继波前依次穿过</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="波流水的现代回响">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>波流水的现代回响
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>波流水在工业界从未成为主流设计风格（对工艺漂移和数据相关的延迟极其敏感），但它留下了一个持久的观念：<strong>均衡路径既是低功耗手段（消除毛刺），也是高吞吐手段（压缩 <span class="math inline">\(t_{max}-t_{min}\)</span>）</strong>。第 26 章会从能耗角度再次遇到同一件事。</p>
+</div>
+</div>
+</section>
+<section id="earle-锁存器the-earle-latch" class="level2">
+<h2 class="anchored" data-anchor-id="earle-锁存器the-earle-latch">25.3 Earle 锁存器（The Earle Latch）</h2>
+<p>经典高速锁存技术：把锁存器嵌入逻辑门内（时钟与数据路径合并优化），减少每级流水的”寄存器税”。它代表了<strong>电路级流水优化</strong>——当逻辑级延迟已经很小时，锁存器自身的建立/保持开销占比上升，必须电路结构创新。现代对应物：脉冲锁存器（pulsed latch）、时间借用（time borrowing）。</p>
+<p>Earle 锁存器的行为方程是一条带反馈的与或式：</p>
+<p><span class="math display">\[
+z = dC \lor dz \lor Cz
+\]</span></p>
+<p><span class="math inline">\(C = 1\)</span> 时输出跟随数据输入 <span class="math inline">\(d\)</span>；<span class="math inline">\(C\)</span> 由 1 降到 0 的瞬间采样并保持，此后只要 <span class="math inline">\(C\)</span> 保持为 0，<span class="math inline">\(d\)</span> 的变化不影响 <span class="math inline">\(z\)</span>。它最初是为锁存进位保存加法器（carry-save adder）而设计的。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch25/fig25_04.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 25.4 Earle 锁存器的两级与或实现，输入数据 d 在锁存器内部需要扇出两次</figcaption>
+</figure>
+</div>
+<p>真正有价值的性质是：<strong>它能与前级的两级与或逻辑合并，而不增加一级门延迟</strong>。设前级算出 <span class="math inline">\(d = vw \lor xy\)</span>，代入上式展开得</p>
+<p><span class="math display">\[
+z = (vw \lor xy)C \lor (vw \lor xy)z \lor Cz
+  = vwC \lor xyC \lor vwz \lor xyz \lor Cz
+\]</span></p>
+<p>结果依然是一个两级与或网络——锁存器只是给与阵列多添了几个带 <span class="math inline">\(C\)</span> 或 <span class="math inline">\(z\)</span> 的乘积项。这就是所谓的”零延迟锁存”：在关键路径上，加法器的最后一级逻辑与寄存器合二为一。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch25/fig25_05.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 25.5 把 Earle 锁存器与前级两级与或逻辑合并后实现 z = vw ∨ xy 的结构</figcaption>
+</figure>
+</div>
+<p>代价是对<strong>时钟脉冲宽度</strong>施加了双边约束。设最大/最小门延迟为 <span class="math inline">\(\delta_{max}, \delta_{min}\)</span>，级最小延迟为 <span class="math inline">\(t_{min}\)</span>，则</p>
+<p><span class="math display">\[
+3\delta_{max} - \delta_{min} + S_{max}(C{\uparrow}, \bar{C}{\downarrow}) \le C_{high} \le 2\delta_{min} + t_{min}
+\]</span></p>
+<p>下界保证：数据确实被保存下来，且当 <span class="math inline">\(C\)</span> 的 0→1 略微领先 <span class="math inline">\(\bar{C}\)</span> 的 1→0 时不至于因逻辑冒险（hazard）锁进错值；上界保证：时钟必须在<strong>下一组输入的最快信号</strong>来得及改变本锁存器输入之前变低。这类”同时有上下界的时序约束”正是 Earle 锁存器难用之处，也是后续各种改进型（如不需要数据扇出的变体）试图简化的地方。</p>
+<p>代入一组数感受一下窗口有多窄：<span class="math inline">\(\delta_{max} = 0.3\,\mathrm{ns}\)</span>、<span class="math inline">\(\delta_{min} = 0.15\,\mathrm{ns}\)</span>、级最小延迟 <span class="math inline">\(t_{min} = 0.6\,\mathrm{ns}\)</span>，忽略 <span class="math inline">\(S_{max}\)</span> 项，则 <span class="math inline">\(C_{high}\)</span> 必须落在 <span class="math inline">\([0.75,\ 0.9]\,\mathrm{ns}\)</span> 内——整个时钟周期里高电平的合法宽度只有 150 ps。这样的约束只能由电路设计师手工保障，无法丢给标准单元流程，这正是 Earle 锁存器留在定制数据通路（手工设计的乘法器、寄存器堆）而没有进入 ASIC 综合流程的原因。</p>
+<p>把 Earle 锁存器嵌进进位保存加法器（它最初的应用场景）之后，一条乘法累加链的每级延迟可以压到 3 级门左右——早期高性能乘法器能把时钟周期做得极低，靠的正是这类电路技巧。今天的对应技术包括脉冲触发器（pulsed flip-flop）、相邻透明锁存器之间的时间借用（time borrowing）、以及把锁存功能分摊进多米诺逻辑的动态锁存结构。共同思想不变：<strong>当时钟周期逼近几级门延迟时，寄存器不能再是外挂的盒子，必须融化进逻辑里。</strong></p>
+</section>
+<section id="并行与数字串行流水线parallel-and-digit-serial-pipelines" class="level2">
+<h2 class="anchored" data-anchor-id="并行与数字串行流水线parallel-and-digit-serial-pipelines">25.4 并行与数字串行流水线（Parallel and Digit-Serial Pipelines）</h2>
+<p><strong>数字串行（digit-serial）</strong>：介于位串行（1 比特/拍）与全并行（<span class="math inline">\(k\)</span> 比特/拍）之间，每拍传 <span class="math inline">\(d\)</span> 位（一个”digit”）。<span class="math inline">\(k\)</span> 位数据 <span class="math inline">\(k/d\)</span> 拍传完：</p>
+<ul>
+<li>面积 ≈ 全并行的 <span class="math inline">\(d/k\)</span>；</li>
+<li>吞吐 = 全并行的 <span class="math inline">\(d/k\)</span>；</li>
+<li><strong>面积-吞吐乘积近似不变</strong>，但功耗/布线的甜点往往在中等 digit 宽度。</li>
+</ul>
+<p>这是 NoC 链路、SerDes 接口、以及资源受限 FPGA 设计的常用刻度尺。</p>
+<p>以 32 位数据通路为例：全并行乘法器需要 32 位宽的压缩树与最终加法器；digit 宽度取 8，则同样功能可用约 1/4 的数据通路面积在 4 拍内完成；取 <span class="math inline">\(d = 4\)</span> 则面积约为 1/8、8 拍完成。翻转的电容随数据通路同比例缩小，总<strong>功率</strong>近似按面积下降，而每次操作的<strong>能量</strong>基本不变——这正是数字串行在低功耗场景的真实卖点：省的是功率与面积，不是能量。</p>
+<p>digit 宽度的最优值由两个相反趋势夹出来：<span class="math inline">\(d\)</span> 越小，数据通路越省，但控制、寄存器与接口的固定开销占比越大，且完成一次运算的拍数越多；<span class="math inline">\(d\)</span> 越大则迅速逼近全并行的成本。经验上甜点常落在 <span class="math inline">\(k/8\)</span> 到 <span class="math inline">\(k/4\)</span> 之间。还有一条布线视角的约束：digit 宽度决定了每个周期要在模块间搬多少条线，在布线资源紧张的设计（FPGA、高密度标准单元）里，<span class="math inline">\(d\)</span> 常常是被布线而不是被逻辑面积钉死的。</p>
+<p>关键在于：<strong>哪些运算天生低位序可流水，哪些不是</strong>。以</p>
+<p><span class="math display">\[
+z = \left(\frac{(a+b)\,c\,d}{e-f}\right)^{1/2}
+\]</span></p>
+<p>为例，它由两次加/减、两次乘法、一次除法、一次开方按固定流图串成。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch25/fig25_06.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 25.6 表达式 z = ((a+b)cd/(e-f))^(1/2) 的流图，以及按数字并行方式求值时的时序图</figcaption>
+</figure>
+</div>
+<p>加法和乘法可以<strong>最低位优先（LSB-first）</strong>位串行地做：只要 <span class="math inline">\(a+b\)</span> 和 <span class="math inline">\(c \times d\)</span> 的最低位一出来，下一级乘法器就能开工——每往关键路径上挂一个功能单元，总延迟几乎不增加。流动性好得惊人。</p>
+<p>把图 25.6 的时账具体化：设加/减单元需 <span class="math inline">\(t_a\)</span>、乘法器需 <span class="math inline">\(t_m\)</span>、除法与开方各需 <span class="math inline">\(t_d\)</span>。数字并行方案的总延迟约为 <span class="math inline">\(2t_a + 2t_m + 2t_d\)</span>，且每个单元算完就闲置，利用率极低；数字流水方案中乘法器在加法器吐出第一个数字后即开工，整条链的完成时间只比最慢的那个单元多出一小段”排头”时间。挂进链里的单元越多、链越长，这种重叠的收益越大——这是数字流水相对数字并行的本质优势。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch25/fig25_07.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 25.7 数字并行与数字流水两种求值方式的时序对比：后者单次运算略慢，但各级几乎完全重叠</figcaption>
+</figure>
+</div>
+<p>除法和开方却必须<strong>最高位优先（MSB-first）</strong>，而且它们的首位依赖于操作数的<strong>所有位</strong>。看一个十进制例子，<span class="math inline">\(0.1234/0.2469\)</span>：</p>
+<ul>
+<li>只看首位数字 <span class="math inline">\(0.1xxx / 0.2xxx\)</span>，商的首位可能在 <span class="math inline">\([3, 9]\)</span> 中的任何一位（最小约 <span class="math inline">\(0.1000/0.2999 \approx 0.3334\)</span>，最大约 <span class="math inline">\(0.1999/0.2000 \approx 0.9995\)</span>）；</li>
+<li>看到第二位仍不解决问题，<span class="math inline">\(0.12xx/0.24xx\)</span> 落在约 <span class="math inline">\([0.4802, 0.5413]\)</span>；</li>
+<li>直到看完全部四位，才能确定首位商 <span class="math inline">\(q_{-1} = 4\)</span>。</li>
+</ul>
+<p>因此，<strong>用标准（非冗余）数制做位串行/数字串行的全流水级联，只能覆盖”加法-乘法”链</strong>；除法和开方必须先把操作数收齐，再回到第 14、21 章的完整算法。唯一的出路是<strong>允许结果以冗余形式输出</strong>——冗余数允许事后修正选错的商位/根位，所以只需操作数的高几位就能定出下一位。这是第 25.5 节在线算术的动机。</p>
+</section>
+<section id="在线数字流水算术on-line-or-digit-pipelined-arithmetic" class="level2">
+<h2 class="anchored" data-anchor-id="在线数字流水算术on-line-or-digit-pipelined-arithmetic">25.5 在线/数字流水算术（On-Line or Digit-Pipelined Arithmetic）</h2>
+<p><strong>在线算术（on-line arithmetic）</strong>：操作数与结果都按<strong>最高位先出</strong>的串行流，第 <span class="math inline">\(j\)</span> 位结果在收到前 <span class="math inline">\(j + \delta\)</span> 位输入后即可产出（<span class="math inline">\(\delta\)</span> 为在线延迟）。它让长串算术运算（如 <span class="math inline">\(((a \times b) + c) / d\)</span>）可以<strong>全流水级联</strong>：上一级的结果高位先行喂给下一级，总延迟 ≈ 各部件在线延迟之和，而非各自完整延迟之和。</p>
+<p>代价：需要冗余表示（高位先行意味着修正只能向低位传播）、控制复杂。在专用信号处理流水线（CORDIC 级联、复数运算链）中有独特价值。</p>
+<p>结果最终以冗余形式产出，而系统其余部分多半要常规二进制。好在转换可以<strong>在线进行（on-the-fly conversion）</strong>：维护两个寄存器 <span class="math inline">\(Q\)</span>（已收到前缀在”当前位为 0”假设下的值）与 <span class="math inline">\(Q^-\)</span>（“当前位为 <span class="math inline">\(-1\)</span>”假设下的值），每来一个新数字就按三种情况同时更新两者，最后一个数字到达时直接选出正确值——整个转换被吸收进串行流，不需要额外的一次完整加法。</p>
+<p>在线算术最成功的落点是<strong>固定拓扑的信号处理链</strong>：自适应滤波器的状态更新（乘加交替）、坐标变换（CORDIC 旋转 → 伸缩 → 反三角的级联）、复数运算链。这些场景里各级单元全部 MSB-first 流水，中间没有任何位宽转换与整字缓冲，端到端延迟约等于各级在线延迟之和再加链长——比起”每个单元收齐整个字再开工”的传统组织，流水深度直接降了一个量级。</p>
+<p>二进制有符号数字（BSD, binary signed-digit）——基 2、数字集 <span class="math inline">\([-1, 1]\)</span>——给出最简单的在线硬件。更高的基 <span class="math inline">\(r = 2^j\)</span> 用更大的数字集把周期数降下来，但元胞更复杂、引脚更多，能否真的更快要看时钟频率是否同步下降；实践中 <span class="math inline">\(r &gt; 16\)</span> 很少划算。浮点数还要求指数先到、尾数后处理，属于可直接叠加的工程细节。</p>
+<p>各类基本运算的<strong>在线延迟</strong>（收到第 <span class="math inline">\(i\)</span> 位输入到产出第 <span class="math inline">\(i\)</span> 位输出之间的拍数）如下：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>运算</th>
+<th>在线延迟（拍）</th>
+<th>前提</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>加法</td>
+<td>1 / 2</td>
+<td>数字集支持无进位加法 / 只能有限进位加法</td>
+</tr>
+<tr class="even">
+<td>乘法</td>
+<td>1 / 2</td>
+<td>同上</td>
+</tr>
+<tr class="odd">
+<td>开方</td>
+<td>1 - 2</td>
+<td>视数制而定</td>
+</tr>
+<tr class="even">
+<td>除法</td>
+<td>3 / 4</td>
+<td>支持无进位加法 / 只能有限进位加法</td>
+</tr>
+</tbody>
+</table>
+<p>读这张表的方式：加法和乘法”看见输入的高位就能产出结果的高位”，所以延迟最小；开方稍难，因为根的高位受被开方数低位的微弱影响；除法最难，因为商同时受被除数与除数两端不确定性的拉扯（下面会用一个基 4 的例子看清这一点）。这张表也是设计在线运算链的”接线图”——把各单元的在线延迟错开对齐，数据流才能严丝合缝地咬合。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch25/fig25_08.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 25.8 数字流水的 MSD 优先无进位加法，本质是无进位加法阵列的一条对角切片，输入到输出延迟 1 拍</figcaption>
+</figure>
+</div>
+<p>加法的第 <span class="math inline">\(-i\)</span> 位结果只依赖两个操作数的第 <span class="math inline">\(-i\)</span> 与 <span class="math inline">\(-i-1\)</span> 位（这正是第 3 章无进位加法的定义），所以收到两个最高位数字就能吐出结果的最高位——图中斜线右侧的阴影代表”尚未看到”的操作数低位与”尚不可知”的和的低位。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch25/fig25_09.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 25.9 数字流水的 MSD 优先有限进位加法，多一级位置和的锁存，延迟 2 拍</figcaption>
+</figure>
+</div>
+<p>BSD 输入不满足无进位加法的条件，必须改用有限进位加法：先算位置进位 <span class="math inline">\(t_{-i+2}\)</span> 与位置和 <span class="math inline">\(w_{-i+1}\)</span>，再合并出临时和 <span class="math inline">\(w_{-i}\)</span>，因此多用一级锁存延迟，在线延迟变成 2 拍。</p>
+<p>除法的延迟之所以高达 3-4 拍，直观原因是被除数与除数的不确定性对商的影响方向相反，必须同时收窄两端。以 <span class="math inline">\(r = 4\)</span>、数字集 <span class="math inline">\([-2, 2]\)</span> 为例（可表示范围仅为 <span class="math inline">\((-2/3,\, 2/3)\)</span>）：</p>
+<ul>
+<li>第 1 拍：被除数 <span class="math inline">\((.0\cdots)_4\)</span>、除数 <span class="math inline">\((.1\cdots)_4\)</span> → 商落在 <span class="math inline">\((-2/3,\,2/3)\)</span>，<span class="math inline">\(q_{-1} \in [-2, 2]\)</span>；</li>
+<li>第 2 拍：<span class="math inline">\((.00\cdots)_4 / (.1\bar{2}\cdots)_4\)</span> → 收窄到 <span class="math inline">\((-1/2,\,1/2)\)</span>，仍不足以定出首位；</li>
+<li>第 3 拍：收窄到 <span class="math inline">\((1/16,\,5/16)\)</span>，<span class="math inline">\(q_{-1} \in [0, 1]\)</span>；</li>
+<li>第 4 拍：才最终收敛到 <span class="math inline">\(q_{-1} = 1\)</span>。</li>
+</ul>
+<p>有人证明过：只要数制支持无进位加法，3 拍总是充分必要；若只能做有限进位加法，则需要 4 拍。</p>
+<p>在线乘法的递推值得写下来。设到第 <span class="math inline">\(i\)</span> 拍为止，两个操作数已收到的高位部分分别构成前缀 <span class="math inline">\(A_{[i]}\)</span> 与 <span class="math inline">\(X_{[i]}\)</span>，新到数字为 <span class="math inline">\(a_{-i}\)</span>、<span class="math inline">\(x_{-i}\)</span>。部分积满足</p>
+<p><span class="math display">\[
+P_{[i]} = P_{[i-1]} + \bigl(a_{-i} X_{[i-1]} + x_{-i} A_{[i-1]}\bigr)\, r^{-i} + a_{-i} x_{-i}\, r^{-2i}
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch25/fig25_10.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 25.10 数字流水 MSD 优先的乘法过程：第 i 拍新到的数字分别与已积累的部分乘数、部分被乘数相乘，左移一个数字位置后累入残余，残余的最高位即为本拍输出的积数字</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch25/fig25_11.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 25.11 数字流水的 MSD 优先 BSD 乘法器：部分被乘数、部分乘数各存寄存器，三操作数无进位加法器每拍吐出一个结果数字</figcaption>
+</figure>
+</div>
+<p>乘法的每拍工作是：把新到的 <span class="math inline">\(a_{-i}\)</span> 与 <span class="math inline">\(x_{-i}\)</span> 分别乘上已有的部分乘数和部分被乘数，再加上 <span class="math inline">\(a_{-i}x_{-i}\)</span>，与左移一位的乘积残量 <span class="math inline">\(p^{(i-1)}\)</span> 做三操作数无进位加法；结果的最高位就是本拍要输出的数字，被丢弃，余下的数字构成新的残量 <span class="math inline">\(p^{(i)}\)</span>。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch25/fig25_12.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 25.12 在线（数字流水）算术单元的概念视图：残余量持续累积，已处理部分不断生长，未处理部分不断收缩</figcaption>
+</figure>
+</div>
+<p>所有在线运算共用同一幅图景：<strong>残余（residual）+ 已处理前缀 + 未处理后缀</strong>。对除法而言，残余量就是”被除数减去已知的商数字与除数相乘所得的部分积”；每确定一位商，就从这个残余里减去两项乘积（新商位 × 部分除数、新除数位 × 部分商），再用残余的高几位去估计下一位商。这与第 14 章 SRT 的残余递推是一回事，只不过操作数是”逐位抵达”的。</p>
+<div class="callout callout-style-default callout-warning callout-titled" title="为什么在线算术没有普及">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">警告</span>为什么在线算术没有普及
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>在线算术用很小的在线延迟换来了”运算链全流水”的能力，在 CORDIC 级联、复数乘加链这类固定拓扑中有过成功应用；但它要求全局统一采用冗余数、并承担最后的冗余-二进制转换开销。当 VLSI 引脚限制不再是瓶颈、而设计周期与工具链成为瓶颈时，“大家都写 <code>$a + b$</code>”的结构胜出了。它的思想遗产留在今天的流式数据流架构里。</p>
+</div>
+</div>
+</section>
+<section id="脉动算术单元systolic-arithmetic-units" class="level2">
+<h2 class="anchored" data-anchor-id="脉动算术单元systolic-arithmetic-units">25.6 脉动算术单元（Systolic Arithmetic Units）</h2>
+<p><strong>脉动阵列（systolic array）</strong>：大量简单 PE（处理单元）规则连接，数据像血液一样在阵列中”脉动”流动，每个 PE 每拍做一次小运算（通常是 MAC）并把结果传给邻居。性质：</p>
+<ul>
+<li>计算与通信<strong>严格局部化</strong>——无全局总线、无长连线；</li>
+<li>完美流水：阵列越大吞吐越高，延迟线性增长但吞吐恒定；</li>
+<li>矩阵乘法是最经典映射。</li>
+</ul>
+<p>判据还需要加严一条：<strong>任何未经锁存的信号都不允许跨多个单元传播</strong>——否则行波进位加法器也要算「脉动」了。进位链不经寄存器地横跨整个字宽，所以它不是脉动结构；这一条把「局部性」从几何要求提升成了时序要求。</p>
+<p>三个值得记住的构造实例：</p>
+<ul>
+<li><strong>阵列乘法器 → 位并行脉动乘法器</strong>。图 11.18 的流水阵列乘法器把 <span class="math inline">\(a_i\)</span> 广播给整列、把 <span class="math inline">\(x_j\)</span> 广播给整行；把广播改成「从前一个 PE 接过来、每拍往下（或往右）传一格」，同时在其余输入路径上补齐等量延迟，电路功能完全不变——这种变换叫<strong>脉动重定时（systolic retiming）</strong>。若要求乘积各位同时可用，还要在 <span class="math inline">\(p\)</span> 输出路径上补延迟。</li>
+<li><strong>数字流水乘法器 → 脉动形式</strong>。图 25.11 中 <span class="math inline">\(a_{-i}\)</span> 与 <span class="math inline">\(x_{-i}\)</span> 驱动一大批 2 选 1 多路器，扇出巨大；但并不需要立刻用到 <span class="math inline">\(x_{-i}a_{[-1,-i+1]}\)</span> 的全部数字，因此可以把相关动作沿阵列铺开：头元胞先形成最高位，输入数字继续右传、结果左传。</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch25/fig25_13.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 25.13 基 4 数字流水乘法器的脉动高层设计：每个元胞处理一个基 4 数字，操作数数字向右传播、结果数字向左传播，控制信号随数据一起流水</figcaption>
+</figure>
+</div>
+<ul>
+<li><strong>Montgomery 模乘</strong>天生适合脉动化：它的”是否减去模 <span class="math inline">\(m\)</span> 的倍数”由<strong>最低位</strong>决定，与进位从低位向高位传播的方向一致，从而化解了第 15.4 节提到的方向冲突；只需把普通阵列乘法器的元胞换成能存部分积位并能做加法带 <span class="math inline">\(m\)</span> 的复杂元胞即可。</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch25/fig25_14.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 25.14 可编程 FIR 滤波器的常规实现（广播控制、广播数据）与脉动实现（流水线化的数据与控制）</figcaption>
+</figure>
+</div>
+<p><span class="math inline">\(N\)</span> 抽头 FIR 的常规实现是 <span class="math inline">\(y(t) = \sum_{i=0}^{N-1} h(i)\,x(t-i)\)</span>：系数 <span class="math inline">\(h(i)\)</span> 由控制信号广播到所有抽头单元。脉动版本把<strong>数据与控制一起流水化</strong>：输入样本沿链一级级右传，系数载荷也随时间戳向前传递，不再有任何信号需要跨越整个阵列。</p>
+<p>把时序账算清楚：常规广播实现的时钟周期里含一条穿越全部 <span class="math inline">\(N\)</span> 个抽头的广播线，其延迟随 <span class="math inline">\(N\)</span> 线性增长，吞吐随之衰减；脉动版本中每条连线只连接相邻单元，时钟周期与 <span class="math inline">\(N\)</span> 无关——<span class="math inline">\(N\)</span> 加倍只是把流水填满的时间（延迟）加了几拍，每拍出一份结果的速率分毫不变。这个”延迟换吞吐、且延迟只涨线性”的交换比，正是脉动结构在大规模阵列上不可替代的原因。</p>
+<p>矩阵乘法映射到脉动阵列有三种经典数据流：<strong>输出固定</strong>（每个 PE 持有一个 <span class="math inline">\(C_{ij}\)</span> 累加器，<span class="math inline">\(A\)</span> 的行与 <span class="math inline">\(B\)</span> 的列交叉流过）、<strong>权重固定</strong>（TPU v1 的选择：权重预先载入 PE，激活流过阵列）、<strong>行固定</strong>（结果行驻留阵列内）。三者的差别不在算力而在<strong>数据搬运量</strong>——谁静止、谁流动，决定了 SRAM 的读写次数与能耗，这正是第 26 章的视角：脉动阵列省的不只是延迟，还有搬数的焦耳。</p>
+<p>脉动重定时的合法性由一条简单的<strong>割集规则（cut-set rule）</strong>保证：在数据流图上任取一条把图分成两半的割，若把割上所有前向边的延迟各加 <span class="math inline">\(k\)</span>、所有反向边的延迟各减 <span class="math inline">\(k\)</span>（不能减成负数），则系统的输入输出功能完全不变。FIR 的广播数据路径变成逐级传递，正是对每条广播线应用一次割集变换的结果。这条规则也是第 26.5 节重定时优化的理论基础——两者是同一枚硬币的两面。</p>
+<div class="callout callout-style-default callout-important callout-titled" title="从历史到当下">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">重要</span>从历史到当下
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>脉动阵列 1980 年代由孔祥重（H.T. Kung）提出时因制造技术受限而沉寂，2016 年 Google TPU 以 256×256 脉动 MAC 阵列重出江湖——<strong>深度学习的矩阵乘法负载 + 先进工艺</strong>，让”数据流过规则阵列”的古老思想成为 AI 芯片的主流架构之一。读本节时值得对照 TPU/NPU 的架构文档。</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="一个值得记住的量化结论">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>一个值得记住的量化结论
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>对可编程 FIR 的两种实现做过详细建模：随着工艺缩放、电路速度提升，<strong>脉动版本几乎保住全部速度收益，而常规版本在仅 20 个抽头时就丢掉近一半，到 200 抽头时几乎丢光</strong>——全部损失来自互连延迟与负载。换句话说，连线延迟在延迟预算中的占比越高，「通信局部化」这一条的价值就越大；这也是今天先进工艺下脉动架构重新吃香的物理原因。</p>
+</div>
+</div>
+</section>
+<section id="本章小结" class="level2">
+<h2 class="anchored" data-anchor-id="本章小结">本章小结</h2>
+<ul>
+<li>流水线用寄存器换吞吐；<span class="math inline">\(T = t+\sigma\tau\)</span>、<span class="math inline">\(R = 1/(t/\sigma+\tau)\)</span>、<span class="math inline">\(G = g+\sigma\gamma\)</span>，<span class="math inline">\(\sigma_{opt} = \sqrt{tg/(\tau\gamma)}\)</span>。</li>
+<li>时钟周期下界要计入锁存开销与随机偏斜；波流水把 <span class="math inline">\(t_{max}-t_{min}\)</span> 而非 <span class="math inline">\(t_{max}\)</span> 作为目标。</li>
+<li>Earle 锁存器把寄存器”融”进两级与或逻辑；代价是严格的双边脉宽约束。</li>
+<li>数字串行给出面积-吞吐的连续刻度；LSB 优先的加/乘可流水，MSB 优先的除/开方不行。</li>
+<li>在线算术：高位先出 + 冗余表示，让运算链全流水；在线延迟加 1-2、开方 1-2、除 3-4 拍。</li>
+<li>脉动阵列：局部通信的规则阵列，吞吐与规模无关、延迟线性增长——AI 加速器的体系结构原型。</li>
+</ul>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./ch24.html" class="pagination-link" aria-label="第24章 查表算术（Arithmetic by Table Lookup）">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第24章 查表算术（Arithmetic by Table Lookup）</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./ch26.html" class="pagination-link" aria-label="第26章 低功耗算术（Low-Power Arithmetic）">
+        <span class="nav-page-text"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 第25章 高吞吐算术（High-Throughput Arithmetic）</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章导读</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>第七部分从"算法"转向"系统"。吞吐量（throughput）才是现代芯片的第一指标——GPU 的单精度算力、交换芯片的包转发率，靠的都是流水线。本章讲算术部件的流水化原则、时钟与吞吐的关系、以及脉动阵列（systolic array）——今天 AI 加速器的体系结构原型。</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## 25.1 算术函数的流水化（Pipelining of Arithmetic Functions）</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>**流水线（pipeline）**：在组合逻辑中插入寄存器，把一次长延迟计算切成 $\sigma$ 级，每级一个时钟周期。效果：</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>时钟周期 ≈ 原延迟的 $1/\sigma$（+寄存器开销）；</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>延迟（latency）不变甚至略增，但**吞吐提升近 $\sigma$ 倍**——每拍可吞入一个新任务。</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>算术部件的流水切分原则：</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**均衡级延迟**：关键路径决定时钟，切分不均等于白送频率；</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**寄存器开销**：算术数据通路宽，流水寄存器面积可占 20-40%——级数不是越多越好；</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Hazard 设计**：迭代型算法（除法、CORDIC）反馈环内不能随意插寄存器——这是"可流水"与"不可流水"算法的分水岭。</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="al">![图 25.1 σ 级算术流水线的结构：组合逻辑被 σ−1 排流水寄存器切成 σ 级，每级一个时钟周期，每个时钟周期可接纳一组新操作数](images/ch25/fig25_01.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>一组具体数字有助于建立直觉。设某乘加单元 $t = 40\,\mathrm{ns}$、$g$ 折合 500 个门，锁存器时间开销 $\tau = 2\,\mathrm{ns}$、成本开销 $\gamma = 25$ 门。不流水时吞吐为 $1/40\,\mathrm{ns} = 25$ Mops；切成 4 级后每级 $10\,\mathrm{ns}$，时钟周期 $12\,\mathrm{ns}$，吞吐升到约 83 Mops（3.3 倍），端到端延迟从 40 ns 变为 48 ns，成本增加约 20%。若进一步切成 8 级，周期降到 $7\,\mathrm{ns}$、吞吐约 143 Mops（5.7 倍），但此时寄存器开销已与原逻辑的一半相当，且 $\tau$ 已占去周期的近三成——继续切下去，每一刀换来的频率越来越少。</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>流水线的**效率（efficiency）**定义为加速比与级数之比 $E = S/\sigma$：级间延迟完全均衡且 $\tau = 0$ 时 $E = 1$；上例中 4 级流水的加速比为 3.3，效率 0.83，8 级时降到 0.71。$\tau$ 固定时令级数继续加大，效率单调下滑。效率曲线与吞吐曲线放到同一张图上看，合理的工作点通常落在"吞吐尚未饱和、效率尚可接受"的拐角附近——这也是为什么实际设计很少用到理论最优级数，而是停在它的一半到三分之二处。</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>**定量模型**。设原功能单元成本为 $g$、延迟为 $t$，每级锁存的时间开销为 $\tau$、成本开销为 $\gamma$，且函数能被切成 $\sigma$ 个延迟相等的级，则流水线版本的三项指标为</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>T = t + \sigma\tau, \qquad</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>R = \frac{1}{T/\sigma} = \frac{1}{t/\sigma + \tau}, \qquad</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>G = g + \sigma\gamma</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>$R \to 1/\tau$ 是理论天花板。但工程上把级内逻辑压到约 4 级门（$4\delta$）就停手——再切下去，级间信号条数增加带来的 $\gamma$ 增长、以及时钟树的功耗，会把频率收益全部吃掉。取级延迟恰为 $4\delta$（即 $\sigma = t/4\delta$）时，三式化为</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>T = t\left(1 + \frac{\tau}{4\delta}\right), \qquad</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>R = \frac{1}{4\delta + \tau}, \qquad</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>G = g\left(1 + \frac{t\gamma}{4g\delta}\right)</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>括号里那两项就是"为极限吞吐付出的延迟税与面积税"——它们只依赖工艺与寄存器结构，与被流水化的函数无关。</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>**最优级数**。吞吐不是唯一目标时，一个自然的品质因数是"单位成本的吞吐"</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>E = \frac{R}{G} = \frac{\sigma}{(t + \sigma\tau)(g + \sigma\gamma)}</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>令 $\mathrm{d}E/\mathrm{d}\sigma = 0$，得到</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>\sigma_{opt} = \sqrt{\frac{tg}{\tau\gamma}}</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>结论朴素而有用：**原函数越慢越复杂（$t, g$ 大）、锁存越快越便宜（$\tau, \gamma$ 小），级数就该越多**。举个具体数字：$t = 40\delta$、$g = 500$ 门、$\tau = 4\delta$、$\gamma = 50$ 门，得 $\sigma_{opt} = 10$——代价是成本与延迟各翻一倍，换来吞吐提升 5 倍。把流水线冒险（数据相关、条件执行迫使排空）算进去之后，实际最优级数会明显小于这个解析值。</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip title="工程解读"}</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>这组公式的用处不在于给出精确级数，而在于给出**校正方向**：换更快的锁存器（降 $\tau$）或更窄的接口（降 $\gamma$），最优级数立刻右移；反过来，若切分点选在函数内部的"胖"边界上（几十条信号要过寄存器），$\gamma$ 暴涨，级数必须收敛。这也解释了为什么深流水总伴随着"寻找自然边界"的人工匠心——自动切分工具必须先学会估算每个切点的信号条数。</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>什么时候不能流水？只要算法内部存在携带反馈的递推 $s^{(j)} = F(s^{(j-1)})$——除法的部分余数递推、IIR 滤波器的输出回授、CORDIC 的迭代——寄存器就只能插在递推环路之外，环路延迟照旧限制迭代速率。对付这类结构的办法不是硬插流水，而是**变换算法本身**：第 26.5 节的循环展开、第 16 章把除法递推改造成乘法链的收敛法，都是把"不可流水的递推"变成"可流水的直馈"的范例。</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>反过来看，哪些算术单元天然适合深流水？凡是可以写成**直馈数据流图**的结构都行：阵列/树形乘法器（部分积阵列一层就是一级）、FIR 滤波器（每个抽头一级）、查表 + 乘加的函数求值链。这些结构的共同点是"数据只朝一个方向走"，寄存器可以插在任意位置而不改变功能——这也正是第 26.5 节重定时变换合法的前提。</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a><span class="fu">## 25.2 时钟速率与吞吐（Clock Rate and Throughput）</span></span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>吞吐 = 每拍任务数 × 时钟频率。提升路径只有两条：**更深流水**（缩短周期）与**更宽并行**（每拍更多任务）。物理现实：</span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>流水深度有收益拐点（寄存器延迟占比、时钟树功耗、分支/依赖惩罚）；</span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>并行度受面积/功耗墙约束——这就是"功耗墙"时代转向专用加速器（NPU/TPU）的根本逻辑：用**领域定制的并行**取代通用高频。</span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>两条路径还可以组合：超宽数据通路 + 深流水。GPU 的 SIMT 是"每拍更多任务"的极限形态（一个 warp 32 个线程共用同一条流水线），超标量 CPU 则是"更深流水 + 乱序填坑"的代表。选择哪边取决于负载的**规则性**：数据级并行度越高、控制流越平直，越应该走宽度方向（宽而慢，能效还好）；依赖链长、分支密集的标量代码，只能往深里切并承担冒险惩罚。</span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>**时钟周期的严格下界**必须把**时钟偏斜（clock skew）**算进来。若随机偏斜的上界为 $\pm\varepsilon$，最坏情形下输入锁存晚到 $\varepsilon$、输出锁存早到 $\varepsilon$，可用于计算的时间被扣掉 $2\varepsilon$：</span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>\Delta t \ge t_{stage} + \tau + 2\varepsilon</span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>当级数很多、$\Delta t$ 很小时，$\varepsilon$ 所占比例上升——这就是为什么深流水通常要配更昂贵的时钟分配网络（H 树、网格、去偏斜电路）。</span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>代入数字感受更深：2 GHz 设计（周期 500 ps）中，若锁存开销 50 ps、随机偏斜 ±50 ps，级内可用于逻辑的预算只剩 300 ps——偏斜一项吃掉两成预算。频率升到 4 GHz，同样的 50 ps 偏斜占比立刻翻倍；而偏斜绝对值并不随工艺同步缩小，这就是 GHz 级深流水芯片里时钟网络动辄占去两三成总功耗的原因。</span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a><span class="al">![图 25.2 波流水让多个计算波前共存于同一流水级内，快波前在前、慢波前在后，级延迟之外只需留出锁存与偏斜的余量](images/ch25/fig25_02.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a>**波流水（wave pipelining）**是一个反直觉的技巧。级延迟并非常数，最快路径为 $t_{min}$、最慢路径为 $t_{max}$；既然两者之间存在时差，为什么不干脆让多个"计算波前"同时在一个流水级里穿行？只要相邻两组输入的信号在**空间上**（沿逻辑深度方向）彼此分开，它们在**时间上**重叠并无害处：</span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a>\Delta t \ge t_{max} - t_{min} + \tau</span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a>于是提高吞吐有两条路：传统的**减小 $t_{max}$**，以及反直觉的**抬高 $t_{min}$**——即延迟均衡化。极端情形下 $t_{max} - t_{min} = 0$，$\Delta t$ 只要大于等于 $\tau$ 即可，此时必须在输出锁存处人为注入**受控时钟偏斜（controlled clock skew）**才能正确采样第 $i$ 级的结果：</span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>S^{(i)} = \left(\sum_{j=1}^{i} \bigl(t^{(j)}_{max} + \tau\bigr)\right) \bmod \Delta t</span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a>例：$t_{max} + \tau = 12\,\mathrm{ns}$、$\Delta t = 5\,\mathrm{ns}$，则输出锁存相对输入锁存需要 $+2$ ns 的偏斜。波流水的代价是对随机偏斜更敏感：$\Delta t \ge t_{max} - t_{min} + \tau + 4\varepsilon$——输入、输出两端各有 $2\varepsilon$ 的最坏损失，而分母如今已经很小了。</span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a>波流水的思想可以追溯到 1960 年代末 Cotton 对"最大速率流水"的研究，1990 年代一度成为研究热点（当时期望用它把时钟频率推过传统流水线的极限）。它最终没有进入主流 EDA 流程，根本原因在于延迟均衡必须对**工艺、电压、温度（PVT）全域**成立——仿真里对齐的两条路径，到了硅片上、到了高温角落里就会错开，而波流水恰恰把性能押在这个错开量上。</span>
+<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a><span class="al">![图 25.3 用时间-空间图对比普通流水与波流水的吞吐：普通流水每级同一时刻只有一个波前，波流水中同一级内可有多个相继波前依次穿过](images/ch25/fig25_03.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="波流水的现代回响"}</span>
+<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a>波流水在工业界从未成为主流设计风格（对工艺漂移和数据相关的延迟极其敏感），但它留下了一个持久的观念：**均衡路径既是低功耗手段（消除毛刺），也是高吞吐手段（压缩 $t_{max}-t_{min}$）**。第 26 章会从能耗角度再次遇到同一件事。</span>
+<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a><span class="fu">## 25.3 Earle 锁存器（The Earle Latch）</span></span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a>经典高速锁存技术：把锁存器嵌入逻辑门内（时钟与数据路径合并优化），减少每级流水的"寄存器税"。它代表了**电路级流水优化**——当逻辑级延迟已经很小时，锁存器自身的建立/保持开销占比上升，必须电路结构创新。现代对应物：脉冲锁存器（pulsed latch）、时间借用（time borrowing）。</span>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a>Earle 锁存器的行为方程是一条带反馈的与或式：</span>
+<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a>z = dC \lor dz \lor Cz</span>
+<span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a>$C = 1$ 时输出跟随数据输入 $d$；$C$ 由 1 降到 0 的瞬间采样并保持，此后只要 $C$ 保持为 0，$d$ 的变化不影响 $z$。它最初是为锁存进位保存加法器（carry-save adder）而设计的。</span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a><span class="al">![图 25.4 Earle 锁存器的两级与或实现，输入数据 d 在锁存器内部需要扇出两次](images/ch25/fig25_04.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>真正有价值的性质是：**它能与前级的两级与或逻辑合并，而不增加一级门延迟**。设前级算出 $d = vw \lor xy$，代入上式展开得</span>
+<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a>z = (vw \lor xy)C \lor (vw \lor xy)z \lor Cz</span>
+<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a>  = vwC \lor xyC \lor vwz \lor xyz \lor Cz</span>
+<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a>结果依然是一个两级与或网络——锁存器只是给与阵列多添了几个带 $C$ 或 $z$ 的乘积项。这就是所谓的"零延迟锁存"：在关键路径上，加法器的最后一级逻辑与寄存器合二为一。</span>
+<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a><span class="al">![图 25.5 把 Earle 锁存器与前级两级与或逻辑合并后实现 z = vw ∨ xy 的结构](images/ch25/fig25_05.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a>代价是对**时钟脉冲宽度**施加了双边约束。设最大/最小门延迟为 $\delta_{max}, \delta_{min}$，级最小延迟为 $t_{min}$，则</span>
+<span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a>3\delta_{max} - \delta_{min} + S_{max}(C{\uparrow}, \bar{C}{\downarrow}) \le C_{high} \le 2\delta_{min} + t_{min}</span>
+<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a>下界保证：数据确实被保存下来，且当 $C$ 的 0→1 略微领先 $\bar{C}$ 的 1→0 时不至于因逻辑冒险（hazard）锁进错值；上界保证：时钟必须在**下一组输入的最快信号**来得及改变本锁存器输入之前变低。这类"同时有上下界的时序约束"正是 Earle 锁存器难用之处，也是后续各种改进型（如不需要数据扇出的变体）试图简化的地方。</span>
+<span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a>代入一组数感受一下窗口有多窄：$\delta_{max} = 0.3\,\mathrm{ns}$、$\delta_{min} = 0.15\,\mathrm{ns}$、级最小延迟 $t_{min} = 0.6\,\mathrm{ns}$，忽略 $S_{max}$ 项，则 $C_{high}$ 必须落在 $<span class="co">[</span><span class="ot">0.75,\ 0.9</span><span class="co">]</span>\,\mathrm{ns}$ 内——整个时钟周期里高电平的合法宽度只有 150 ps。这样的约束只能由电路设计师手工保障，无法丢给标准单元流程，这正是 Earle 锁存器留在定制数据通路（手工设计的乘法器、寄存器堆）而没有进入 ASIC 综合流程的原因。</span>
+<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a>把 Earle 锁存器嵌进进位保存加法器（它最初的应用场景）之后，一条乘法累加链的每级延迟可以压到 3 级门左右——早期高性能乘法器能把时钟周期做得极低，靠的正是这类电路技巧。今天的对应技术包括脉冲触发器（pulsed flip-flop）、相邻透明锁存器之间的时间借用（time borrowing）、以及把锁存功能分摊进多米诺逻辑的动态锁存结构。共同思想不变：**当时钟周期逼近几级门延迟时，寄存器不能再是外挂的盒子，必须融化进逻辑里。**</span>
+<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a><span class="fu">## 25.4 并行与数字串行流水线（Parallel and Digit-Serial Pipelines）</span></span>
+<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a>**数字串行（digit-serial）**：介于位串行（1 比特/拍）与全并行（$k$ 比特/拍）之间，每拍传 $d$ 位（一个"digit"）。$k$ 位数据 $k/d$ 拍传完：</span>
+<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>面积 ≈ 全并行的 $d/k$；</span>
+<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>吞吐 = 全并行的 $d/k$；</span>
+<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**面积-吞吐乘积近似不变**，但功耗/布线的甜点往往在中等 digit 宽度。</span>
+<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a>这是 NoC 链路、SerDes 接口、以及资源受限 FPGA 设计的常用刻度尺。</span>
+<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a>以 32 位数据通路为例：全并行乘法器需要 32 位宽的压缩树与最终加法器；digit 宽度取 8，则同样功能可用约 1/4 的数据通路面积在 4 拍内完成；取 $d = 4$ 则面积约为 1/8、8 拍完成。翻转的电容随数据通路同比例缩小，总**功率**近似按面积下降，而每次操作的**能量**基本不变——这正是数字串行在低功耗场景的真实卖点：省的是功率与面积，不是能量。</span>
+<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>digit 宽度的最优值由两个相反趋势夹出来：$d$ 越小，数据通路越省，但控制、寄存器与接口的固定开销占比越大，且完成一次运算的拍数越多；$d$ 越大则迅速逼近全并行的成本。经验上甜点常落在 $k/8$ 到 $k/4$ 之间。还有一条布线视角的约束：digit 宽度决定了每个周期要在模块间搬多少条线，在布线资源紧张的设计（FPGA、高密度标准单元）里，$d$ 常常是被布线而不是被逻辑面积钉死的。</span>
+<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a>关键在于：**哪些运算天生低位序可流水，哪些不是**。以</span>
+<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a>z = \left(\frac{(a+b)\,c\,d}{e-f}\right)^{1/2}</span>
+<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a>为例，它由两次加/减、两次乘法、一次除法、一次开方按固定流图串成。</span>
+<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a><span class="al">![图 25.6 表达式 z = ((a+b)cd/(e-f))^(1/2) 的流图，以及按数字并行方式求值时的时序图](images/ch25/fig25_06.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>加法和乘法可以**最低位优先（LSB-first）**位串行地做：只要 $a+b$ 和 $c \times d$ 的最低位一出来，下一级乘法器就能开工——每往关键路径上挂一个功能单元，总延迟几乎不增加。流动性好得惊人。</span>
+<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>把图 25.6 的时账具体化：设加/减单元需 $t_a$、乘法器需 $t_m$、除法与开方各需 $t_d$。数字并行方案的总延迟约为 $2t_a + 2t_m + 2t_d$，且每个单元算完就闲置，利用率极低；数字流水方案中乘法器在加法器吐出第一个数字后即开工，整条链的完成时间只比最慢的那个单元多出一小段"排头"时间。挂进链里的单元越多、链越长，这种重叠的收益越大——这是数字流水相对数字并行的本质优势。</span>
+<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a><span class="al">![图 25.7 数字并行与数字流水两种求值方式的时序对比：后者单次运算略慢，但各级几乎完全重叠](images/ch25/fig25_07.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a>除法和开方却必须**最高位优先（MSB-first）**，而且它们的首位依赖于操作数的**所有位**。看一个十进制例子，$0.1234/0.2469$：</span>
+<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>只看首位数字 $0.1xxx / 0.2xxx$，商的首位可能在 $<span class="co">[</span><span class="ot">3, 9</span><span class="co">]</span>$ 中的任何一位（最小约 $0.1000/0.2999 \approx 0.3334$，最大约 $0.1999/0.2000 \approx 0.9995$）；</span>
+<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>看到第二位仍不解决问题，$0.12xx/0.24xx$ 落在约 $<span class="co">[</span><span class="ot">0.4802, 0.5413</span><span class="co">]</span>$；</span>
+<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>直到看完全部四位，才能确定首位商 $q_{-1} = 4$。</span>
+<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a>因此，**用标准（非冗余）数制做位串行/数字串行的全流水级联，只能覆盖"加法-乘法"链**；除法和开方必须先把操作数收齐，再回到第 14、21 章的完整算法。唯一的出路是**允许结果以冗余形式输出**——冗余数允许事后修正选错的商位/根位，所以只需操作数的高几位就能定出下一位。这是第 25.5 节在线算术的动机。</span>
+<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a><span class="fu">## 25.5 在线/数字流水算术（On-Line or Digit-Pipelined Arithmetic）</span></span>
+<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a>**在线算术（on-line arithmetic）**：操作数与结果都按**最高位先出**的串行流，第 $j$ 位结果在收到前 $j + \delta$ 位输入后即可产出（$\delta$ 为在线延迟）。它让长串算术运算（如 $((a \times b) + c) / d$）可以**全流水级联**：上一级的结果高位先行喂给下一级，总延迟 ≈ 各部件在线延迟之和，而非各自完整延迟之和。</span>
+<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a>代价：需要冗余表示（高位先行意味着修正只能向低位传播）、控制复杂。在专用信号处理流水线（CORDIC 级联、复数运算链）中有独特价值。</span>
+<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a>结果最终以冗余形式产出，而系统其余部分多半要常规二进制。好在转换可以**在线进行（on-the-fly conversion）**：维护两个寄存器 $Q$（已收到前缀在"当前位为 0"假设下的值）与 $Q^-$（"当前位为 $-1$"假设下的值），每来一个新数字就按三种情况同时更新两者，最后一个数字到达时直接选出正确值——整个转换被吸收进串行流，不需要额外的一次完整加法。</span>
+<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a>在线算术最成功的落点是**固定拓扑的信号处理链**：自适应滤波器的状态更新（乘加交替）、坐标变换（CORDIC 旋转 → 伸缩 → 反三角的级联）、复数运算链。这些场景里各级单元全部 MSB-first 流水，中间没有任何位宽转换与整字缓冲，端到端延迟约等于各级在线延迟之和再加链长——比起"每个单元收齐整个字再开工"的传统组织，流水深度直接降了一个量级。</span>
+<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a>二进制有符号数字（BSD, binary signed-digit）——基 2、数字集 $<span class="co">[</span><span class="ot">-1, 1</span><span class="co">]</span>$——给出最简单的在线硬件。更高的基 $r = 2^j$ 用更大的数字集把周期数降下来，但元胞更复杂、引脚更多，能否真的更快要看时钟频率是否同步下降；实践中 $r &gt; 16$ 很少划算。浮点数还要求指数先到、尾数后处理，属于可直接叠加的工程细节。</span>
+<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a>各类基本运算的**在线延迟**（收到第 $i$ 位输入到产出第 $i$ 位输出之间的拍数）如下：</span>
+<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 运算 <span class="pp">|</span> 在线延迟（拍） <span class="pp">|</span> 前提 <span class="pp">|</span></span>
+<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|</span></span>
+<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 加法 <span class="pp">|</span> 1 / 2 <span class="pp">|</span> 数字集支持无进位加法 / 只能有限进位加法 <span class="pp">|</span></span>
+<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 乘法 <span class="pp">|</span> 1 / 2 <span class="pp">|</span> 同上 <span class="pp">|</span></span>
+<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 开方 <span class="pp">|</span> 1 - 2 <span class="pp">|</span> 视数制而定 <span class="pp">|</span></span>
+<span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 除法 <span class="pp">|</span> 3 / 4 <span class="pp">|</span> 支持无进位加法 / 只能有限进位加法 <span class="pp">|</span></span>
+<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a>读这张表的方式：加法和乘法"看见输入的高位就能产出结果的高位"，所以延迟最小；开方稍难，因为根的高位受被开方数低位的微弱影响；除法最难，因为商同时受被除数与除数两端不确定性的拉扯（下面会用一个基 4 的例子看清这一点）。这张表也是设计在线运算链的"接线图"——把各单元的在线延迟错开对齐，数据流才能严丝合缝地咬合。</span>
+<span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a><span class="al">![图 25.8 数字流水的 MSD 优先无进位加法，本质是无进位加法阵列的一条对角切片，输入到输出延迟 1 拍](images/ch25/fig25_08.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a>加法的第 $-i$ 位结果只依赖两个操作数的第 $-i$ 与 $-i-1$ 位（这正是第 3 章无进位加法的定义），所以收到两个最高位数字就能吐出结果的最高位——图中斜线右侧的阴影代表"尚未看到"的操作数低位与"尚不可知"的和的低位。</span>
+<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a><span class="al">![图 25.9 数字流水的 MSD 优先有限进位加法，多一级位置和的锁存，延迟 2 拍](images/ch25/fig25_09.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a>BSD 输入不满足无进位加法的条件，必须改用有限进位加法：先算位置进位 $t_{-i+2}$ 与位置和 $w_{-i+1}$，再合并出临时和 $w_{-i}$，因此多用一级锁存延迟，在线延迟变成 2 拍。</span>
+<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a>除法的延迟之所以高达 3-4 拍，直观原因是被除数与除数的不确定性对商的影响方向相反，必须同时收窄两端。以 $r = 4$、数字集 $<span class="co">[</span><span class="ot">-2, 2</span><span class="co">]</span>$ 为例（可表示范围仅为 $(-2/3,\, 2/3)$）：</span>
+<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>第 1 拍：被除数 $(.0\cdots)_4$、除数 $(.1\cdots)_4$ → 商落在 $(-2/3,\,2/3)$，$q_{-1} \in <span class="co">[</span><span class="ot">-2, 2</span><span class="co">]</span>$；</span>
+<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>第 2 拍：$(.00\cdots)_4 / (.1\bar{2}\cdots)_4$ → 收窄到 $(-1/2,\,1/2)$，仍不足以定出首位；</span>
+<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>第 3 拍：收窄到 $(1/16,\,5/16)$，$q_{-1} \in <span class="co">[</span><span class="ot">0, 1</span><span class="co">]</span>$；</span>
+<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>第 4 拍：才最终收敛到 $q_{-1} = 1$。</span>
+<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a>有人证明过：只要数制支持无进位加法，3 拍总是充分必要；若只能做有限进位加法，则需要 4 拍。</span>
+<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a>在线乘法的递推值得写下来。设到第 $i$ 拍为止，两个操作数已收到的高位部分分别构成前缀 $A_{<span class="co">[</span><span class="ot">i</span><span class="co">]</span>}$ 与 $X_{<span class="co">[</span><span class="ot">i</span><span class="co">]</span>}$，新到数字为 $a_{-i}$、$x_{-i}$。部分积满足</span>
+<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a>P_{<span class="co">[</span><span class="ot">i</span><span class="co">]</span>} = P_{<span class="co">[</span><span class="ot">i-1</span><span class="co">]</span>} + \bigl(a_{-i} X_{<span class="co">[</span><span class="ot">i-1</span><span class="co">]</span>} + x_{-i} A_{<span class="co">[</span><span class="ot">i-1</span><span class="co">]</span>}\bigr)\, r^{-i} + a_{-i} x_{-i}\, r^{-2i}</span>
+<span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a><span class="al">![图 25.10 数字流水 MSD 优先的乘法过程：第 i 拍新到的数字分别与已积累的部分乘数、部分被乘数相乘，左移一个数字位置后累入残余，残余的最高位即为本拍输出的积数字](images/ch25/fig25_10.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a><span class="al">![图 25.11 数字流水的 MSD 优先 BSD 乘法器：部分被乘数、部分乘数各存寄存器，三操作数无进位加法器每拍吐出一个结果数字](images/ch25/fig25_11.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>乘法的每拍工作是：把新到的 $a_{-i}$ 与 $x_{-i}$ 分别乘上已有的部分乘数和部分被乘数，再加上 $a_{-i}x_{-i}$，与左移一位的乘积残量 $p^{(i-1)}$ 做三操作数无进位加法；结果的最高位就是本拍要输出的数字，被丢弃，余下的数字构成新的残量 $p^{(i)}$。</span>
+<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a><span class="al">![图 25.12 在线（数字流水）算术单元的概念视图：残余量持续累积，已处理部分不断生长，未处理部分不断收缩](images/ch25/fig25_12.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a>所有在线运算共用同一幅图景：**残余（residual）+ 已处理前缀 + 未处理后缀**。对除法而言，残余量就是"被除数减去已知的商数字与除数相乘所得的部分积"；每确定一位商，就从这个残余里减去两项乘积（新商位 × 部分除数、新除数位 × 部分商），再用残余的高几位去估计下一位商。这与第 14 章 SRT 的残余递推是一回事，只不过操作数是"逐位抵达"的。</span>
+<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>::: {.callout-warning title="为什么在线算术没有普及"}</span>
+<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>在线算术用很小的在线延迟换来了"运算链全流水"的能力，在 CORDIC 级联、复数乘加链这类固定拓扑中有过成功应用；但它要求全局统一采用冗余数、并承担最后的冗余-二进制转换开销。当 VLSI 引脚限制不再是瓶颈、而设计周期与工具链成为瓶颈时，"大家都写 <span class="in">`$a + b$`</span>"的结构胜出了。它的思想遗产留在今天的流式数据流架构里。</span>
+<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a><span class="fu">## 25.6 脉动算术单元（Systolic Arithmetic Units）</span></span>
+<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>**脉动阵列（systolic array）**：大量简单 PE（处理单元）规则连接，数据像血液一样在阵列中"脉动"流动，每个 PE 每拍做一次小运算（通常是 MAC）并把结果传给邻居。性质：</span>
+<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>计算与通信**严格局部化**——无全局总线、无长连线；</span>
+<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>完美流水：阵列越大吞吐越高，延迟线性增长但吞吐恒定；</span>
+<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>矩阵乘法是最经典映射。</span>
+<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a>判据还需要加严一条：**任何未经锁存的信号都不允许跨多个单元传播**——否则行波进位加法器也要算「脉动」了。进位链不经寄存器地横跨整个字宽，所以它不是脉动结构；这一条把「局部性」从几何要求提升成了时序要求。</span>
+<span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a>三个值得记住的构造实例：</span>
+<span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**阵列乘法器 → 位并行脉动乘法器**。图 11.18 的流水阵列乘法器把 $a_i$ 广播给整列、把 $x_j$ 广播给整行；把广播改成「从前一个 PE 接过来、每拍往下（或往右）传一格」，同时在其余输入路径上补齐等量延迟，电路功能完全不变——这种变换叫**脉动重定时（systolic retiming）**。若要求乘积各位同时可用，还要在 $p$ 输出路径上补延迟。</span>
+<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**数字流水乘法器 → 脉动形式**。图 25.11 中 $a_{-i}$ 与 $x_{-i}$ 驱动一大批 2 选 1 多路器，扇出巨大；但并不需要立刻用到 $x_{-i}a_{<span class="co">[</span><span class="ot">-1,-i+1</span><span class="co">]</span>}$ 的全部数字，因此可以把相关动作沿阵列铺开：头元胞先形成最高位，输入数字继续右传、结果左传。</span>
+<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a><span class="al">![图 25.13 基 4 数字流水乘法器的脉动高层设计：每个元胞处理一个基 4 数字，操作数数字向右传播、结果数字向左传播，控制信号随数据一起流水](images/ch25/fig25_13.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Montgomery 模乘**天生适合脉动化：它的"是否减去模 $m$ 的倍数"由**最低位**决定，与进位从低位向高位传播的方向一致，从而化解了第 15.4 节提到的方向冲突；只需把普通阵列乘法器的元胞换成能存部分积位并能做加法带 $m$ 的复杂元胞即可。</span>
+<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a><span class="al">![图 25.14 可编程 FIR 滤波器的常规实现（广播控制、广播数据）与脉动实现（流水线化的数据与控制）](images/ch25/fig25_14.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a>$N$ 抽头 FIR 的常规实现是 $y(t) = \sum_{i=0}^{N-1} h(i)\,x(t-i)$：系数 $h(i)$ 由控制信号广播到所有抽头单元。脉动版本把**数据与控制一起流水化**：输入样本沿链一级级右传，系数载荷也随时间戳向前传递，不再有任何信号需要跨越整个阵列。</span>
+<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a>把时序账算清楚：常规广播实现的时钟周期里含一条穿越全部 $N$ 个抽头的广播线，其延迟随 $N$ 线性增长，吞吐随之衰减；脉动版本中每条连线只连接相邻单元，时钟周期与 $N$ 无关——$N$ 加倍只是把流水填满的时间（延迟）加了几拍，每拍出一份结果的速率分毫不变。这个"延迟换吞吐、且延迟只涨线性"的交换比，正是脉动结构在大规模阵列上不可替代的原因。</span>
+<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a>矩阵乘法映射到脉动阵列有三种经典数据流：**输出固定**（每个 PE 持有一个 $C_{ij}$ 累加器，$A$ 的行与 $B$ 的列交叉流过）、**权重固定**（TPU v1 的选择：权重预先载入 PE，激活流过阵列）、**行固定**（结果行驻留阵列内）。三者的差别不在算力而在**数据搬运量**——谁静止、谁流动，决定了 SRAM 的读写次数与能耗，这正是第 26 章的视角：脉动阵列省的不只是延迟，还有搬数的焦耳。</span>
+<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a>脉动重定时的合法性由一条简单的**割集规则（cut-set rule）**保证：在数据流图上任取一条把图分成两半的割，若把割上所有前向边的延迟各加 $k$、所有反向边的延迟各减 $k$（不能减成负数），则系统的输入输出功能完全不变。FIR 的广播数据路径变成逐级传递，正是对每条广播线应用一次割集变换的结果。这条规则也是第 26.5 节重定时优化的理论基础——两者是同一枚硬币的两面。</span>
+<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a>::: {.callout-important title="从历史到当下"}</span>
+<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a>脉动阵列 1980 年代由孔祥重（H.T. Kung）提出时因制造技术受限而沉寂，2016 年 Google TPU 以 256×256 脉动 MAC 阵列重出江湖——**深度学习的矩阵乘法负载 + 先进工艺**，让"数据流过规则阵列"的古老思想成为 AI 芯片的主流架构之一。读本节时值得对照 TPU/NPU 的架构文档。</span>
+<span id="cb1-275"><a href="#cb1-275" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-277"><a href="#cb1-277" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="一个值得记住的量化结论"}</span>
+<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a>对可编程 FIR 的两种实现做过详细建模：随着工艺缩放、电路速度提升，**脉动版本几乎保住全部速度收益，而常规版本在仅 20 个抽头时就丢掉近一半，到 200 抽头时几乎丢光**——全部损失来自互连延迟与负载。换句话说，连线延迟在延迟预算中的占比越高，「通信局部化」这一条的价值就越大；这也是今天先进工艺下脉动架构重新吃香的物理原因。</span>
+<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-281"><a href="#cb1-281" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章小结</span></span>
+<span id="cb1-282"><a href="#cb1-282" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-283"><a href="#cb1-283" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>流水线用寄存器换吞吐；$T = t+\sigma\tau$、$R = 1/(t/\sigma+\tau)$、$G = g+\sigma\gamma$，$\sigma_{opt} = \sqrt{tg/(\tau\gamma)}$。</span>
+<span id="cb1-284"><a href="#cb1-284" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>时钟周期下界要计入锁存开销与随机偏斜；波流水把 $t_{max}-t_{min}$ 而非 $t_{max}$ 作为目标。</span>
+<span id="cb1-285"><a href="#cb1-285" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Earle 锁存器把寄存器"融"进两级与或逻辑；代价是严格的双边脉宽约束。</span>
+<span id="cb1-286"><a href="#cb1-286" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>数字串行给出面积-吞吐的连续刻度；LSB 优先的加/乘可流水，MSB 优先的除/开方不行。</span>
+<span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>在线算术：高位先出 + 冗余表示，让运算链全流水；在线延迟加 1-2、开方 1-2、除 3-4 拍。</span>
+<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>脉动阵列：局部通信的规则阵列，吞吐与规模无关、延迟线性增长——AI 加速器的体系结构原型。</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

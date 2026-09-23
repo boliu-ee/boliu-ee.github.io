@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第18章 浮点运算（Floating-Point Operations） – 计算机算术：算法与硬件设计（中文解读版）</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./ch19.html" rel="next">
+<link href="./ch17.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-77d2b90c99eeff80c5837adab8b96ac7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch17.html">第五部分 实数运算 (Real Arithmetic)</a></li><li class="breadcrumb-item"><a href="./ch18.html"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">计算机算术：算法与硬件设计（中文解读版）</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第一部分 数的表示 (Number Representation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch01.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第二部分 加法与减法 (Addition/Subtraction)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第7章 快速加法器的变体（Variations in Fast Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第8章 多操作数加法（Multioperand Addition）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部分 乘法 (Multiplication)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第9章 基本乘法方案（Basic Multiplication Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第10章 高基数乘法器（High-Radix Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">第四部分 除法 (Division)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第14章 高基数除法器（High-Radix Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第15章 除法器的变体（Variations in Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第16章 收敛法除法（Division by Convergence）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">第五部分 实数运算 (Real Arithmetic)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第17章 浮点数表示（Floating-Point Representations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch18.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">第六部分 函数求值 (Function Evaluation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第23章 函数求值的变体（Variations in Function Evaluation）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第24章 查表算术（Arithmetic by Table Lookup）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">第七部分 实现专题 (Implementation Topics)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch26.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch27.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch28.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第28章 可重构算术（Reconfigurable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">附录 过去、现在与未来（Past, Present, and Future）</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#本章导读" id="toc-本章导读" class="nav-link active" data-scroll-target="#本章导读">本章导读</a></li>
+  <li><a href="#浮点加减法器floating-point-adderssubtractors" id="toc-浮点加减法器floating-point-adderssubtractors" class="nav-link" data-scroll-target="#浮点加减法器floating-point-adderssubtractors">18.1 浮点加减法器（Floating-Point Adders/Subtractors)</a></li>
+  <li><a href="#前移位与后移位pre--and-postshifting" id="toc-前移位与后移位pre--and-postshifting" class="nav-link" data-scroll-target="#前移位与后移位pre--and-postshifting">18.2 前移位与后移位（Pre- and Postshifting)</a></li>
+  <li><a href="#舍入与异常rounding-and-exceptions" id="toc-舍入与异常rounding-and-exceptions" class="nav-link" data-scroll-target="#舍入与异常rounding-and-exceptions">18.3 舍入与异常（Rounding and Exceptions)</a></li>
+  <li><a href="#浮点乘法器与除法器floating-point-multipliers-and-dividers" id="toc-浮点乘法器与除法器floating-point-multipliers-and-dividers" class="nav-link" data-scroll-target="#浮点乘法器与除法器floating-point-multipliers-and-dividers">18.4 浮点乘法器与除法器（Floating-Point Multipliers and Dividers)</a></li>
+  <li><a href="#乘加融合单元fused-multiply-add-units-fma" id="toc-乘加融合单元fused-multiply-add-units-fma" class="nav-link" data-scroll-target="#乘加融合单元fused-multiply-add-units-fma">18.5 乘加融合单元（Fused Multiply-Add Units, FMA）</a></li>
+  <li><a href="#对数运算单元logarithmic-arithmetic-unit" id="toc-对数运算单元logarithmic-arithmetic-unit" class="nav-link" data-scroll-target="#对数运算单元logarithmic-arithmetic-unit">18.6 对数运算单元（Logarithmic Arithmetic Unit)</a></li>
+  <li><a href="#rtl-实践rtlch18_4_fp_multiplier" id="toc-rtl-实践rtlch18_4_fp_multiplier" class="nav-link" data-scroll-target="#rtl-实践rtlch18_4_fp_multiplier">RTL 实践：<code>rtl/ch18_4_fp_multiplier</code></a></li>
+  <li><a href="#本章小结" id="toc-本章小结" class="nav-link" data-scroll-target="#本章小结">本章小结</a></li>
+  <li><a href="#原书插图" id="toc-原书插图" class="nav-link" data-scroll-target="#原书插图">原书插图</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch17.html">第五部分 实数运算 (Real Arithmetic)</a></li><li class="breadcrumb-item"><a href="./ch18.html"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="本章导读" class="level2">
+<h2 class="anchored" data-anchor-id="本章导读">本章导读</h2>
+<p>第 17 章讲了浮点”怎么表示”，本章讲”怎么算”。浮点加法器比乘法器更难做（对阶与规格化的两次大移位），FMA 是二者的融合巅峰。这一章是全书前面所有整数技术的”总装车间”：移位器、CLA、压缩树、舍入逻辑在此会师。</p>
+<p>读这一章盯住两个主题：<strong>如何把串行步骤并行化或提前做</strong>（指数预计算、前导零预测、双通路）与<strong>如何在不保存全部位的前提下保证正确舍入</strong>（guard/round/sticky）。现代 FPU 的性能差距几乎都来自对这两件事的处理水平。</p>
+</section>
+<section id="浮点加减法器floating-point-adderssubtractors" class="level2">
+<h2 class="anchored" data-anchor-id="浮点加减法器floating-point-adderssubtractors">18.1 浮点加减法器（Floating-Point Adders/Subtractors)</h2>
+<p>浮点加法的完整流程：</p>
+<ol type="1">
+<li><strong>指数差对齐</strong>：算 <span class="math inline">\(e_x - e_y\)</span>，小阶尾数右移（对齐移位器 alignment shifter）；</li>
+<li><strong>尾数加减</strong>：按有效操作（符号⊕操作码）做加或减；</li>
+<li><strong>规格化</strong>：结果可能前导零一串（有效减法且指数接近时）→ 前导零计数（LZC）+ 左移；也可能溢出 1 位 → 右移 1 位；</li>
+<li><strong>舍入</strong>：用 guard/round/sticky 按模式舍入；</li>
+<li><strong>异常</strong>：溢出/下溢/无效处理。</li>
+</ol>
+<p>几处省硬件的经典手法：<strong>只给一个操作数配备前移位器</strong>（另一个需要移位时把两者交换）；<strong>只给一个操作数配备求补逻辑</strong>（通常配给不被前移位的那个，缩短关键路径），符号由符号逻辑统一裁决；尾数加法器比输入尾数<strong>宽</strong>（左侧多 1 位容纳符号、右侧多 3 位放 GRS）。IEEE 754 下对齐后的和/差落在 <span class="math inline">\([0,4)\)</span>：落在 <span class="math inline">\([2,4)\)</span> 则右移 1 位阶码 +1，落在 <span class="math inline">\([0,1)\)</span> 则可能需任意位左移。左移位数由<strong>前导零/前导一计数器（LZC）</strong>给出，也可在加法进行的同时<strong>预测</strong>（18.2 节），把 LZC 移出关键路径。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="为什么浮点加法比乘法难">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>为什么浮点加法比乘法难
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>乘法没有”对阶”（指数直接相加），尾数乘法后只需最多右移 1 位；加法则有<strong>两次不可预知方向的大移位</strong>（对阶右移 + 规格化左移），加上 LZC——关键路径明显更长。这就是 FPU 里加法器往往比乘法器流水级更多的原因。</p>
+</div>
+</div>
+<p><strong>双通路（dual-path）优化</strong>：把”指数差大”（对齐主导，规格化最多 1 位）与”指数差小且有效减法”（规格化主导，对齐最多 1 位）拆成 FAR/CLOSE 两条专用通路，每条只做一次大移位——现代浮点加法器标准结构。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch18/fig18_02.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 18.2</figcaption>
+</figure>
+</div>
+<p>一个工程细节：结果为负时要做 2 的补码还原（取反加 ulp），而舍入又可能要加 ulp——两次加法可合并，于是舍入阶段实际只往加法器输出上加 <strong>0、ulp 或 2ulp</strong> 三者之一。</p>
+</section>
+<section id="前移位与后移位pre--and-postshifting" class="level2">
+<h2 class="anchored" data-anchor-id="前移位与后移位pre--and-postshifting">18.2 前移位与后移位（Pre- and Postshifting)</h2>
+<ul>
+<li><strong>前移位（对阶）</strong>：右移丢失的低位要收进 sticky——移位器输出带 GRS 三比特；</li>
+<li><strong>后移位（规格化）</strong>：左移时用保护位补充低位，保持精度；</li>
+<li>桶形移位器（barrel shifter）是这两处的共同硬件，<span class="math inline">\(k\)</span> 位单拍任意移位——面积大户（<span class="math inline">\(O(k \log k)\)</span> 个 mux），浮点单元的面积相当部分在移位器上。</li>
+</ul>
+<p><strong>移位量可以大幅简化</strong>：单精度下指数差理论上可达 253，但尾数加法器只有几十位——若加法器 32 位宽，任何 <span class="math inline">\(\ge32\)</span> 位的右移都把操作数变成 0（只留 sticky）。于是只需算指数差的<strong>低 5 位</strong>，差 <span class="math inline">\(\ge32\)</span> 时强制输出 0。</p>
+<p>移位器有两种极端实现：单级是每位输出一个 32 选 1 mux（图 18.2），扇入扇出问题严重；多级则把移位量按二进制分解，每级做”移或不移 <span class="math inline">\(2^j\)</span>“的 2 选 1 mux，<span class="math inline">\(k\)</span> 位任意移位只需 <span class="math inline">\(\log_2 k\)</span> 级。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch18/fig18_03.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 18.3 四级组合移位器：自上而下分别实现移 1、2、4、8 位，可覆盖 0-15 位的任意前移</figcaption>
+</figure>
+</div>
+<p>工程上常取折中：0-31 位移位分两级，第一级由移位量低 3 位控制做 0-7 位移，第二级由高 2 位控制做 0/8/16/24 位移。指数差为负时，可求补、可用 ROM 直译，也可把 <span class="math inline">\(e_1-e_2\)</span> 与 <span class="math inline">\(e_2-e_1\)</span> 都算出来再选正的那个——只需算少数几位，复制一个减法器几乎不花钱。</p>
+<p>后移位器与前移位器的差别只有一点：要能做”右移 0-1 位”<strong>或</strong>”左移 0-31 位”。把加法器输出写成 <span class="math inline">\(z = (c_{out}z_1z_0.z_{-1}z_{-2}\cdots)_{\text{2's-compl}}\)</span>，需右移规格化的条件是 <span class="math inline">\(c_{out}\ne z_1\)</span>；若 <span class="math inline">\(c_{out}=z_1\)</span>，左移位数等于从 <span class="math inline">\(z_0\)</span> 开始与 <span class="math inline">\(z_1\)</span> 相同的连续位数。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch18/fig18_04.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 18.4 前导零/前导一的”计数”与”预测”两种方案：计数在加法结果出来后统计，预测与加法并行进行</figcaption>
+</figure>
+</div>
+<p><strong>预测法</strong>借用第 5.6 节的进位记号：异号相加（只有这时才需左移规格化）时，若恰有 <span class="math inline">\(i\)</span> 个位置从 0 开始传播进位（<span class="math inline">\(p_0=\cdots=p_{-i+1}=1\)</span>、<span class="math inline">\(p_{-i}=0\)</span>），则沿 <span class="math inline">\(g\)</span> 串或 <span class="math inline">\(a\)</span> 串找到第一个断点 <span class="math inline">\(j\)</span>，前导 0（或 1）的个数就是 <span class="math inline">\(j\)</span> 或 <span class="math inline">\(j-1\)</span>，由第 <span class="math inline">\(j\)</span> 位的进位输出二选一。<span class="math inline">\(g,p,a\)</span> 与进位信号可直接从尾数加法器内部取出，故额外硬件不多；电路上第一级类似 CLA（本质可写成并行前缀计算），第二级是优先编码器。</p>
+</section>
+<section id="舍入与异常rounding-and-exceptions" class="level2">
+<h2 class="anchored" data-anchor-id="舍入与异常rounding-and-exceptions">18.3 舍入与异常（Rounding and Exceptions)</h2>
+<p>舍入逻辑的真值输入：结果的 LSB、G、R、S 四比特 + 舍入模式。就近偶舍入规则：</p>
+<ul>
+<li><span class="math inline">\(R=0\)</span>：不进位（舍去部分不足一半）；</li>
+<li><span class="math inline">\(R=1, S=1\)</span>：进位（超过一半）；</li>
+<li><span class="math inline">\(R=1, S=0\)</span>（恰好一半）：LSB=1 才进位（向偶收敛）。</li>
+</ul>
+<p>为什么<strong>三个额外位就够</strong>？因为两件互补的事实：对阶右移<strong>恰好 1 位</strong>时 G 保存被移出的那一位，精度毫无损失；右移 <strong>2 位及以上</strong>时被移操作数幅值 <span class="math inline">\(&lt;1/2\)</span>，与未被移的 <span class="math inline">\([1,2)\)</span> 操作数之差落在 <span class="math inline">\([1/2,2)\)</span>，<strong>规格化左移至多 1 位</strong>，G 仍足以保护精度。故加法器右侧只需加宽 3 位，输出写成 <span class="math inline">\((c_{out}z_1z_0.z_{-1}\cdots z_{-l}\,G\,R\,S)_{\text{2's-compl}}\)</span>，其中 <span class="math inline">\(S\)</span> 是”所有经过它的位的逻辑 OR”——例如右移 7 位时，G 存第 1 个移出位、R 存第 2 个，S 是后 5 位的 OR。这个 OR 可顺手做在移位器里，几乎不花钱。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="GRS 与规格化移位的联动">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>GRS 与规格化移位的联动
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>规格化右移 1 位时新的 <span class="math inline">\(S \leftarrow R\lor S\)</span>；左移 1 位时右侧补 0。多位左移时粘位必然为 0，因此<strong>无需舍入</strong>——精度完整保留，这正是双通路设计中 CLOSE 通路”甚至可以不做舍入”的根据。</p>
+<p>最终对正的规格化结果 <span class="math inline">\(Z\)</span> 做就近偶舍入：若 <span class="math inline">\(Z_{-l-1}=0\)</span>（不足一半），或 <span class="math inline">\(Z_{-l}=Z_{-l-2}=Z_{-l-3}=0\)</span>（恰好一半且末位为偶），则原样截断；否则加 <span class="math inline">\(\mathrm{ulp}=2^{-l}\)</span>。</p>
+</div>
+</div>
+<p>舍入后可能再次溢出（1.111…1 进成 10.0），需”舍入后再规格化”——设计时通常把这一步与规格化合拍（预测 + 修正）。上溢只可能伴随右移规格化发生，下溢只可能伴随左移规格化发生，都由指数调整加法器检出；零结果的检测则是 LZC 的副产品。</p>
+</section>
+<section id="浮点乘法器与除法器floating-point-multipliers-and-dividers" class="level2">
+<h2 class="anchored" data-anchor-id="浮点乘法器与除法器floating-point-multipliers-and-dividers">18.4 浮点乘法器与除法器（Floating-Point Multipliers and Dividers)</h2>
+<p><strong>乘法器</strong>：指数相加（减偏置）+ 尾数相乘（第 9-11 章全套技术：Booth + 压缩树 + CPA）+ 规格化（最多 1 位）+ 舍入。特殊值旁路：<span class="math inline">\(0 \times \infty = \text{NaN}\)</span> 等。</p>
+<p>与加法不同：两个 <span class="math inline">\([1,2)\)</span> 尾数之积落在 <span class="math inline">\([1,4)\)</span>，至多右移 1 位，故<strong>指数可预计算两个候选值</strong>等结果明了后二选一；尾数乘法是全流程最慢的一段，其余计算有充裕时间”偷跑”；且<strong>不需要 guard 位</strong>——乘积的小数点位置确定，被丢弃部分从固定位置开始，只需 round + sticky 即可正确舍入（加法因左移规格化会把 GRS 拉进结果才需要 G）。多数乘法器先算出积的低位，而是否右移规格化要到末尾才知，于是可并行准备”右移版”与”不右移版”两个舍入结果最后二选一。</p>
+<p><strong>除法器</strong>：指数相减 + 尾数相除（第 13-16 章：SRT 或收敛法）+ 舍入。除法延迟通常是乘法的 3-10 倍，是 FPU 的吞吐短板——很多流水线设计让除法器独立非流水，容忍它的长延迟。</p>
+<p>除法与乘法在舍入上的关键差异：商的尾数落在 <span class="math inline">\((1/2,2)\)</span>，可能要<strong>左移</strong> 1 位，故商必须多产生 2 位作为 guard 与 round 位。若用产生余数的数字递归方案，sticky 位可直接由<strong>最终余数是否为零</strong>推出；若用收敛法（第 16 章）则<strong>没有余数可用</strong>，正确舍入只能靠多算保护位 + 符号判定——这是收敛除法落地时最头疼的一环。由于乘除结构高度相似（图 18.6 是共用框图），用收敛法实现除法时把浮点乘法器改造成乘除一体单元几乎不需要额外硬件。</p>
+</section>
+<section id="乘加融合单元fused-multiply-add-units-fma" class="level2">
+<h2 class="anchored" data-anchor-id="乘加融合单元fused-multiply-add-units-fma">18.5 乘加融合单元（Fused Multiply-Add Units, FMA）</h2>
+<p><span class="math inline">\(a \times b + c\)</span> <strong>单次舍入</strong>完成（对比”乘后加”两次舍入）：</p>
+<ul>
+<li><strong>精度优势</strong>：乘积不被截断就参与加法，消除中间舍入误差；</li>
+<li><strong>结构要点</strong>：<span class="math inline">\(c\)</span> 的尾数需与 <span class="math inline">\(2k\)</span> 位乘积对阶（移位范围大），加法器宽 <span class="math inline">\(3k\)</span> 级别，压缩树里 <span class="math inline">\(c\)</span> 只是”免费多来的一行”（12.6 节的思想在浮点的落地）；</li>
+<li><strong>生态影响</strong>：FMA 是现代指令集（AVX-512、ARM NEON、GPU）的浮点原子，峰值算力 = 核心数 × 频率 × FMA 数 × 2。数值算法（点积、多项式求值、Newton 迭代）因 FMA 重写而更快更准。</li>
+</ul>
+<p>FMA 值得单做硬件，是因为它命中两类最常见的序列：多项式求值（Horner 法 <span class="math inline">\(s \leftarrow sz + c^{(j)}\)</span>）与向量点积（<span class="math inline">\(s \leftarrow s + u^{(j)}v^{(j)}\)</span>）。朴素实现是”保留双倍宽乘积的乘法器 + 双倍宽加法器”级联，延迟过长。融合结构有三处改进：</p>
+<ol type="1">
+<li><strong>乘积保持存储进位形式</strong>，省掉乘法末尾的进位传播；随后的加法变成三操作数加（一层 CSA + 一次快速加法）；</li>
+<li><strong>对阶前移固定施加在 <span class="math inline">\(b\)</span> 上</strong>，方向可左可右。移位后的 <span class="math inline">\(b\)</span> 取三倍字宽即可：右移超 <span class="math inline">\(k\)</span> 位的部分压进 sticky，左移超 <span class="math inline">\(k\)</span> 位则乘积极小、只通过舍入影响结果；</li>
+<li><strong>三输入前导零预测</strong>（乘积的存储进位形式 + 移位后的 <span class="math inline">\(b\)</span>），比两输入略慢但仍快于进位传播加法，且前面多一层 CSA，时间预算更宽松。</li>
+</ol>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch18/fig18_07.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 18.7 快速 FMA 单元框图：乘积以存储进位形式进入 CSA 树，<span class="math inline">\(s_b\)</span> 经可变方向的对阶前移后与之相加</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch18/fig18_05.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 18.5</figcaption>
+</figure>
+</div>
+<p>优化后 FMA 的延迟与普通浮点乘法器相当，于是<strong>可以干脆不设独立的加法器与乘法器</strong>：令 <span class="math inline">\(x=1\)</span> 就是加法，令 <span class="math inline">\(b=0\)</span> 就是乘法。</p>
+</section>
+<section id="对数运算单元logarithmic-arithmetic-unit" class="level2">
+<h2 class="anchored" data-anchor-id="对数运算单元logarithmic-arithmetic-unit">18.6 对数运算单元（Logarithmic Arithmetic Unit)</h2>
+<p>LNS（17.6 节）的运算单元：乘除是定点加减（廉价），加减要算 <span class="math inline">\(\log(1 \pm b^{\Delta})\)</span>——通过查表 + 插值实现（第 24 章技术）。单元结构因此与浮点完全对偶：<strong>简单运算便宜、复杂运算靠表</strong>。在乘法密集的专用负载中曾有原型芯片验证了可行性与能效优势。</p>
+<p>关键的一步化简是<strong>把二元运算变成一元运算</strong>。设 <span class="math inline">\(x &gt; y &gt; 0\)</span>，则</p>
+<p><span class="math display">\[
+L_z = \log(x \pm y) = \log x + \log\big(1 \pm y/x\big)
+\]</span></p>
+<p>其中 <span class="math inline">\(\log x\)</span> 已知，<span class="math inline">\(\Delta = \log(y/x) = -(\log x - \log y) \le 0\)</span> 由一次减法得到。于是只需两张<strong>单操作数</strong>表 <span class="math inline">\(\varphi^{+}(\Delta) = \log(1+\log^{-1}\Delta)\)</span> 与 <span class="math inline">\(\varphi^{-}(\Delta) = \log(1-\log^{-1}\Delta)\)</span>，加减法即 <span class="math inline">\(\log(x\pm y) = \log x + \varphi^{\pm}(\Delta)\)</span>。表规模从 <span class="math inline">\(2^{2k}\times k\)</span> 降到 <span class="math inline">\(2^k\times k\)</span>，这才使 LNS 实用化。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch18/fig18_08.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 18.8 对数数系的完整运算单元：<span class="math inline">\(\varphi^{+}\)</span>/<span class="math inline">\(\varphi^{-}\)</span> 两张 ROM 承担加减，两个加减器分别处理对阶差值与偏置补偿</figcaption>
+</figure>
+</div>
+<p>单元先比较 <span class="math inline">\(L_x\)</span> 与 <span class="math inline">\(L_y\)</span> 决定谁大，控制逻辑据此解释差值符号与结果符号。若所有值都乘了比例因子 <span class="math inline">\(m\)</span>（使小于 1 的数也能用无符号对数表示），乘法要减去 <span class="math inline">\(L_m\)</span>、除法要加回、加减法则由第二个加减器把 <span class="math inline">\(L_x\)</span> 与查表值相加。整个单元就是”两个加减器 + 两张 ROM + 少量控制”——硬件重心从移位器转移到了表。</p>
+</section>
+<section id="rtl-实践rtlch18_4_fp_multiplier" class="level2">
+<h2 class="anchored" data-anchor-id="rtl-实践rtlch18_4_fp_multiplier">RTL 实践：<code>rtl/ch18_4_fp_multiplier</code></h2>
+<p>简化 IEEE-754 binary32 浮点乘法器（教学版），覆盖 18.4 节核心流程：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">wire</span> [<span class="dv">47</span>:<span class="dv">0</span>] mprod = ma * mb;                    <span class="co">// 24x24 尾数相乘</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="kw">wire</span>        norm_shift = mprod[<span class="dv">47</span>];             <span class="co">// 乘积落在 [1,4) 的哪一半</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="kw">wire</span>        guard  = mnorm[<span class="dv">23</span>];                 <span class="co">// RNE 三比特</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="kw">wire</span>        round  = mnorm[<span class="dv">22</span>];</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="kw">wire</span>        sticky = |mnorm[<span class="dv">21</span>:<span class="dv">0</span>];</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="kw">wire</span>        round_up = guard &amp; (round | sticky | mnorm[<span class="dv">24</span>]);  <span class="co">// 平局看 LSB 奇偶</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>设计要点：</p>
+<ul>
+<li><strong>隐藏位还原</strong>：<code>{1'b1, a[22:0]}</code>——规格化数的隐藏 1 必须先补回再运算；</li>
+<li><strong>二次规格化</strong>：尾数乘积可能落在 <span class="math inline">\([2,4)\)</span>，需右移一位并阶码 +1；舍入进位还可能再次触发这一修正（<code>re_norm</code>）；</li>
+<li><strong>就近偶舍入</strong>：<code>round_up = guard &amp; (round | sticky | lsb)</code>——平局时看结果末位奇偶，这是 IEEE 754 无偏性的硬件表达；</li>
+<li>教学简化：仅处理规格化数与 ±0；上溢饱和到最大规格数、下溢刷零，未实现非规格化数/Inf/NaN（这些正是工业 FPU 验证的大头）；</li>
+<li>testbench 的 14 个定向用例覆盖符号组合、RNE 平局取偶、sticky 向下、上溢饱和、下溢刷零。</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> rtl/ch18_4_fp_multiplier</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> run_iverilog.sh    <span class="co"># 或 bash run_verilator.sh</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="本章小结" class="level2">
+<h2 class="anchored" data-anchor-id="本章小结">本章小结</h2>
+<ul>
+<li>浮点加法的难点是两次大移位；双通路（FAR/CLOSE）是标准解。</li>
+<li>舍入四比特（LSB, G, R, S）+ 模式 → 舍入决策；舍入后可能需再规格化。</li>
+<li>乘法复用整数乘法全套技术；除法用 SRT/收敛法，是 FPU 短板。</li>
+<li>FMA 单次舍入，精度与吞吐双赢，现代算力的原子单位。</li>
+</ul>
+</section>
+<section id="原书插图" class="level2">
+<h2 class="anchored" data-anchor-id="原书插图">原书插图</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch18/fig18_01.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 18.1</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch18/fig18_06.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 18.6</figcaption>
+</figure>
+</div>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./ch17.html" class="pagination-link" aria-label="第17章 浮点数表示（Floating-Point Representations）">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第17章 浮点数表示（Floating-Point Representations）</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./ch19.html" class="pagination-link" aria-label="第19章 误差与误差控制（Errors and Error Control）">
+        <span class="nav-page-text"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 第18章 浮点运算（Floating-Point Operations）</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章导读</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>第 17 章讲了浮点"怎么表示"，本章讲"怎么算"。浮点加法器比乘法器更难做（对阶与规格化的两次大移位），FMA 是二者的融合巅峰。这一章是全书前面所有整数技术的"总装车间"：移位器、CLA、压缩树、舍入逻辑在此会师。</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>读这一章盯住两个主题：**如何把串行步骤并行化或提前做**（指数预计算、前导零预测、双通路）与**如何在不保存全部位的前提下保证正确舍入**（guard/round/sticky）。现代 FPU 的性能差距几乎都来自对这两件事的处理水平。</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="fu">## 18.1 浮点加减法器（Floating-Point Adders/Subtractors)</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>浮点加法的完整流程：</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**指数差对齐**：算 $e_x - e_y$，小阶尾数右移（对齐移位器 alignment shifter）；</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**尾数加减**：按有效操作（符号⊕操作码）做加或减；</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**规格化**：结果可能前导零一串（有效减法且指数接近时）→ 前导零计数（LZC）+ 左移；也可能溢出 1 位 → 右移 1 位；</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="ss">4. </span>**舍入**：用 guard/round/sticky 按模式舍入；</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="ss">5. </span>**异常**：溢出/下溢/无效处理。</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>几处省硬件的经典手法：**只给一个操作数配备前移位器**（另一个需要移位时把两者交换）；**只给一个操作数配备求补逻辑**（通常配给不被前移位的那个，缩短关键路径），符号由符号逻辑统一裁决；尾数加法器比输入尾数**宽**（左侧多 1 位容纳符号、右侧多 3 位放 GRS）。IEEE 754 下对齐后的和/差落在 $[0,4)$：落在 $[2,4)$ 则右移 1 位阶码 +1，落在 $[0,1)$ 则可能需任意位左移。左移位数由**前导零/前导一计数器（LZC）**给出，也可在加法进行的同时**预测**（18.2 节），把 LZC 移出关键路径。</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="为什么浮点加法比乘法难"}</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>乘法没有"对阶"（指数直接相加），尾数乘法后只需最多右移 1 位；加法则有**两次不可预知方向的大移位**（对阶右移 + 规格化左移），加上 LZC——关键路径明显更长。这就是 FPU 里加法器往往比乘法器流水级更多的原因。</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>**双通路（dual-path）优化**：把"指数差大"（对齐主导，规格化最多 1 位）与"指数差小且有效减法"（规格化主导，对齐最多 1 位）拆成 FAR/CLOSE 两条专用通路，每条只做一次大移位——现代浮点加法器标准结构。</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 18.2](images/ch18/fig18_02.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>一个工程细节：结果为负时要做 2 的补码还原（取反加 ulp），而舍入又可能要加 ulp——两次加法可合并，于是舍入阶段实际只往加法器输出上加 **0、ulp 或 2ulp** 三者之一。</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="fu">## 18.2 前移位与后移位（Pre- and Postshifting)</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**前移位（对阶）**：右移丢失的低位要收进 sticky——移位器输出带 GRS 三比特；</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**后移位（规格化）**：左移时用保护位补充低位，保持精度；</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>桶形移位器（barrel shifter）是这两处的共同硬件，$k$ 位单拍任意移位——面积大户（$O(k \log k)$ 个 mux），浮点单元的面积相当部分在移位器上。</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>**移位量可以大幅简化**：单精度下指数差理论上可达 253，但尾数加法器只有几十位——若加法器 32 位宽，任何 $\ge32$ 位的右移都把操作数变成 0（只留 sticky）。于是只需算指数差的**低 5 位**，差 $\ge32$ 时强制输出 0。</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>移位器有两种极端实现：单级是每位输出一个 32 选 1 mux（图 18.2），扇入扇出问题严重；多级则把移位量按二进制分解，每级做"移或不移 $2^j$"的 2 选 1 mux，$k$ 位任意移位只需 $\log_2 k$ 级。</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="al">![图 18.3 四级组合移位器：自上而下分别实现移 1、2、4、8 位，可覆盖 0-15 位的任意前移](images/ch18/fig18_03.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>工程上常取折中：0-31 位移位分两级，第一级由移位量低 3 位控制做 0-7 位移，第二级由高 2 位控制做 0/8/16/24 位移。指数差为负时，可求补、可用 ROM 直译，也可把 $e_1-e_2$ 与 $e_2-e_1$ 都算出来再选正的那个——只需算少数几位，复制一个减法器几乎不花钱。</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>后移位器与前移位器的差别只有一点：要能做"右移 0-1 位"**或**"左移 0-31 位"。把加法器输出写成 $z = (c_{out}z_1z_0.z_{-1}z_{-2}\cdots)_{\text{2's-compl}}$，需右移规格化的条件是 $c_{out}\ne z_1$；若 $c_{out}=z_1$，左移位数等于从 $z_0$ 开始与 $z_1$ 相同的连续位数。</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a><span class="al">![图 18.4 前导零/前导一的"计数"与"预测"两种方案：计数在加法结果出来后统计，预测与加法并行进行](images/ch18/fig18_04.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>**预测法**借用第 5.6 节的进位记号：异号相加（只有这时才需左移规格化）时，若恰有 $i$ 个位置从 0 开始传播进位（$p_0=\cdots=p_{-i+1}=1$、$p_{-i}=0$），则沿 $g$ 串或 $a$ 串找到第一个断点 $j$，前导 0（或 1）的个数就是 $j$ 或 $j-1$，由第 $j$ 位的进位输出二选一。$g,p,a$ 与进位信号可直接从尾数加法器内部取出，故额外硬件不多；电路上第一级类似 CLA（本质可写成并行前缀计算），第二级是优先编码器。</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="fu">## 18.3 舍入与异常（Rounding and Exceptions)</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>舍入逻辑的真值输入：结果的 LSB、G、R、S 四比特 + 舍入模式。就近偶舍入规则：</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>$R=0$：不进位（舍去部分不足一半）；</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>$R=1, S=1$：进位（超过一半）；</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>$R=1, S=0$（恰好一半）：LSB=1 才进位（向偶收敛）。</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>为什么**三个额外位就够**？因为两件互补的事实：对阶右移**恰好 1 位**时 G 保存被移出的那一位，精度毫无损失；右移 **2 位及以上**时被移操作数幅值 $&lt;1/2$，与未被移的 $[1,2)$ 操作数之差落在 $[1/2,2)$，**规格化左移至多 1 位**，G 仍足以保护精度。故加法器右侧只需加宽 3 位，输出写成 $(c_{out}z_1z_0.z_{-1}\cdots z_{-l}\,G\,R\,S)_{\text{2's-compl}}$，其中 $S$ 是"所有经过它的位的逻辑 OR"——例如右移 7 位时，G 存第 1 个移出位、R 存第 2 个，S 是后 5 位的 OR。这个 OR 可顺手做在移位器里，几乎不花钱。</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="GRS 与规格化移位的联动"}</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>规格化右移 1 位时新的 $S \leftarrow R\lor S$；左移 1 位时右侧补 0。多位左移时粘位必然为 0，因此**无需舍入**——精度完整保留，这正是双通路设计中 CLOSE 通路"甚至可以不做舍入"的根据。</span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>最终对正的规格化结果 $Z$ 做就近偶舍入：若 $Z_{-l-1}=0$（不足一半），或 $Z_{-l}=Z_{-l-2}=Z_{-l-3}=0$（恰好一半且末位为偶），则原样截断；否则加 $\mathrm{ulp}=2^{-l}$。</span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>舍入后可能再次溢出（1.111…1 进成 10.0），需"舍入后再规格化"——设计时通常把这一步与规格化合拍（预测 + 修正）。上溢只可能伴随右移规格化发生，下溢只可能伴随左移规格化发生，都由指数调整加法器检出；零结果的检测则是 LZC 的副产品。</span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a><span class="fu">## 18.4 浮点乘法器与除法器（Floating-Point Multipliers and Dividers)</span></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>**乘法器**：指数相加（减偏置）+ 尾数相乘（第 9-11 章全套技术：Booth + 压缩树 + CPA）+ 规格化（最多 1 位）+ 舍入。特殊值旁路：$0 \times \infty = \text{NaN}$ 等。</span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>与加法不同：两个 $[1,2)$ 尾数之积落在 $[1,4)$，至多右移 1 位，故**指数可预计算两个候选值**等结果明了后二选一；尾数乘法是全流程最慢的一段，其余计算有充裕时间"偷跑"；且**不需要 guard 位**——乘积的小数点位置确定，被丢弃部分从固定位置开始，只需 round + sticky 即可正确舍入（加法因左移规格化会把 GRS 拉进结果才需要 G）。多数乘法器先算出积的低位，而是否右移规格化要到末尾才知，于是可并行准备"右移版"与"不右移版"两个舍入结果最后二选一。</span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>**除法器**：指数相减 + 尾数相除（第 13-16 章：SRT 或收敛法）+ 舍入。除法延迟通常是乘法的 3-10 倍，是 FPU 的吞吐短板——很多流水线设计让除法器独立非流水，容忍它的长延迟。</span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>除法与乘法在舍入上的关键差异：商的尾数落在 $(1/2,2)$，可能要**左移** 1 位，故商必须多产生 2 位作为 guard 与 round 位。若用产生余数的数字递归方案，sticky 位可直接由**最终余数是否为零**推出；若用收敛法（第 16 章）则**没有余数可用**，正确舍入只能靠多算保护位 + 符号判定——这是收敛除法落地时最头疼的一环。由于乘除结构高度相似（图 18.6 是共用框图），用收敛法实现除法时把浮点乘法器改造成乘除一体单元几乎不需要额外硬件。</span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a><span class="fu">## 18.5 乘加融合单元（Fused Multiply-Add Units, FMA）</span></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>$a \times b + c$ **单次舍入**完成（对比"乘后加"两次舍入）：</span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**精度优势**：乘积不被截断就参与加法，消除中间舍入误差；</span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**结构要点**：$c$ 的尾数需与 $2k$ 位乘积对阶（移位范围大），加法器宽 $3k$ 级别，压缩树里 $c$ 只是"免费多来的一行"（12.6 节的思想在浮点的落地）；</span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**生态影响**：FMA 是现代指令集（AVX-512、ARM NEON、GPU）的浮点原子，峰值算力 = 核心数 × 频率 × FMA 数 × 2。数值算法（点积、多项式求值、Newton 迭代）因 FMA 重写而更快更准。</span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>FMA 值得单做硬件，是因为它命中两类最常见的序列：多项式求值（Horner 法 $s \leftarrow sz + c^{(j)}$）与向量点积（$s \leftarrow s + u^{(j)}v^{(j)}$）。朴素实现是"保留双倍宽乘积的乘法器 + 双倍宽加法器"级联，延迟过长。融合结构有三处改进：</span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**乘积保持存储进位形式**，省掉乘法末尾的进位传播；随后的加法变成三操作数加（一层 CSA + 一次快速加法）；</span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**对阶前移固定施加在 $b$ 上**，方向可左可右。移位后的 $b$ 取三倍字宽即可：右移超 $k$ 位的部分压进 sticky，左移超 $k$ 位则乘积极小、只通过舍入影响结果；</span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**三输入前导零预测**（乘积的存储进位形式 + 移位后的 $b$），比两输入略慢但仍快于进位传播加法，且前面多一层 CSA，时间预算更宽松。</span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a><span class="al">![图 18.7 快速 FMA 单元框图：乘积以存储进位形式进入 CSA 树，$s_b$ 经可变方向的对阶前移后与之相加](images/ch18/fig18_07.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 18.5](images/ch18/fig18_05.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a>优化后 FMA 的延迟与普通浮点乘法器相当，于是**可以干脆不设独立的加法器与乘法器**：令 $x=1$ 就是加法，令 $b=0$ 就是乘法。</span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a><span class="fu">## 18.6 对数运算单元（Logarithmic Arithmetic Unit)</span></span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a>LNS（17.6 节）的运算单元：乘除是定点加减（廉价），加减要算 $\log(1 \pm b^{\Delta})$——通过查表 + 插值实现（第 24 章技术）。单元结构因此与浮点完全对偶：**简单运算便宜、复杂运算靠表**。在乘法密集的专用负载中曾有原型芯片验证了可行性与能效优势。</span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a>关键的一步化简是**把二元运算变成一元运算**。设 $x &gt; y &gt; 0$，则</span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a>L_z = \log(x \pm y) = \log x + \log\big(1 \pm y/x\big)</span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a>其中 $\log x$ 已知，$\Delta = \log(y/x) = -(\log x - \log y) \le 0$ 由一次减法得到。于是只需两张**单操作数**表 $\varphi^{+}(\Delta) = \log(1+\log^{-1}\Delta)$ 与 $\varphi^{-}(\Delta) = \log(1-\log^{-1}\Delta)$，加减法即 $\log(x\pm y) = \log x + \varphi^{\pm}(\Delta)$。表规模从 $2^{2k}\times k$ 降到 $2^k\times k$，这才使 LNS 实用化。</span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a><span class="al">![图 18.8 对数数系的完整运算单元：$\varphi^{+}$/$\varphi^{-}$ 两张 ROM 承担加减，两个加减器分别处理对阶差值与偏置补偿](images/ch18/fig18_08.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a>单元先比较 $L_x$ 与 $L_y$ 决定谁大，控制逻辑据此解释差值符号与结果符号。若所有值都乘了比例因子 $m$（使小于 1 的数也能用无符号对数表示），乘法要减去 $L_m$、除法要加回、加减法则由第二个加减器把 $L_x$ 与查表值相加。整个单元就是"两个加减器 + 两张 ROM + 少量控制"——硬件重心从移位器转移到了表。</span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a><span class="fu">## RTL 实践：`rtl/ch18_4_fp_multiplier`</span></span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a>简化 IEEE-754 binary32 浮点乘法器（教学版），覆盖 18.4 节核心流程：</span>
+<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a><span class="in">```systemverilog</span></span>
+<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a><span class="in">wire [47:0] mprod = ma * mb;                    // 24x24 尾数相乘</span></span>
+<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a><span class="in">wire        norm_shift = mprod[47];             // 乘积落在 [1,4) 的哪一半</span></span>
+<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a><span class="in">wire        guard  = mnorm[23];                 // RNE 三比特</span></span>
+<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a><span class="in">wire        round  = mnorm[22];</span></span>
+<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a><span class="in">wire        sticky = |mnorm[21:0];</span></span>
+<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a><span class="in">wire        round_up = guard &amp; (round | sticky | mnorm[24]);  // 平局看 LSB 奇偶</span></span>
+<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a>设计要点：</span>
+<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**隐藏位还原**：<span class="in">`{1'b1, a[22:0]}`</span>——规格化数的隐藏 1 必须先补回再运算；</span>
+<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**二次规格化**：尾数乘积可能落在 $[2,4)$，需右移一位并阶码 +1；舍入进位还可能再次触发这一修正（<span class="in">`re_norm`</span>）；</span>
+<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**就近偶舍入**：<span class="in">`round_up = guard &amp; (round | sticky | lsb)`</span>——平局时看结果末位奇偶，这是 IEEE 754 无偏性的硬件表达；</span>
+<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>教学简化：仅处理规格化数与 ±0；上溢饱和到最大规格数、下溢刷零，未实现非规格化数/Inf/NaN（这些正是工业 FPU 验证的大头）；</span>
+<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>testbench 的 14 个定向用例覆盖符号组合、RNE 平局取偶、sticky 向下、上溢饱和、下溢刷零。</span>
+<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a><span class="in">```bash</span></span>
+<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> rtl/ch18_4_fp_multiplier</span>
+<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a><span class="fu">bash</span> run_iverilog.sh    <span class="co"># 或 bash run_verilator.sh</span></span>
+<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章小结</span></span>
+<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>浮点加法的难点是两次大移位；双通路（FAR/CLOSE）是标准解。</span>
+<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>舍入四比特（LSB, G, R, S）+ 模式 → 舍入决策；舍入后可能需再规格化。</span>
+<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>乘法复用整数乘法全套技术；除法用 SRT/收敛法，是 FPU 短板。</span>
+<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>FMA 单次舍入，精度与吞吐双赢，现代算力的原子单位。</span>
+<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a><span class="fu">## 原书插图</span></span>
+<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 18.1](images/ch18/fig18_01.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 18.6](images/ch18/fig18_06.png)</span>{fig-align="center" width="85%"}</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

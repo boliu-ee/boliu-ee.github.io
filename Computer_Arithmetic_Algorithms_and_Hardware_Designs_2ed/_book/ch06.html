@@ -1,0 +1,2154 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第6章 超前进位加法器（Carry-Lookahead Adders） – 计算机算术：算法与硬件设计（中文解读版）</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./ch07.html" rel="next">
+<link href="./ch05.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-77d2b90c99eeff80c5837adab8b96ac7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch05.html">第二部分 加法与减法 (Addition/Subtraction)</a></li><li class="breadcrumb-item"><a href="./ch06.html"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">计算机算术：算法与硬件设计（中文解读版）</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第一部分 数的表示 (Number Representation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch01.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第二部分 加法与减法 (Addition/Subtraction)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch06.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第7章 快速加法器的变体（Variations in Fast Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第8章 多操作数加法（Multioperand Addition）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部分 乘法 (Multiplication)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第9章 基本乘法方案（Basic Multiplication Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第10章 高基数乘法器（High-Radix Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">第四部分 除法 (Division)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第14章 高基数除法器（High-Radix Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第15章 除法器的变体（Variations in Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第16章 收敛法除法（Division by Convergence）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">第五部分 实数运算 (Real Arithmetic)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第17章 浮点数表示（Floating-Point Representations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">第六部分 函数求值 (Function Evaluation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第23章 函数求值的变体（Variations in Function Evaluation）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第24章 查表算术（Arithmetic by Table Lookup）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">第七部分 实现专题 (Implementation Topics)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch26.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch27.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch28.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第28章 可重构算术（Reconfigurable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">附录 过去、现在与未来（Past, Present, and Future）</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#本章导读" id="toc-本章导读" class="nav-link active" data-scroll-target="#本章导读">本章导读</a></li>
+  <li><a href="#展开进位递推unrolling-the-carry-recurrence" id="toc-展开进位递推unrolling-the-carry-recurrence" class="nav-link" data-scroll-target="#展开进位递推unrolling-the-carry-recurrence">6.1 展开进位递推（Unrolling the Carry Recurrence）</a>
+  <ul class="collapse">
+  <li><a href="#rtl-实践rtlch6_2_carry_lookahead_adder" id="toc-rtl-实践rtlch6_2_carry_lookahead_adder" class="nav-link" data-scroll-target="#rtl-实践rtlch6_2_carry_lookahead_adder">RTL 实践：<code>rtl/ch6_2_carry_lookahead_adder</code></a></li>
+  </ul></li>
+  <li><a href="#超前进位加法器设计carry-lookahead-adder-design" id="toc-超前进位加法器设计carry-lookahead-adder-design" class="nav-link" data-scroll-target="#超前进位加法器设计carry-lookahead-adder-design">6.2 超前进位加法器设计（Carry-Lookahead Adder Design）</a></li>
+  <li><a href="#ling-加法器与相关设计ling-adder-and-related-designs" id="toc-ling-加法器与相关设计ling-adder-and-related-designs" class="nav-link" data-scroll-target="#ling-加法器与相关设计ling-adder-and-related-designs">6.3 Ling 加法器与相关设计（Ling Adder and Related Designs）</a></li>
+  <li><a href="#进位确定即前缀计算carry-determination-as-prefix-computation" id="toc-进位确定即前缀计算carry-determination-as-prefix-computation" class="nav-link" data-scroll-target="#进位确定即前缀计算carry-determination-as-prefix-computation">6.4 进位确定即前缀计算（Carry Determination as Prefix Computation）</a></li>
+  <li><a href="#其他并行前缀网络alternative-parallel-prefix-networks" id="toc-其他并行前缀网络alternative-parallel-prefix-networks" class="nav-link" data-scroll-target="#其他并行前缀网络alternative-parallel-prefix-networks">6.5 其他并行前缀网络（Alternative Parallel Prefix Networks）</a>
+  <ul class="collapse">
+  <li><a href="#rtl-实践rtlch6_4_kogge_stone_adder" id="toc-rtl-实践rtlch6_4_kogge_stone_adder" class="nav-link" data-scroll-target="#rtl-实践rtlch6_4_kogge_stone_adder">RTL 实践：<code>rtl/ch6_4_kogge_stone_adder</code></a></li>
+  </ul></li>
+  <li><a href="#vlsi-实现考量vlsi-implementation-aspects" id="toc-vlsi-实现考量vlsi-implementation-aspects" class="nav-link" data-scroll-target="#vlsi-实现考量vlsi-implementation-aspects">6.6 VLSI 实现考量（VLSI Implementation Aspects）</a></li>
+  <li><a href="#本章小结" id="toc-本章小结" class="nav-link" data-scroll-target="#本章小结">本章小结</a></li>
+  <li><a href="#原书插图" id="toc-原书插图" class="nav-link" data-scroll-target="#原书插图">原书插图</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch05.html">第二部分 加法与减法 (Addition/Subtraction)</a></li><li class="breadcrumb-item"><a href="./ch06.html"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="本章导读" class="level2">
+<h2 class="anchored" data-anchor-id="本章导读">本章导读</h2>
+<p>第 5 章留下的问题是：进位递推 <span class="math inline">\(c_{i+1} = g_i + p_i c_i\)</span> 是串行的，能不能”一眼看穿”所有进位？超前进位（carry-lookahead, CLA）的答案是：把递推<strong>展开</strong>。本章从直接展开的二级 CLA 讲起，引出 Ling 加法器的巧思，最后抵达现代加法器的主流视角——<strong>进位计算即并行前缀问题（parallel prefix problem）</strong>，Kogge-Stone、Brent-Kung、Han-Carlson、Ladner-Fischer 等经典网络都是这个框架下的不同折中。</p>
+</section>
+<section id="展开进位递推unrolling-the-carry-recurrence" class="level2">
+<h2 class="anchored" data-anchor-id="展开进位递推unrolling-the-carry-recurrence">6.1 展开进位递推（Unrolling the Carry Recurrence）</h2>
+<p>先明确本章要回答的问题的下界。和的最高位依赖于全部 <span class="math inline">\(2k\)</span> 个输入比特；若逻辑门扇入至多为 <span class="math inline">\(d\)</span>，则任何加法器的延迟都不可能低于 <span class="math inline">\(\log_d(2k)\)</span>。第 5 章的行波进位是 <span class="math inline">\(O(k)\)</span>，离这个下界太远——能不能做到 <span class="math inline">\(O(\log k)\)</span>？超前进位给出肯定回答。</p>
+<p>先复习第 5 章的三个辅助信号：生成（generate）<span class="math inline">\(g_i = x_i y_i\)</span>、传播（propagate）<span class="math inline">\(p_i = x_i \oplus y_i\)</span>、传递（transfer）<span class="math inline">\(t_i = a_i = g_i + p_i\)</span>（<span class="math inline">\(a_i\)</span> 亦称 annihilate/absorb，表示”不消灭进位”）。进位递推因此有两种等价写法：</p>
+<p><span class="math display">\[
+c_{i+1} = g_i + p_i c_i = g_i + t_i c_i
+\]</span></p>
+<p>这里有一个值得反复体会的要点：这个递推把<strong>进位网络（carry network）</strong>的设计与数制细节彻底解耦——它既不关心你用二进制还是高基数、也不关心你在做加法还是减法。把 <span class="math inline">\(g_i, p_i\)</span> 重新解释为借位生成与借位传播，同一个进位网络可以原封不动地当作借位网络（borrow network）用：二进制减法 <span class="math inline">\(x - y\)</span> 里，借位生成 <span class="math inline">\(\gamma_i = \bar{x}_i y_i\)</span>、借位传播 <span class="math inline">\(\pi_i = x_i \oplus y_i\)</span>（与加法的 <span class="math inline">\(p_i\)</span> 完全相同！），借位递推 <span class="math inline">\(b_{i+1} = \gamma_i + \pi_i b_i\)</span> 与进位递推同构。CLA 结构能被跨场景复用的根源就在这里。</p>
+<p>把递推逐级代入，就能把每个进位写成 <span class="math inline">\((g, p)\)</span> 与 <span class="math inline">\(c_0\)</span> 的纯组合函数。以 <span class="math inline">\(c_i\)</span> 为例，展开的前几步是：</p>
+<p><span class="math display">\[
+\begin{aligned}
+c_i &amp;= g_{i-1} + p_{i-1}c_{i-1} \\
+    &amp;= g_{i-1} + g_{i-2}p_{i-1} + c_{i-2}p_{i-2}p_{i-1} \\
+    &amp;= g_{i-1} + g_{i-2}p_{i-1} + g_{i-3}p_{i-2}p_{i-1} + c_{i-3}p_{i-3}p_{i-2}p_{i-1}
+\end{aligned}
+\]</span></p>
+<p>一直展开到最后一个乘积项含有 <span class="math inline">\(c_0 = c_{in}\)</span> 为止。展开式的读法极其直观：<strong>进位进入第 <span class="math inline">\(i\)</span> 位，当且仅当</strong>它在第 <span class="math inline">\(i-1\)</span> 位生成；或者它在第 <span class="math inline">\(i-2\)</span> 位生成、并被第 <span class="math inline">\(i-1\)</span> 位传播；或者它在第 <span class="math inline">\(i-3\)</span> 位生成、并被第 <span class="math inline">\(i-2\)</span> 与第 <span class="math inline">\(i-1\)</span> 位接力传播……每一项都是”某个低位生成 + 中间一路传播”的组合。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="解读">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>解读
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>展开（unrolling）是硬件设计里”面积换时间”的最古老手法：把递推的时序维度压扁成组合逻辑的空间维度。本章后面的一切结构——多级 lookahead、Ling、前缀网络——都可以看成对”完全展开不可行”这一现实的补救：<strong>只展开有限的跨度，然后用层次结构把跨度接力起来</strong>。理解 CLA 的最好方式，就是把它当成”受控的、分层的展开”。</p>
+</div>
+</div>
+<p>看一个具体例子。设 <span class="math inline">\(x = 1011_2\)</span>、<span class="math inline">\(y = 0111_2\)</span>、<span class="math inline">\(c_{in} = 0\)</span>，则位级信号为 <span class="math inline">\(g = (g_3 g_2 g_1 g_0) = 0011\)</span>、<span class="math inline">\(p = (p_3 p_2 p_1 p_0) = 1100\)</span>。逐位套用展开式：</p>
+<p><span class="math display">\[
+c_1 = g_0 + p_0 c_0 = 1,\qquad
+c_2 = g_1 + p_1 g_0 + p_1 p_0 c_0 = 1,\qquad
+c_3 = g_2 + p_2 g_1 = 1,\qquad
+c_4 = g_3 + p_3 g_2 + p_3 p_2 g_1 = 1
+\]</span></p>
+<p><span class="math inline">\(c_4 = 1\)</span> 的来历是：第 1 位生成的进位被第 2、3 位一路传播了上去。最终和位 <span class="math inline">\(s_i = p_i \oplus c_i\)</span> 给出 <span class="math inline">\(s = 0010\)</span>、进位输出 <span class="math inline">\(c_4 = 1\)</span>，合起来 <span class="math inline">\(10010_2 = 18\)</span>，与 <span class="math inline">\(11 + 7\)</span> 相符。</p>
+<p><span class="math inline">\(k = 4\)</span> 时把四个进位全部写开，就是教科书上最经典的一组式子：</p>
+<p><span class="math display">\[
+\begin{aligned}
+c_1 &amp;= g_0 + c_0 p_0\\
+c_2 &amp;= g_1 + g_0 p_1 + c_0 p_0 p_1\\
+c_3 &amp;= g_2 + g_1 p_2 + g_0 p_1 p_2 + c_0 p_0 p_1 p_2\\
+c_4 &amp;= g_3 + g_2 p_3 + g_1 p_2 p_3 + g_0 p_1 p_2 p_3 + c_0 p_0 p_1 p_2 p_3
+\end{aligned}
+\]</span></p>
+<p>每一项的”文字数”恰好比进位下标多 1——<span class="math inline">\(c_4\)</span> 的最长项含 5 个文字。配上产生 <span class="math inline">\(g_i\)</span> 的二输入与门、产生 <span class="math inline">\(p_i\)</span> 与和位的二输入异或门，这组式子就是一个<strong>全超前（full lookahead）4 位加法器</strong>的全部进位逻辑。</p>
+<p>理论上，<strong>任意 <span class="math inline">\(k\)</span> 位的进位都能用两级与或逻辑直接算出</strong>，最大扇入为 <span class="math inline">\(k+1\)</span>。这既是好消息也是坏消息：<span class="math inline">\(k = 31\)</span> 时 <span class="math inline">\(c_{31}\)</span> 的展开式有 32 个乘积项、最大项含 32 个文字，这种规模的与门/或门在 CMOS 里并不存在，只能拆成门树实现，延迟又被”还”了回来。顺带把 4 位全超前的门账记下来：四个进位共 <span class="math inline">\(1+2+3+4 = 10\)</span> 个乘积项，合计 <span class="math inline">\(2+3+4+5 = 14\)</span> 个文字，即 10 个与门（共 14 输入）加 4 个或门（共 10 输入）——这个基数是后面比较各种改进方案（如 Ling）时的参照系。</p>
+<p>面对扇入爆炸，教科书给出两条出路：</p>
+<ul>
+<li><strong>高基数加法（high-radix addition）</strong>：把相邻 <span class="math inline">\(h\)</span> 位合并成一个基数 <span class="math inline">\(2^h\)</span> 的数字，进位链长度立刻除以 <span class="math inline">\(h\)</span>；代价是生成 <span class="math inline">\(g, p\)</span> 信号与求和数字的逻辑变复杂。给定工艺下可能存在一个最优基数。一个简化的分析模型能说明这种权衡的形态：设数字级 <span class="math inline">\(g, p\)</span> 的产生与和数字的计算共花 <span class="math inline">\(\delta h\)</span> 时间（与 <span class="math inline">\(h\)</span> 成正比），进位网络用单位时间的 2 位 lookahead 生成器逐层搭建，则总延迟形如 <span class="math inline">\(\delta h + O(\log_2(k/h))\)</span> 的级数乘以级延迟——<span class="math inline">\(h\)</span> 增大时前一项线性涨、后一项对数降，交点即最优基数。这个模型与 6.2 节”组宽最优在 4 附近”的经验结论互为印证。</li>
+<li><strong>多级超前进位（multilevel lookahead）</strong>：保持二进制，改用”块 → 块的块 → ……“的层次化 lookahead。这是工业界的实际选择，即 6.2 节的主题。</li>
+</ul>
+<p><strong>4 位 CLA 模块</strong>是这条路上的甜蜜点：组内 4 位进位用两级与或逻辑直接展开，同时产出<strong>组生成 <span class="math inline">\(G\)</span> 与组传播 <span class="math inline">\(P\)</span></strong>（即所谓的块信号 block signals）：</p>
+<p><span class="math display">\[
+G = g_3 + p_3 g_2 + p_3 p_2 g_1 + p_3 p_2 p_1 p_0, \qquad P = p_3 p_2 p_1 p_0
+\]</span></p>
+<p>组与组之间再用同样的递推——多级 CLA（multilevel CLA）由此而来，总延迟 <span class="math inline">\(O(\log k)\)</span>。</p>
+<p>需要注意 <span class="math inline">\(c_4\)</span> 并不参与任何和位的计算，因此不必走完整的展开式，用更省的一级形式 <span class="math inline">\(c_4 = g_3 + p_3 c_3\)</span> 事后补算即可，几乎不损失速度。原书图 6.1 给出的正是这样一个 4 位全超前进位（full lookahead）进位网络。把它的 <span class="math inline">\(c_4\)</span> 部分替换为块信号产生电路，就得到下面这个可以级联的标准积木。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch06/fig06_02.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 6.2</figcaption>
+</figure>
+</div>
+<p>回到前面那个算例：该组的 <span class="math inline">\((G, P) = (1, 0)\)</span>。下游电路只要看到这两个比特就知道”无论 <span class="math inline">\(c_{in}\)</span> 是什么，进位都会被生成”，完全不必关心组内到底发生了什么。<strong>块信号把 4 位的内部结构压缩成两个比特</strong>，这正是多级 lookahead 能够层层套娃的根本原因。</p>
+<p>再把块信号的三种典型形态记熟，后面读图会快得多：<span class="math inline">\((G, P) = (0, 0)\)</span> 意味着该块<strong>吸收</strong>（无论进位输入是什么，块输出进位恒为 0，组内必有某位 <span class="math inline">\(x_i = y_i = 0\)</span> 截断了传播链）；<span class="math inline">\((0, 1)\)</span> 意味着<strong>传播</strong>（块输出进位就等于块输入进位，组内每位都恰好一进一出）；<span class="math inline">\((1, \cdot)\)</span> 意味着<strong>生成</strong>（块输入进位无关紧要）。三级判断共用一套 <span class="math inline">\((g, p)\)</span> 合并逻辑——这也是把第 5 章的”进位完成检测”电路换成 lookahead 结构时几乎不用改设计的原因。</p>
+<section id="rtl-实践rtlch6_2_carry_lookahead_adder" class="level3">
+<h3 class="anchored" data-anchor-id="rtl-实践rtlch6_2_carry_lookahead_adder">RTL 实践：<code>rtl/ch6_2_carry_lookahead_adder</code></h3>
+<p>两级结构：4 位 CLA 组生成局部 <span class="math inline">\(g, p\)</span>，组级再用 lookahead 逻辑产生组间进位：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> cla4 (</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span>  <span class="kw">logic</span> [<span class="dv">3</span>:<span class="dv">0</span>] a, b,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span>  <span class="kw">logic</span>       cin,</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span> [<span class="dv">3</span>:<span class="dv">0</span>] <span class="kw">s</span>,</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span>       pg, gg    <span class="co">// 组传播、组生成</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">logic</span> [<span class="dv">3</span>:<span class="dv">0</span>] g, p;</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">logic</span> [<span class="dv">4</span>:<span class="dv">0</span>] c;</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> g = a &amp; b;</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> p = a ^ b;</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> c[<span class="dv">0</span>]  = cin;</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> c[<span class="dv">1</span>]  = g[<span class="dv">0</span>] | (p[<span class="dv">0</span>] &amp; c[<span class="dv">0</span>]);</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> c[<span class="dv">2</span>]  = g[<span class="dv">1</span>] | (p[<span class="dv">1</span>] &amp; g[<span class="dv">0</span>]) | (p[<span class="dv">1</span>] &amp; p[<span class="dv">0</span>] &amp; c[<span class="dv">0</span>]);</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> c[<span class="dv">3</span>]  = g[<span class="dv">2</span>] | (p[<span class="dv">2</span>] &amp; g[<span class="dv">1</span>]) | (p[<span class="dv">2</span>] &amp; p[<span class="dv">1</span>] &amp; g[<span class="dv">0</span>])</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>                 | (p[<span class="dv">2</span>] &amp; p[<span class="dv">1</span>] &amp; p[<span class="dv">0</span>] &amp; c[<span class="dv">0</span>]);</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> c[<span class="dv">4</span>]  = g[<span class="dv">3</span>] | (p[<span class="dv">3</span>] &amp; g[<span class="dv">2</span>]) | (p[<span class="dv">3</span>] &amp; p[<span class="dv">2</span>] &amp; g[<span class="dv">1</span>])</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                 | (p[<span class="dv">3</span>] &amp; p[<span class="dv">2</span>] &amp; p[<span class="dv">1</span>] &amp; g[<span class="dv">0</span>])</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>                 | (p[<span class="dv">3</span>] &amp; p[<span class="dv">2</span>] &amp; p[<span class="dv">1</span>] &amp; p[<span class="dv">0</span>] &amp; c[<span class="dv">0</span>]);</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> <span class="kw">s</span>  = p ^ c[<span class="dv">3</span>:<span class="dv">0</span>];</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> pg = &amp;p;                       <span class="co">// p3 p2 p1 p0</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> gg = g[<span class="dv">3</span>] | (p[<span class="dv">3</span>]&amp;g[<span class="dv">2</span>]) | (p[<span class="dv">3</span>]&amp;p[<span class="dv">2</span>]&amp;g[<span class="dv">1</span>])</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>              | (p[<span class="dv">3</span>]&amp;p[<span class="dv">2</span>]&amp;p[<span class="dv">1</span>]&amp;g[<span class="dv">0</span>]);    <span class="co">// 不含 cin 的组生成</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>16 位版本用 4 个 <code>cla4</code> + 一个组间 lookahead 单元；testbench 与黄金模型全面对比（含 <span class="math inline">\(c_{in}\)</span> 两种取值）。</p>
+</section>
+</section>
+<section id="超前进位加法器设计carry-lookahead-adder-design" class="level2">
+<h2 class="anchored" data-anchor-id="超前进位加法器设计carry-lookahead-adder-design">6.2 超前进位加法器设计（Carry-Lookahead Adder Design）</h2>
+<p>把二进制加法按 4 位一组”打包”来看，它等价于一次<strong>基数 16 的加法</strong>：每个 radix-16 数字位覆盖原二进制的第 <span class="math inline">\(i\)</span> 到第 <span class="math inline">\(i+3\)</span> 位（<span class="math inline">\(i\)</span> 为 4 的倍数），其块生成与块传播信号为：</p>
+<p><span class="math display">\[
+g_{[i,i+3]} = g_{i+3} + g_{i+2}p_{i+3} + g_{i+1}p_{i+2}p_{i+3} + g_i p_{i+1}p_{i+2}p_{i+3},
+\qquad
+p_{[i,i+3]} = p_i p_{i+1} p_{i+2} p_{i+3}
+\]</span></p>
+<p>读法与 6.1 节的展开式完全一致：四个位<strong>共同传播</strong>进入的进位，当且仅当四个位各自都传播；它们<strong>共同生成</strong>进位，当最高位自己生成，或次高位生成并被最高位传播，以此类推。一句话概括：<strong>在位块这一层，“传播”是 AND，“生成”是带传播链的 OR</strong>。这两条式子就是整个多级 CLA 的公理。</p>
+<p>更一般地，对 <span class="math inline">\(i_0 &lt; i_1 &lt; i_2\)</span>，任意宽度的相邻块都可以合并：</p>
+<p><span class="math display">\[
+g_{[i_0,i_2-1]} = g_{[i_1,i_2-1]} + g_{[i_0,i_1-1]}\,p_{[i_1,i_2-1]},
+\qquad
+p_{[i_0,i_2-1]} = p_{[i_0,i_1-1]}\,p_{[i_1,i_2-1]}
+\]</span></p>
+<p>而且参与合并的两块<strong>不必毗连，允许互相重叠</strong>：对满足 <span class="math inline">\(i_0 \le i_1-1 \le j_0 &lt; j_1\)</span> 的区间 <span class="math inline">\([i_1, j_1]\)</span> 与 <span class="math inline">\([i_0, j_0]\)</span>，同样有</p>
+<p><span class="math display">\[
+g_{[i_0,j_1]} = g_{[i_1,j_1]} + g_{[i_0,j_0]}\,p_{[i_1,j_1]},
+\qquad
+p_{[i_0,j_1]} = p_{[i_0,j_0]}\,p_{[i_1,j_1]}
+\]</span></p>
+<p>这条性质看似只是数学脚注，实则是后面并行前缀结构的自由度来源：前缀网络里大量节点共享部分区间的结果，正是靠”重叠块也能合并”才合法。证明只需把两个重叠块各自按”不重叠的三段”拆开写两遍：设 <span class="math inline">\(A = [i_0, i_1-1]\)</span>、<span class="math inline">\(B = [i_1, j_0]\)</span>、<span class="math inline">\(C = [j_0+1, j_1]\)</span>，则 <span class="math inline">\([i_0, j_0] = AB\)</span>、<span class="math inline">\([i_1, j_1] = BC\)</span>，代入合并式得 <span class="math inline">\(g_{[i_0,j_1]} = g_{BC} + g_{AB}p_{BC} = (g_C + g_B p_C) + (g_B + g_A p_B)(p_B p_C)\)</span>，展开后 <span class="math inline">\(g_B\)</span> 项合并、冗余项吸收，结果与直接对 <span class="math inline">\(ABC\)</span> 三段合并完全一致——重叠部分 <span class="math inline">\(B\)</span> 被”算了两次”却不出错，因为块生成/传播是幂等意义下的区间性质，而不是计数。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch06/fig06_03.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 6.3 用 4 位 lookahead 进位生成器把相邻（或重叠）块的 <span class="math inline">\((g, p)\)</span> 信号合并为总块的 <span class="math inline">\((g, p)\)</span></figcaption>
+</figure>
+</div>
+<p>有了这块积木，搭宽加法器就是纯粹的级联：两级 16 位 CLA = 4 个 4 位加法器 + 1 个 4 位 lookahead 进位生成器（此时后者等价于”预测一次 radix-16 加法中的三个中间进位”）。</p>
+<p>拿一组 16 位数据把两级流程完整走一遍：<span class="math inline">\(x = (0101\,1000\,1100\,1011)_2\)</span>、<span class="math inline">\(y = (1010\,0001\,0011\,0111)_2\)</span>、<span class="math inline">\(c_0 = 0\)</span>。先逐块算位级信号与块信号：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>块</th>
+<th>位</th>
+<th><span class="math inline">\(g\)</span></th>
+<th><span class="math inline">\(p\)</span></th>
+<th><span class="math inline">\((G, P)\)</span></th>
+<th>块类型</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0（位 0–3）</td>
+<td>1011 / 0111</td>
+<td>0011</td>
+<td>1100</td>
+<td><span class="math inline">\((1, 0)\)</span></td>
+<td>生成</td>
+</tr>
+<tr class="even">
+<td>1（位 4–7）</td>
+<td>1100 / 0011</td>
+<td>0000</td>
+<td>1111</td>
+<td><span class="math inline">\((0, 1)\)</span></td>
+<td>传播</td>
+</tr>
+<tr class="odd">
+<td>2（位 8–11）</td>
+<td>1000 / 0001</td>
+<td>0000</td>
+<td>1001</td>
+<td><span class="math inline">\((0, 0)\)</span></td>
+<td>吸收</td>
+</tr>
+<tr class="even">
+<td>3（位 12–15）</td>
+<td>0101 / 1010</td>
+<td>0000</td>
+<td>1111</td>
+<td><span class="math inline">\((0, 1)\)</span></td>
+<td>传播</td>
+</tr>
+</tbody>
+</table>
+<p>lookahead 生成器对这四个 <span class="math inline">\((G, P)\)</span> 套用同一组展开式：<span class="math inline">\(c_4 = G_0 = 1\)</span>；<span class="math inline">\(c_8 = G_1 + P_1 G_0 = 1\)</span>；<span class="math inline">\(c_{12} = G_2 + P_2 G_1 + P_2 P_1 G_0 = 0\)</span>（吸收块一刀切断了进位链）；<span class="math inline">\(c_{16} = G_3 + P_3 G_2 + \cdots = 0\)</span>。各块拿到自己的输入进位后再并行算内部进位与和位：块 0 得 <span class="math inline">\(0010\)</span>、块 1 得 <span class="math inline">\(0000\)</span>、块 2 得 <span class="math inline">\(1010\)</span>、块 3 得 <span class="math inline">\(1111\)</span>，拼出 <span class="math inline">\(s = (1111\,1010\,0000\,0010)_2 = 64002 = 22731 + 41271\)</span>。注意全过程里四个块算和位是<strong>同时</strong>进行的——lookahead 生成器把”等进位”从串行依赖变成了并行广播。</p>
+<p>它的关键路径可以逐段拆开：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>关键路径段</th>
+<th>门级</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>产生位级 <span class="math inline">\(g_i, p_i\)</span></td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>产生 4 位块的 <span class="math inline">\((g, p)\)</span></td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<td>预测块间进位 <span class="math inline">\(c_4, c_8, c_{12}\)</span></td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td>生成块内部进位 <span class="math inline">\(c_{i+1}\)</span></td>
+<td>2</td>
+</tr>
+<tr class="odd">
+<td>计算和位 <span class="math inline">\(s_i = p_i \oplus c_i\)</span></td>
+<td>2</td>
+</tr>
+<tr class="even">
+<td><strong>合计</strong></td>
+<td><strong>9</strong></td>
+</tr>
+</tbody>
+</table>
+<p>对比 16 位行波进位加法器的 32 个门级，收益接近 4 倍——而这只是两级 lookahead。</p>
+<p>再往上叠一级：4 个上述 16 位加法器加一个 4 位 lookahead 生成器，就得到三级 64 位 CLA。一个反直觉的事实先记下来：32 位（<span class="math inline">\(\lceil \log_4 32 \rceil = 3\)</span>）也是三级、同样 13 个门级——32 位加法器在这个体系里一点便宜都占不到，这个”字长尴尬”问题留到 7.5 节用混合结构解决。</p>
+<p>16 位那级内部还有一层时序细节值得展开：lookahead 生成器送出 <span class="math inline">\(c_4, c_8, c_{12}\)</span> 之后，各 4 位块还要用<strong>块内自己的展开式</strong>生成 <span class="math inline">\(c_{i+1}\)</span> 并算和位——这就是延迟表里最后那 “2 + 2” 级的来历。注意块内这 4 级与相邻块的计算完全并行，且块 0 因为没有上级进位要等，实际比其他块早完成；关键路径穿过的是”最后一个拿到组进位的块”。画时序图时，把 lookahead 生成器的输出沿标注在第 5 级、各块和位标注在第 9 级，整条路径的分段延迟就一目了然了。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch06/fig06_04.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 6.4 用 16 个 4 位加法器与 5 个 lookahead 进位生成器搭建 64 位超前进位加法器</figcaption>
+</figure>
+</div>
+<p>每增加一级 lookahead，延迟固定增加 4 个门级：向下汇总 <span class="math inline">\((g, p)\)</span> 用 2 级，向上分发进位再用 2 级。因此基于 4 位 lookahead 块的 <span class="math inline">\(k\)</span> 位 CLA 延迟为</p>
+<p><span class="math display">\[
+T_{\text{lookahead-add}} = 4\log_4 k + 1 \quad \text{个门级}
+\]</span></p>
+<p>64 位即 <span class="math inline">\(4 \times 3 + 1 = 13\)</span> 级。若字宽不是 4 的整数次幂，部分 lookahead 端口闲置，公式改为 <span class="math inline">\(4\lceil \log_4 k \rceil + 1\)</span>。</p>
+<p>把 13 级与行波的 128 级放在一起，再对照 6.1 节开头的下界 <span class="math inline">\(\log_2(2 \times 64) = 7\)</span> 级（二输入门），可以看出三级 CLA 已经把理论下界追到了 2 倍以内——继续逼近的部分就要靠前缀网络（6.5 节）和工艺技巧（6.6 节）去抠了。元件账也顺手算一下：16 个 4 位加法器、5 个 lookahead 生成器，每个生成器内部是十几个与或门，整个进位网络的规模仍然只是 <span class="math inline">\(O(k)\)</span> 量级——多级 lookahead 用线性硬件买到了对数延迟，这是它战胜”全展开”的根本原因。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="设计取舍">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>设计取舍
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>组宽并非越大越好。改用 6 位或 8 位 lookahead 块能减少 lookahead 的<strong>级数</strong>，但每级内部与或门的扇入随之上升，而 CMOS 里高扇入门的延迟与面积都是超线性增长的。总延迟大致是”（每级门延迟，随组宽 <span class="math inline">\(r\)</span> 上升）<span class="math inline">\(\times\)</span>（级数 <span class="math inline">\(\log_r k\)</span>，随 <span class="math inline">\(r\)</span> 下降）“，二者相乘在某个 <span class="math inline">\(r\)</span> 处取极小——实践中这个最优点落在 4 附近，这也是 4 位 CLA 组成为事实标准的原因。</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-note callout-titled" title="历史注脚">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>历史注脚
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>4 位 lookahead 块的标准化有深刻的历史惯性：TTL 时代的 74181 ALU 直接输出组信号 <span class="math inline">\(\overline{G}, \overline{P}\)</span>，配套的 74182 正是”4 位 lookahead 进位生成器”本尊——多级 CLA 在 1970 年代就是两颗标准芯片的对插。今天 SoC 里的加法器早已不用分立芯片，但”4 位组 + <span class="math inline">\((G, P)\)</span> 接口”的模块划分原封不动地活在每一个综合出来的 CLA 里。</p>
+</div>
+</div>
+<p>最后一个容易被忽略的工程细节：图 6.4 的多级结构天然不产生最高进位 <span class="math inline">\(c_{64}\)</span>，而溢出判断、多字长拼接等场景都必须要它。业内有两个补救办法：其一是按最高位的辅助信号直接构造</p>
+<p><span class="math display">\[
+c_{out} = g_{[0,k-1]} + c_0\,p_{[0,k-1]} = x_{k-1}y_{k-1} + s_{k-1}\left(x_{k-1} + y_{k-1}\right)
+\]</span></p>
+<p>后一个等号的推导值得看一眼：<span class="math inline">\(c_{out} = 1\)</span> 当最高位两个操作数都是 1（<span class="math inline">\(x_{k-1}y_{k-1}\)</span>），或者和位为 1 且至少一个操作数为 1——后一种情形恰好覆盖”低位进位传上来”的全部可能（<span class="math inline">\(s_{k-1} = 1\)</span> 而 <span class="math inline">\(x_{k-1}y_{k-1} = 0\)</span> 时，两操作数必为一个 1 一个 0，<span class="math inline">\(c_{out}\)</span> 就等于 <span class="math inline">\(c_{k-1}\)</span>，而 <span class="math inline">\(x_{k-1} + y_{k-1} = 1\)</span> 把它选中）。这个形式完全绕开了进位网络，用最高位的本地信号几个门就搞定。其二是干脆把加法器做宽 1 位（需要 60 位就做 61 位），直接把多出来的那个和位当作进位输出——粗暴但极其好用，许多综合出来的”进位输出”就是这么来的。</p>
+</section>
+<section id="ling-加法器与相关设计ling-adder-and-related-designs" class="level2">
+<h2 class="anchored" data-anchor-id="ling-加法器与相关设计ling-adder-and-related-designs">6.3 Ling 加法器与相关设计（Ling Adder and Related Designs）</h2>
+<p>Ling 的观察：进位 <span class="math inline">\(c_{i+1} = g_i + p_i c_i\)</span> 里，若改用<strong>伪进位（pseudo-carry）</strong> <span class="math inline">\(h_{i+1} = c_i + c_{i+1}\)</span>（定义不同，递推更简单），可以使每个 lookahead 项少一个因子，扇入降低、速度提升，代价是末级和位要多一级修正逻辑。</p>
+<p>推导只用两个在二进制下恒成立的事实：<span class="math inline">\(g_i p_i = 0\)</span>（同一位不可能既生成又传播），以及 <span class="math inline">\(g_{i-1} \Rightarrow c_i\)</span>（一旦生成，进位必为 1）。于是</p>
+<p><span class="math display">\[
+c_{i-1}p_{i-1} = \underbrace{g_{i-1}p_{i-1}}_{=\,0} + c_{i-1}p_{i-1} + \underbrace{c_i p_{i-1}}_{=\,c_{i-1}p_{i-1}} = (c_{i-1} + c_i)\,p_{i-1} = h_i p_{i-1}
+\]</span></p>
+<p>进而由 <span class="math inline">\(g_{i-1} \Rightarrow h_i\)</span> 得</p>
+<p><span class="math display">\[
+c_i = g_{i-1} + c_{i-1}p_{i-1} = h_i g_{i-1} + h_i p_{i-1} = h_i\,(g_{i-1} + p_{i-1}) = h_i\,t_{i-1}
+\]</span></p>
+<p>伪进位自己的递推则是</p>
+<p><span class="math display">\[
+h_i = c_i + c_{i-1} = g_{i-1} + c_{i-1} = g_{i-1} + h_{i-1}t_{i-2}
+\]</span></p>
+<p>把它同样展开四级（展开中用 <span class="math inline">\(t_{i-2}g_{i-2} = g_{i-2}\)</span> 吸收冗余项，这是 <span class="math inline">\(h_i\)</span> 比 <span class="math inline">\(c_i\)</span> 短一截的直接原因）：</p>
+<p><span class="math display">\[
+h_i = g_{i-1} + g_{i-2} + g_{i-3}t_{i-3}t_{i-2} + g_{i-4}t_{i-3}t_{i-2} + h_{i-4}t_{i-4}t_{i-3}t_{i-2}
+\]</span></p>
+<p>结构上的差距一眼可见：前两个乘积项是”裸”的 <span class="math inline">\(g\)</span>，最大的乘积项只含 4 个文字；而 <span class="math inline">\(c_i\)</span> 的同跨度展开里每一项都挂着 <span class="math inline">\(t_{i-1}\)</span> 这根链条，最大项含 5 个文字。根源在于 <span class="math inline">\(h\)</span> 的递推 <span class="math inline">\(h_i = g_{i-1} + h_{i-1}t_{i-2}\)</span> 每一步只挂一个”延迟两拍”的 <span class="math inline">\(t\)</span>，而 <span class="math inline">\(c\)</span> 的递推每步都挂相邻的 <span class="math inline">\(t_{i-1}\)</span>——链条天然短一环，扇入因此整体降一档。</p>
+<p>账要这么算：表达 <span class="math inline">\(h_i\)</span> 需要 5 个乘积项、最大 <strong>4 输入</strong>与门、合计 <strong>14 个门输入</strong>；而表达 <span class="math inline">\(c_i\)</span> 同样 5 项，却要 <strong>5 输入</strong>与门、合计 <strong>19 个门输入</strong>。若工艺支持<strong>线与/线或（wired-OR）</strong>，差距更夸张——3 个门 9 个输入对 4 个门 14 个输入。扇入降一档、总输入数降三成，在版图面积与功耗上都是实打实的收益。把两种方案的关键指标并排放：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>指标</th>
+<th>传统 <span class="math inline">\(c_i\)</span> 展开</th>
+<th>Ling <span class="math inline">\(h_i\)</span> 展开</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>乘积项数</td>
+<td>5</td>
+<td>5</td>
+</tr>
+<tr class="even">
+<td>最大与门扇入</td>
+<td>5</td>
+<td>4</td>
+</tr>
+<tr class="odd">
+<td>门输入总数</td>
+<td>19</td>
+<td>14（约省 26%）</td>
+</tr>
+<tr class="even">
+<td>wired-OR 实现</td>
+<td>4 门 / 14 输入</td>
+<td>3 门 / 9 输入</td>
+</tr>
+<tr class="odd">
+<td>末级和位逻辑</td>
+<td><span class="math inline">\(p_i \oplus c_i\)</span>（1 级 XOR）</td>
+<td><span class="math inline">\(p_i \oplus h_i t_{i-1}\)</span>（多 1 级 AND）</td>
+</tr>
+</tbody>
+</table>
+<p>表格最后一行就是全部代价所在——Ling 加法器本质上是”把进位网络内部省下的逻辑，挪一小部分到末级和位上”的再平衡。</p>
+<p>代价在最后一步：由于真正的进位是 <span class="math inline">\(c_i = h_i t_{i-1}\)</span>，和位不再是朴素的 <span class="math inline">\(s_i = p_i \oplus c_i\)</span>，而要写成</p>
+<p><span class="math display">\[
+s_i = p_i \oplus h_i t_{i-1}
+\]</span></p>
+<p>多出一级与门。这笔交易划算与否取决于工艺：只要 lookahead 网络本身在关键路径上占大头（宽位加法器正是如此），牺牲末级一级换内部每级一档扇入，几乎总是赢。</p>
+<p>用 6.1 节那组数据把 Ling 递推也跑一遍：<span class="math inline">\(g = 0011\)</span>、<span class="math inline">\(p = 1100\)</span>、<span class="math inline">\(t = g + p = 1111\)</span>、<span class="math inline">\(c_0 = 0\)</span>。由 <span class="math inline">\(h_{i+1} = g_i + h_i t_{i-1}\)</span>（<span class="math inline">\(h_0 = c_0 = 0\)</span>）逐位算：<span class="math inline">\(h_1 = g_0 = 1\)</span>，<span class="math inline">\(h_2 = g_1 + h_1 t_0 = 1\)</span>，<span class="math inline">\(h_3 = g_2 + h_2 t_1 = 1\)</span>，<span class="math inline">\(h_4 = g_3 + h_3 t_2 = 1\)</span>。再验证和位：<span class="math inline">\(s_1 = p_1 \oplus h_1 t_0 = 0 \oplus 1 = 1\)</span>，<span class="math inline">\(s_2 = p_2 \oplus h_2 t_1 = 1 \oplus 1 = 0\)</span>，<span class="math inline">\(s_3 = p_3 \oplus h_3 t_2 = 1 \oplus 1 = 0\)</span>，加上 <span class="math inline">\(s_0 = 0\)</span>，得 <span class="math inline">\(s = 0010\)</span>——与传统进位版本的结果分毫不差。注意这里 <span class="math inline">\(t\)</span> 全为 1，于是 <span class="math inline">\(h_i = c_i\)</span> 恰好成立；一般情况下 <span class="math inline">\(h_i\)</span> 比 <span class="math inline">\(c_i\)</span> “胖”（<span class="math inline">\(h_i = c_i + c_{i-1} \ge c_i\)</span>），正是这份冗余换回了递推式的低扇入。</p>
+<p>Doran 后来把这招系统化：干脆传播一个一般的函数 <span class="math inline">\(\eta\)</span> 而非 <span class="math inline">\(c\)</span>，其中</p>
+<p><span class="math display">\[
+\eta_{i+1} = f(x_i, y_i, c_i) = \psi(x_i, y_i)\,c_i + \phi(x_i, y_i)\,\bar{c}_i
+\]</span></p>
+<p>这是 <span class="math inline">\(f\)</span> 关于 <span class="math inline">\(c_i\)</span> 的香农展开，<span class="math inline">\(\psi\)</span> 与 <span class="math inline">\(\phi\)</span> 必须对 <span class="math inline">\(x_i, y_i\)</span> <strong>对称</strong>（否则同一位的贡献会依赖操作数顺序）。两个变量的对称布尔函数只有 8 个，因此形式上共 <span class="math inline">\(8 \times 8 = 64\)</span> 种组合；把它们划分为不相交的两组 <span class="math inline">\(\{0, \bar{t}_i, g_i, \bar{p}_i\}\)</span> 与 <span class="math inline">\(\{1, t_i, \bar{g}_i, p_i\}\)</span> 后可以证明：<span class="math inline">\(\psi\)</span> 与 <span class="math inline">\(\phi\)</span> 若同属一组，和位就无法由 <span class="math inline">\(\eta_i\)</span> 复原。于是合法的加法器只剩 <span class="math inline">\(8 \times 4 = 32\)</span> 种，其中 4 种具备 Ling 加法器的优良性质，而 Ling 加法器本身就是 <span class="math inline">\(\psi = 1\)</span>、<span class="math inline">\(\phi = g_i = x_i y_i\)</span> 的那个特例。Doran 这套枚举的价值不在于”又多了 31 种加法器”，而在于它给出了一个<strong>可搜索的设计空间</strong>：把”递推传播什么信号”参数化之后，扇入、门数、末级修正成本都成了空间坐标，可以按工艺指标系统地寻优——这与 6.5 节前缀网络的”不可能三角”是同一种方法论。</p>
+<p>顺带一提，Ling 结构做成减法器几乎免费：把 <span class="math inline">\(g_i, p_i\)</span> 换成借位生成/借位传播信号即可（6.1 节开头说过进位网络与借位网络同构），唯一要改的是末级修正逻辑里 <span class="math inline">\(t_{i-1}\)</span> 的定义——这也是”信号重解释”红利的又一次兑现。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="解读">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>解读
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Ling 加法器是”<strong>改变递推形式以降低每级逻辑深度</strong>”的范例。这类”数学等价但电路更优”的变换是算术设计的高级技巧——同样的思路后来也出现在进位选择、前缀融合等设计中。IBM 的若干高性能处理器曾采用 Ling 结构。</p>
+</div>
+</div>
+<p>Ling 思想与前缀框架也能嫁接。观察展开式 <span class="math inline">\(h_4 = g_3 + g_2 + g_1 t_2 + g_0 t_1 t_2 + h_0 t_0 t_1 t_2\)</span>（下标平移后的写法），可以重新加括号成</p>
+<p><span class="math display">\[
+h_4 = (g_3 + g_2) + (t_3 t_2)\,(g_1 + g_0) + (t_3 t_2)(t_1 t_0)\,h_0
+\]</span></p>
+<p>——相邻两位先各自归并成 <span class="math inline">\((g_{2i+1} + g_{2i},\; t_{2i+1} t_{2i})\)</span> 形式的”超信号”，之后就是一个标准的两两合并前缀结构。沿这条路走下去，奇数下标与偶数下标的”Ling 进位”可以分别用两棵较浅的前缀树并行算出（Dimitrakopoulos 等人的并行前缀 Ling 加法器），把 Ling 的低扇入优势与前缀网络的对数深度叠加到了一起。</p>
+</section>
+<section id="进位确定即前缀计算carry-determination-as-prefix-computation" class="level2">
+<h2 class="anchored" data-anchor-id="进位确定即前缀计算carry-determination-as-prefix-computation">6.4 进位确定即前缀计算（Carry Determination as Prefix Computation）</h2>
+<p>把视角再抬高一层。定义<strong>进位算子（carry operator）</strong> <span class="math inline">\(\odot\)</span>（也称前缀算子）：</p>
+<p><span class="math display">\[
+(g, p) \odot (g', p') = (g + p\,g',\; p\,p')
+\]</span></p>
+<p>这里的直觉顺序是”右操作数在低位、左操作数在高位”：合并后的一大块要生成进位，当<strong>高位块自己生成</strong>，或者<strong>低位块生成且被高位块传播</strong>；要传播，则两块都必须传播。注意它和 6.2 节的块合并式是同一件事，只是剥掉了下标——下标本就无关紧要，任意两个相邻（或重叠）的位组都能这么合。</p>
+<p>电路实现上，<span class="math inline">\(\odot\)</span> 的与或形式 <span class="math inline">\(g = g'' + g'p''\)</span>、<span class="math inline">\(p = p'p''\)</span> 并不是唯一选择。代数变形 <span class="math inline">\(g = (g' + g'')(p'' + g')\)</span> 可以让 <span class="math inline">\(g\)</span> 与 <span class="math inline">\(p\)</span> 都走<strong>两级 NOR</strong>（或 NOT-NOR）逻辑——在 NOR 门比 AND/OR 更快的工艺（如某些 domino 逻辑风格）里，这个变形让整个前缀网络的每一级都省出可观的延迟。读前缀加法器论文时看到形状陌生的算子电路，多半就是这类等价变形。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch06/fig06_05.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 6.5 用进位算子 <span class="math inline">\(\odot\)</span> 把相邻（或重叠）两块 <span class="math inline">\(B'\)</span>、<span class="math inline">\(B''\)</span> 的 <span class="math inline">\((g, p)\)</span> 信号合并为总块 <span class="math inline">\(B\)</span> 的 <span class="math inline">\((g, p)\)</span></figcaption>
+</figure>
+</div>
+<p>进位递推 <span class="math inline">\(c_{i+1} = g_i + p_i c_i\)</span> 恰好可以写成前缀积：记 <span class="math inline">\((G_{i:j}, P_{i:j}) = (g_i, p_i) \odot (g_{i-1}, p_{i-1}) \odot \cdots \odot (g_j, p_j)\)</span>，则</p>
+<p><span class="math display">\[
+c_{i+1} = G_{i:0} + P_{i:0}\,c_0
+\]</span></p>
+<p><span class="math inline">\(\odot\)</span> 满足<strong>结合律</strong>（但不满足交换律）——即 <span class="math inline">\(\big((g',p')\odot(g'',p'')\big)\odot(g''',p''')\)</span> 与 <span class="math inline">\((g',p')\odot\big((g'',p'')\odot(g''',p''')\big)\)</span> 恒等，但一般 <span class="math inline">\(g'' + p''g' \ne g' + p'g''\)</span>。这意味着<span class="math inline">\((g, p)\)</span> 序列可以任意加括号，<strong>计算所有前缀 <span class="math inline">\((G_{i:0}, P_{i:0})\)</span> 就成为一个并行前缀（parallel prefix / scan）问题</strong>，任何前缀网络都能求解它。形式化地写：</p>
+<p><span class="math display">\[
+\text{给定}\ (g_0,p_0), (g_1,p_1), \ldots, (g_{k-1},p_{k-1})
+\quad\Longrightarrow\quad
+\text{求}\ (G_{0:0},P_{0:0}), (G_{1:0},P_{1:0}), \ldots, (G_{k-1:0},P_{k-1:0})
+\]</span></p>
+<p>带 <span class="math inline">\(c_{in}\)</span> 的加法也不用特殊处理：把 <span class="math inline">\(c_{in}=1\)</span> 看成”第 <span class="math inline">\(-1\)</span> 级生成的进位”，令 <span class="math inline">\(p_{-1} = 0\)</span>、<span class="math inline">\(g_{-1} = c_{in}\)</span>，然后照常计算所有前缀即可——只是级数从 <span class="math inline">\(k\)</span> 级变成 <span class="math inline">\(k+1\)</span> 级。</p>
+<p>顺便指出一个文献中的等价表述：整个前缀框架也可以建立在 <span class="math inline">\((g, a)\)</span>（生成/吸收）而非 <span class="math inline">\((g, p)\)</span> 信号对上——进位递推 <span class="math inline">\(c_{i+1} = g_i + \bar{a}_i c_i\)</span> 同样给出结合律算子。两种表述在数学上完全平行，差别只在电路实现的细节（<span class="math inline">\(p\)</span> 用 XOR 产生、<span class="math inline">\(a\)</span> 用 NOR 产生，不同工艺下成本各异），以及行波型前缀电路在 <span class="math inline">\((g, a)\)</span> 表述下会自然退化成第 5 章的曼彻斯特式结构。后文统一用 <span class="math inline">\((g, p)\)</span>。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch06/fig06_06.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 6.6</figcaption>
+</figure>
+</div>
+<p>图上这张四输入网络值得照着算一遍。原书给 (a) 图喂的输入（从右往左）是 <span class="math inline">\(x_0 = 5\)</span>、<span class="math inline">\(x_1 = 2\)</span>、<span class="math inline">\(x_2 = -1\)</span>、<span class="math inline">\(x_3 = 6\)</span>：第一级两个加法器并行算出 <span class="math inline">\(x_0 + x_1 = 7\)</span> 与 <span class="math inline">\(x_2 + x_3 = 5\)</span>；第二级把 <span class="math inline">\(7\)</span> 与 <span class="math inline">\(-1\)</span>、<span class="math inline">\(5\)</span> 分别组合，四个输出依次为 <span class="math inline">\(s_0 = 5\)</span>、<span class="math inline">\(s_1 = 7\)</span>、<span class="math inline">\(s_2 = 7 + (-1) = 6\)</span>、<span class="math inline">\(s_3 = 7 + 5 = 12\)</span>。把每个加法单元替换成 <span class="math inline">\(\odot\)</span> 算子，就得到对应的进位网络（图中 (a) 与 (b) 的拓扑完全相同，(b) 的输出即 <span class="math inline">\(c_1\)</span> 到 <span class="math inline">\(c_4\)</span> 所需的 <span class="math inline">\((g_{[0,i]}, p_{[0,i]})\)</span>）。不过有一处必须小心：<strong>整数加法是可交换的</strong>，随意组合部分和也能得到正确结果，但那样画出来的网络<strong>不能直接搬去做进位网络</strong>——只要被合并的块始终保持连续、且顺序不被打乱，才是安全的。</p>
+<p>反过来，<span class="math inline">\((g, p)\)</span> 给我们比加法更多的自由：由于重叠块的合并同样合法，前缀网络可以复用部分区间的结果（加法里这么做会导致重复计数）。这一份额外自由度，正是第 6.5 节各种花式前缀图能存在的原因。</p>
+<p>动手练习一下这个翻译过程（8 输入）：画一个三级前缀网络——第一级两两合并 <span class="math inline">\((x_0,x_1), (x_2,x_3), (x_4,x_5), (x_6,x_7)\)</span>；第二级合并相邻对得 <span class="math inline">\(s_1, s_3, s_5, s_7\)</span>；第三级补齐偶数下标 <span class="math inline">\(s_2 = s_1 \odot x_2\)</span> 之类——再把每个加法器换成 <span class="math inline">\(\odot\)</span> 算子，就得到一个 8 位进位网络（这正是 Brent-Kung 的 8 输入实例）。若要支持 <span class="math inline">\(c_{in}\)</span>，按前面的办法在最右端补一个 <span class="math inline">\((g_{-1}, p_{-1}) = (c_{in}, 0)\)</span> 节点即可。这个”先画整数网络、再整体换算子”的工作流，是设计自定义前缀加法器的标准起手式。</p>
+<p>最后提醒一个容易看错图的约定：<strong>进位网络图按从右到左编号</strong>（因为它对应位置记数法里从低位到高位的下标顺序），所以图上”从左往右读”的方向其实是高到低。严格说我们算的是后缀和，但按惯例仍称”前缀和/并行前缀网络”。</p>
+<div class="callout callout-style-default callout-tip callout-titled" title="工程视角">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>工程视角
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>前缀框架最大的实用价值是<strong>可综合性</strong>：<span class="math inline">\((g, p)\)</span> 初始化 + <span class="math inline">\(\odot\)</span> 算子 + 求和 XOR 都是固定单元，唯一的变量是”前缀图怎么连”。现代 EDA 的 arithmetic synthesis 正是这么做的——把 <code>+</code> 映射成一个参数化前缀图，按时序约束在 Kogge-Stone / Han-Carlson / Brent-Kung 族里挑拓扑。手写前缀结构的意义因此不在”工具不会”，而在约束极端（超高频、超低功耗、异形字宽）时给出工具搜索空间之外的拓扑。</p>
+</div>
+</div>
+<p>把前缀框架推到极端还有一个 sanity check 的价值：最朴素的前缀网络是<strong>串行的</strong>——每个前缀依次由前一个前缀与当前输入合并得到。把它翻译成进位网络，每一级就是 <span class="math inline">\(c_{i+1} = g_i + p_i c_i\)</span>，整个电路恰好退化成第 5 章的行波进位加法器。也就是说，“前缀计算”这个抽象把行波、CLA、Kogge-Stone 全部收进同一个家族：它们只是同一个问题在（延迟, 面积, 扇出）空间里不同落点的实例。这也是本书反复强调的方法论——<strong>先把问题抽象对，再谈结构创新</strong>。</p>
+</section>
+<section id="其他并行前缀网络alternative-parallel-prefix-networks" class="level2">
+<h2 class="anchored" data-anchor-id="其他并行前缀网络alternative-parallel-prefix-networks">6.5 其他并行前缀网络（Alternative Parallel Prefix Networks）</h2>
+<p>前缀网络的谱系由两种截然不同的”分治”策略拉开。<strong>Ladner-Fischer</strong> 走的是”先各自算、再一次性对齐”的路：低 <span class="math inline">\(k/2\)</span> 位交给右子网络算出它们自己的全部前缀和；高 <span class="math inline">\(k/2\)</span> 位交给左子网络算出<strong>局部</strong>前缀和；最后把右网络最左端的那个输出（即 <span class="math inline">\(s_{k/2-1}\)</span>）一次性加到左边的所有输出上。它的延迟与代价递推是</p>
+<p><span class="math display">\[
+D(k) = D(k/2) + 1 = \log_2 k,\qquad
+C(k) = 2C(k/2) + k/2 = (k/2)\log_2 k
+\]</span></p>
+<p>延迟已经达到”只允许二输入算子”时的理论下界，但代价却接近 Kogge-Stone。把代价递推展开验证一遍：<span class="math inline">\(C(2) = 1\)</span>，<span class="math inline">\(C(4) = 2 \times 1 + 2 = 4\)</span>，<span class="math inline">\(C(8) = 2 \times 4 + 4 = 12\)</span>，<span class="math inline">\(C(16) = 2 \times 12 + 8 = 32 = (16/2)\log_2 16\)</span>——与闭式吻合。更要命的是扇出：<span class="math inline">\(s_{k/2-1}\)</span> 这一根信号线要驱动左边 <span class="math inline">\(k/2\)</span> 个加法单元，直接实现必须插缓冲链，反而把理论优势吃掉一截。对 16 输入的实例，这个节点的扇出是 8——在标准单元库设计里，8 倍扇出的网络通常要拆成 2-3 级缓冲树，相当于凭空多出约一级有效延迟，Ladner-Fischer 的”理论最快”因此常常兑现不了。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch06/fig06_07.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 6.7 Ladner–Fischer 并行前缀网络由两个 <span class="math inline">\(k/2\)</span> 输入子网络加 <span class="math inline">\(k/2\)</span> 个加法单元构成</figcaption>
+</figure>
+</div>
+<p><strong>Brent-Kung</strong> 的分治则更加精打细算：先把输入两两相加，得到长度为 <span class="math inline">\(k/2\)</span> 的新序列</p>
+<p><span class="math display">\[
+x_0+x_1,\; x_2+x_3,\; x_4+x_5,\; \ldots,\; x_{k-2}+x_{k-1}
+\]</span></p>
+<p>对这个新序列求前缀和，得到的恰好就是原序列的<strong>奇数下标</strong>前缀和 <span class="math inline">\(s_1, s_3, s_5, \ldots\)</span>（因为 <span class="math inline">\(s_3 = (x_0+x_1) + (x_2+x_3)\)</span>）；偶数下标再用最后一级加法补齐：<span class="math inline">\(s_{2j} = s_{2j-1} + x_{2j}\)</span>。于是</p>
+<p><span class="math display">\[
+D(k) = D(k/2) + 2 = 2\log_2 k - 2,\qquad
+C(k) = C(k/2) + k - 1 = 2k - 2 - \log_2 k
+\]</span></p>
+<p>延迟几乎翻倍，节点数却只有 <span class="math inline">\(2k\)</span> 量级——Brent 与 Kung 当年正是为了压制 VLSI 版图面积才提出它的。把 16 输入的三组数字摆在一起更能看清格局：Ladner-Fischer 4 级 32 单元（但有一个扇出 8 的节点）、Brent-Kung 6 级 26 单元、Kogge-Stone 4 级 49 单元。Kogge-Stone 的节点多的另一面是<strong>连线长</strong>：第 <span class="math inline">\(j\)</span> 级的合并距离是 <span class="math inline">\(2^{j-1}\)</span>，最后一级要跨越整个字长的一半——在”线延迟与门延迟同量级”的工艺节点上，这几根长线往往才是真正的关键路径，这也是混合结构与稀疏结构存在的现实理由。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch06/fig06_08.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 6.8 由一个 <span class="math inline">\(k/2\)</span> 输入子网络加 <span class="math inline">\(k-1\)</span> 个加法单元构成的 Brent–Kung 前缀网络</figcaption>
+</figure>
+</div>
+<p>主流前缀网络的折中谱系（<span class="math inline">\(k\)</span> 位）：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>网络</th>
+<th>级数</th>
+<th>节点数</th>
+<th>扇出</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Kogge-Stone <span class="citation" data-cites="kogge1973">(<a href="references.html#ref-kogge1973" role="doc-biblioref">Kogge 和 Stone 1973年</a>)</span></td>
+<td><span class="math inline">\(\log_2 k\)</span></td>
+<td><span class="math inline">\(k\log_2 k\)</span></td>
+<td>2</td>
+<td>最快、节点多、布线长</td>
+</tr>
+<tr class="even">
+<td>Brent-Kung <span class="citation" data-cites="brent1982">(<a href="references.html#ref-brent1982" role="doc-biblioref">Brent 和 Kung 1982年</a>)</span></td>
+<td><span class="math inline">\(2\log_2 k - 1\)</span></td>
+<td><span class="math inline">\(2k\)</span></td>
+<td>小</td>
+<td>最省、级数多一倍</td>
+</tr>
+<tr class="odd">
+<td>Han-Carlson</td>
+<td><span class="math inline">\(\log_2 k + 1\)</span></td>
+<td>介于两者</td>
+<td>中</td>
+<td>两者的杂交</td>
+</tr>
+<tr class="even">
+<td>Ladner-Fischer</td>
+<td><span class="math inline">\(\log_2 k\)</span></td>
+<td>较少</td>
+<td>高</td>
+<td>高扇出需缓冲</td>
+</tr>
+</tbody>
+</table>
+<p>表里没展开说的 <strong>Han-Carlson</strong> 网络值得补一笔：它先用一级 Brent-Kung 式的两两合并把问题降到 <span class="math inline">\(k/2\)</span>，中段用 Kogge-Stone 只对<strong>奇数下标</strong>（或偶数下标）做完整前缀，末段再用一级 Brent-Kung 把缺失的下标补齐。奇偶分流使中段网络的节点数只有同宽 Kogge-Stone 的一半，延迟却只比最优多一级——在 64 位以上的处理器数据通路里，Han-Carlson 是比纯 Kogge-Stone 更常见的落地方案。前缀图的整个设计空间已被系统研究过（Harris 的分类工作给出了统一视角）：以（级数, 节点数, 最大扇出）为坐标，经典网络全都落在一条”不可能三角”的边界上，新设计无非是在边界上挑选新的落点。</p>
+<p><strong>Kogge-Stone</strong> 的规则网格结构在版图上极其友好（等长线、可平铺），是高性能处理器最常见的选择：<span class="math inline">\(k\)</span> 输入时延迟 <span class="math inline">\(\log_2 k\)</span> 级、代价 <span class="math inline">\(k\log_2 k - k + 1\)</span> 个单元，是二输入限制下最快的方案；<strong>Brent-Kung</strong> 在面积/功耗敏感时占优，代价仅 <span class="math inline">\(2k-2-\log_2 k\)</span>。Kogge-Stone 的构造也可以写成递推：把 <span class="math inline">\(k\)</span> 个输入的问题拆成两个 <span class="math inline">\(k/2\)</span> 子问题，再把右半的全部结果分别与左半对应输出合并一次，<span class="math inline">\(D(k) = D(k/2) + 1\)</span>、<span class="math inline">\(C(k) = 2C(k/2) + k\)</span>——与 Ladner-Fischer 同款的延迟递推，但它把”一根信号扇出 <span class="math inline">\(k/2\)</span> 次”换成了”<span class="math inline">\(k/2\)</span> 对信号各自扇出 2 次”，用节点数换掉了扇出隐患。另有一个看图时的陷阱：图 6.9 的 Brent-Kung 画出 7 层节点，但中间两层彼此独立、可并行执行，实际延迟只有 6 级，这就是 <span class="math inline">\(2\log_2 k - 2\)</span> 里那个 <span class="math inline">\(-2\)</span> 的来历。</p>
+<p>既然两个极点各有痛点，自然会想到把它们杂交。以 16 位为例把四种结构的账并排（级数含单元自身延迟，节点数按递推精确计算）：</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>16 输入网络</th>
+<th>级数</th>
+<th>单元数</th>
+<th>最大扇出</th>
+<th>一句话点评</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ladner-Fischer</td>
+<td>4</td>
+<td>32</td>
+<td>8</td>
+<td>理论最快，扇出埋雷</td>
+</tr>
+<tr class="even">
+<td>Brent-Kung</td>
+<td>6</td>
+<td>26</td>
+<td>2</td>
+<td>最省，慢两级</td>
+</tr>
+<tr class="odd">
+<td>Kogge-Stone</td>
+<td>4</td>
+<td>49</td>
+<td>2</td>
+<td>最快最规整，节点近翻倍</td>
+</tr>
+<tr class="even">
+<td>BK/KS 混合（图 6.11）</td>
+<td>5</td>
+<td>32</td>
+<td>2</td>
+<td>多一级，省三分之一</td>
+</tr>
+</tbody>
+</table>
+<p>把图 6.9 中间那个”八输入前缀计算”部分换成八输入 Kogge-Stone 网络后，得到的混合图是 <strong>5 级 32 个单元</strong>——只比最快方案多一级，却省掉三分之一的单元。</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch06/fig06_11.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 6.11 面向 16 输入的 Brent–Kung/Kogge–Stone 混合并行前缀图</figcaption>
+</figure>
+</div>
+<p>一般化地，两端各保留一级 Brent-Kung、中间用 <span class="math inline">\(k/2\)</span> 输入的 Kogge-Stone，得到</p>
+<p><span class="math display">\[
+D(k) = \log_2 k + 1,\qquad C(k) = (k/2)\log_2 k
+\]</span></p>
+<p>即”延迟仅比最优多一级，代价砍半”。实践中这个混合模板非常受欢迎：它可以按工艺的线/门延迟比连续调节两段的比例，而不必在两个极端之间二选一。更一般地，两端各保留 <span class="math inline">\(\ell\)</span> 级 Brent-Kung、中间用 <span class="math inline">\(k/2^\ell\)</span> 输入的 Kogge-Stone，延迟成为 <span class="math inline">\(\log_2 k + \ell\)</span>、代价约 <span class="math inline">\((k/2)\log_2(k/2^{\ell-1})\)</span> 量级——<span class="math inline">\(\ell\)</span> 就是延迟-面积折中旋钮。Sugla 与 Carlson 当年正是沿着这条线系统研究了面积极端受限时的折中空间；对给定的字宽和工艺，最优 <span class="math inline">\(\ell\)</span> 可以用”代价×延迟”指标扫出来。</p>
+<section id="rtl-实践rtlch6_4_kogge_stone_adder" class="level3">
+<h3 class="anchored" data-anchor-id="rtl-实践rtlch6_4_kogge_stone_adder">RTL 实践：<code>rtl/ch6_4_kogge_stone_adder</code></h3>
+<p>参数化 Kogge-Stone 前缀加法器——generate 循环按”距离 <span class="math inline">\(2^j\)</span>“逐级合并 <span class="math inline">\((G, P)\)</span>：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode systemverilog code-with-copy"><code class="sourceCode systemverilog"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">module</span> kogge_stone_adder #(<span class="kw">parameter</span> <span class="kw">int</span> N = <span class="dv">16</span>) (</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span>  <span class="kw">logic</span> [N<span class="dv">-1</span>:<span class="dv">0</span>] a, b,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">input</span>  <span class="kw">logic</span>         cin,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span> [N<span class="dv">-1</span>:<span class="dv">0</span>] <span class="kw">s</span>,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">output</span> <span class="kw">logic</span>         cout</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>);</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">localparam</span> <span class="kw">int</span> L = <span class="kw">$clog2</span>(N);</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">logic</span> [N<span class="dv">-1</span>:<span class="dv">0</span>] G [<span class="dv">0</span>:L];</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">logic</span> [N<span class="dv">-1</span>:<span class="dv">0</span>] P [<span class="dv">0</span>:L];</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="co">// 第 0 级：位级 g/p（g0 注入 cin）</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> G[<span class="dv">0</span>][<span class="dv">0</span>] = a[<span class="dv">0</span>] &amp; b[<span class="dv">0</span>] | ((a[<span class="dv">0</span>] ^ b[<span class="dv">0</span>]) &amp; cin);</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> P[<span class="dv">0</span>][<span class="dv">0</span>] = <span class="bn">1'b0</span>;   <span class="co">// 该位不再传播（cin 已吸收）</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">genvar</span> i;</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">generate</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        <span class="kw">for</span> (i = <span class="dv">1</span>; i &lt; N; i++) <span class="kw">begin :</span><span class="dt"> </span><span class="kw">g_init</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>            <span class="kw">assign</span> G[<span class="dv">0</span>][i] = a[i] &amp; b[i];</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>            <span class="kw">assign</span> P[<span class="dv">0</span>][i] = a[i] ^ b[i];</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">end</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>        <span class="co">// 前缀级</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>        <span class="kw">for</span> (<span class="kw">int</span> j = <span class="dv">1</span>; j &lt;= L; j++) <span class="kw">begin :</span><span class="dt"> </span><span class="kw">g_stage</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>            <span class="kw">for</span> (i = <span class="dv">0</span>; i &lt; N; i++) <span class="kw">begin :</span><span class="dt"> </span><span class="kw">g_node</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>                <span class="kw">if</span> (i &gt;= (<span class="dv">1</span> &lt;&lt; (j<span class="dv">-1</span>))) <span class="kw">begin</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">assign</span> G[j][i] = G[j<span class="dv">-1</span>][i] |</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>                        (P[j<span class="dv">-1</span>][i] &amp; G[j<span class="dv">-1</span>][i - (<span class="dv">1</span> &lt;&lt; (j<span class="dv">-1</span>))]);</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">assign</span> P[j][i] = P[j<span class="dv">-1</span>][i] &amp; P[j<span class="dv">-1</span>][i - (<span class="dv">1</span> &lt;&lt; (j<span class="dv">-1</span>))];</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>                <span class="kw">end</span> <span class="kw">else</span> <span class="kw">begin</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">assign</span> G[j][i] = G[j<span class="dv">-1</span>][i];</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">assign</span> P[j][i] = P[j<span class="dv">-1</span>][i];</span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>                <span class="kw">end</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>            <span class="kw">end</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        <span class="kw">end</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    <span class="kw">endgenerate</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> <span class="kw">s</span>    = (a ^ b) ^ {G[L][N<span class="dv">-2</span>:<span class="dv">0</span>], cin};</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    <span class="kw">assign</span> cout = G[L][N<span class="dv">-1</span>];</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="kw">endmodule</span></span></code></pre></div><button title="复制到剪贴板" class="code-copy-button"><i class="bi"></i></button></div>
+<p>（同目录还附 Brent-Kung 版本 <code>brent_kung_adder.sv</code> 供对照。）</p>
+</section>
+</section>
+<section id="vlsi-实现考量vlsi-implementation-aspects" class="level2">
+<h2 class="anchored" data-anchor-id="vlsi-实现考量vlsi-implementation-aspects">6.6 VLSI 实现考量（VLSI Implementation Aspects）</h2>
+<p>门级模型里的”最优”，落地到真实芯片上往往不是最优。图 6.9 那样的 Brent-Kung 图确实很适合 VLSI（节点少、连线短），但对高性能宽字长设计仍偏慢。真正流片时，工程师会结合工艺特性重新设计网络形态。</p>
+<p>一个经典案例是 AMD Am29050 微处理器里的加法器（原书以 64 位版本说明）：它做的是<strong>基数 256 的加法</strong>，因而只需要算出 <span class="math inline">\(c_8, c_{16}, c_{24}, \ldots, c_{56}\)</span> 这 7 个稀疏进位——<strong>不用的进位一个都不算</strong>，这是省硬件的第一步。</p>
+<p>其核心构件是 <strong>曼彻斯特进位链（Manchester carry chain, MCC）</strong>：用预充电的传输管（图 6.12 中标为 PH2 的时钟相位）实现”传播链”，进位沿链传播而不是逐级进门，因此同样的门延时能覆盖更多位。MCC 的工作节奏分两相：预充电相把链上的关键节点充到高电平；求值相里，若某位 <span class="math inline">\(g_i = 1\)</span> 则对应节点经条件放电管直接拉低（生成），若 <span class="math inline">\(p_i = 1\)</span> 则该位传输管导通、把放电路径向高位传递（传播），若两者皆 0 则路径被切断（吸收）。整条链的延迟近似与位数的平方成正比（<span class="math inline">\(RC\)</span> 阶梯效应），这正是 7.1 节”曼彻斯特链里块内行波延迟随块宽平方增长”这一假设的物理出处。图 6.12 给出两种 CMOS 实现：</p>
+<ul>
+<li><strong>(a) 型</strong>：只输出整块的 <span class="math inline">\((g_{[0,3]}, p_{[0,3]})\)</span>，四个位的 <span class="math inline">\(g_i\)</span> 经条件放电、<span class="math inline">\(p_i\)</span> 经传输管串联，结构最紧凑；</li>
+<li><strong>(b) 型</strong>：除了整体信号 <span class="math inline">\([0,3]\)</span>，还额外输出中间前缀 <span class="math inline">\([0,1]\)</span> 与 <span class="math inline">\([0,2]\)</span> 的 <span class="math inline">\((g, p)\)</span> 信号——代价是多几根抽头，收益是<strong>一个 MCC 顺带算出多个前缀</strong>，把本该独立节点完成的结果捎带出来。</li>
+</ul>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch06/fig06_12.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 6.12 CMOS 工艺下两种 4 位曼彻斯特进位链设计示例</figcaption>
+</figure>
+</div>
+<p>把 (a) 型与 (b) 型按三层组织起来，就得到一棵”生成树（spanning tree）“式的进位网络：第一层 16 个 4 位 (a) 型 MCC 产生 <span class="math inline">\([0,3], [4,7], \ldots, [60,63]\)</span>；第二层用 1 个 5 位和 3 个 4 位 (b) 型 MCC 把它们合并，顺带产出 <span class="math inline">\([16,23]\)</span>、<span class="math inline">\([16,27]\)</span> 之类的中间前缀；第三层再两个 MCC 收口，最终得到 <span class="math inline">\([0,63]\)</span> 与所需的各个稀疏进位。对照原书图 6.13 看，第二层 (b) 型 MCC 的”中间抽头”是整套设计的点睛之笔：<span class="math inline">\(c_{24}\)</span> 需要 <span class="math inline">\([{-1},23]\)</span>、<span class="math inline">\(c_{32}\)</span> 需要 <span class="math inline">\([{-1},31]\)</span>，二者共享 <span class="math inline">\([16,23]\)</span> 这个中间结果，正是 6.4 节”重叠块合法合并”在晶体管层面的兑现。整个过程只有三层，且每一层的连线都局限在相邻范围——位片化（bit-sliced）版图可以等高平铺，时钟树与数据通路布线都可控。</p>
+<p>这个案例说明了一条普适经验：<strong>最优网络是在给定工艺下的最优，不是门级模型下的最优</strong>。许多并行前缀加法器在”只计节点延迟”时同为最优，一旦把互连（扇入、扇出、线延时）计入，排序就会明显改变。深亚微米工艺下的系统性研究（如 Huang 与 Ercegovac 对前缀加法器线延迟影响的分析、Knowles 的加法器族谱工作）给出的结论相当一致：门级模型里的”平手”在计入布线后往往拉开明显差距，而版图规整、连线等长的结构会把理论优势兑现得更多。</p>
+<p>渐近分析之外，真实芯片里决定成败的是：</p>
+<ul>
+<li><strong>布线电容</strong>：前缀网络的长线（Kogge-Stone 的跨距连线）在深亚微米下比门延迟更致命——线延迟随长度平方增长（分布 <span class="math inline">\(RC\)</span>），一根横跨 32 位的连线可能需要中途插中继器，等效于在网络上又加了一级；</li>
+<li><strong>扇出缓冲</strong>：高扇出节点（Ladner-Fischer）需要缓冲链，吃掉理论优势；</li>
+<li><strong>门级实现</strong>：<span class="math inline">\(g + p\,g'\)</span> 用 AOI/OAI 复合门一级完成，比分立门快得多——CMOS 里”与或非”本来就是单级结构，把算子映射到 AOI21/AOI22 这类单元后，前缀网络每级的实际延迟常常只有名义”两级与或”的六成左右；</li>
+<li><strong>位片化（bit-slice）版图</strong>：让每位的版图等高可平铺，时钟树与数据通路布线才可控。</li>
+</ul>
+<p>还有一个跳出同步框架的思路值得知道：异步设计里，行波进位的<strong>平均</strong>延迟是 <span class="math inline">\(O(1)\)</span>（随机数据下进位链平均只传播很短的距离），而超前进位保证<strong>最坏</strong> <span class="math inline">\(O(\log k)\)</span>。把两者并行实现、谁先出结果用谁，理论上可以造出平均 <span class="math inline">\(O(\log\log k)\)</span> 的异步加法器——这是”最坏情况设计”与”平均情况设计”杂交的一个优雅样本，虽然工业界很少为此付出异步设计的验证成本。</p>
+<p>把本章主要方案的”字长-延迟-硬件”账本汇总成一张表，作为选型起点（门级模型、4 位 lookahead 块）：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>方案</th>
+<th>16 位</th>
+<th>32 位</th>
+<th>64 位</th>
+<th>硬件量级</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>行波进位</td>
+<td>32 级</td>
+<td>64 级</td>
+<td>128 级</td>
+<td><span class="math inline">\(O(k)\)</span></td>
+<td>基准</td>
+</tr>
+<tr class="even">
+<td>多级 CLA</td>
+<td>9 级</td>
+<td>13 级</td>
+<td>13 级</td>
+<td><span class="math inline">\(O(k)\)</span></td>
+<td>32 位不占便宜</td>
+</tr>
+<tr class="odd">
+<td>Ling CLA</td>
+<td>≈8 级</td>
+<td>≈12 级</td>
+<td>≈12 级</td>
+<td><span class="math inline">\(O(k)\)</span>，省约 1/4 门输入</td>
+<td>末级多 1 级</td>
+</tr>
+<tr class="even">
+<td>Kogge-Stone</td>
+<td>4+3 级</td>
+<td>5+3 级</td>
+<td>6+3 级</td>
+<td><span class="math inline">\(O(k\log k)\)</span></td>
+<td>前缀级 + 输入/求和 3 级</td>
+</tr>
+<tr class="odd">
+<td>Brent-Kung</td>
+<td>6+3 级</td>
+<td>8+3 级</td>
+<td>10+3 级</td>
+<td><span class="math inline">\(O(k)\)</span></td>
+<td>面积敏感首选</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="本章小结" class="level2">
+<h2 class="anchored" data-anchor-id="本章小结">本章小结</h2>
+<ul>
+<li>CLA：展开进位递推为两级逻辑，4 位组 + 多级组间 lookahead → <span class="math inline">\(O(\log k)\)</span>；64 位三级结构约 13 个门级。</li>
+<li>Ling：变换递推形式（传播伪进位 <span class="math inline">\(h\)</span> 而非 <span class="math inline">\(c\)</span>）把最大扇入从 5 降到 4、门输入数从 19 降到 14，代价是末级和位多一级。</li>
+<li>进位计算 = 前缀问题，<span class="math inline">\(\odot\)</span> 算子满足结合律但不满足交换律；Kogge-Stone（快）、Brent-Kung（省）是两个极点，混合图是工业常用折中。</li>
+<li>块信号允许<strong>重叠区间</strong>合并，这为前缀网络提供了整数加法所没有的自由度。</li>
+<li>VLSI 现实：布线、扇出、复合门、位片版图，往往比渐近级数更决定成败。</li>
+</ul>
+</section>
+<section id="原书插图" class="level2">
+<h2 class="anchored" data-anchor-id="原书插图">原书插图</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch06/fig06_01.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 6.1</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch06/fig06_09.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 6.9</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch06/fig06_10.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>原书 Fig. 6.10</figcaption>
+</figure>
+</div>
+
+
+<!-- -->
+
+<div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
+<div id="ref-brent1982" class="csl-entry" role="listitem">
+Brent, Richard P., 和 H. T. Kung. 1982年. <span>《A Regular Layout for Parallel Adders》</span>. <em>IEEE Transactions on Computers</em> C-31 (3): 260～64.
+</div>
+<div id="ref-kogge1973" class="csl-entry" role="listitem">
+Kogge, Peter M., 和 Harold S. Stone. 1973年. <span>《A Parallel Algorithm for the Efficient Solution of a General Class of Recurrence Equations》</span>. <em>IEEE Transactions on Computers</em> C-22 (8): 786～93.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./ch05.html" class="pagination-link" aria-label="第5章 基本加法与计数（Basic Addition and Counting）">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./ch07.html" class="pagination-link" aria-label="第7章 快速加法器的变体（Variations in Fast Adders）">
+        <span class="nav-page-text"><span class="chapter-title">第7章 快速加法器的变体（Variations in Fast Adders）</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 第6章 超前进位加法器（Carry-Lookahead Adders）</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章导读</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>第 5 章留下的问题是：进位递推 $c_{i+1} = g_i + p_i c_i$ 是串行的，能不能"一眼看穿"所有进位？超前进位（carry-lookahead, CLA）的答案是：把递推**展开**。本章从直接展开的二级 CLA 讲起，引出 Ling 加法器的巧思，最后抵达现代加法器的主流视角——**进位计算即并行前缀问题（parallel prefix problem）**，Kogge-Stone、Brent-Kung、Han-Carlson、Ladner-Fischer 等经典网络都是这个框架下的不同折中。</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## 6.1 展开进位递推（Unrolling the Carry Recurrence）</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>先明确本章要回答的问题的下界。和的最高位依赖于全部 $2k$ 个输入比特；若逻辑门扇入至多为 $d$，则任何加法器的延迟都不可能低于 $\log_d(2k)$。第 5 章的行波进位是 $O(k)$，离这个下界太远——能不能做到 $O(\log k)$？超前进位给出肯定回答。</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>先复习第 5 章的三个辅助信号：生成（generate）$g_i = x_i y_i$、传播（propagate）$p_i = x_i \oplus y_i$、传递（transfer）$t_i = a_i = g_i + p_i$（$a_i$ 亦称 annihilate/absorb，表示"不消灭进位"）。进位递推因此有两种等价写法：</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>c_{i+1} = g_i + p_i c_i = g_i + t_i c_i</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>这里有一个值得反复体会的要点：这个递推把**进位网络（carry network）**的设计与数制细节彻底解耦——它既不关心你用二进制还是高基数、也不关心你在做加法还是减法。把 $g_i, p_i$ 重新解释为借位生成与借位传播，同一个进位网络可以原封不动地当作借位网络（borrow network）用：二进制减法 $x - y$ 里，借位生成 $\gamma_i = \bar{x}_i y_i$、借位传播 $\pi_i = x_i \oplus y_i$（与加法的 $p_i$ 完全相同！），借位递推 $b_{i+1} = \gamma_i + \pi_i b_i$ 与进位递推同构。CLA 结构能被跨场景复用的根源就在这里。</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>把递推逐级代入，就能把每个进位写成 $(g, p)$ 与 $c_0$ 的纯组合函数。以 $c_i$ 为例，展开的前几步是：</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>\begin{aligned}</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>c_i &amp;= g_{i-1} + p_{i-1}c_{i-1} <span class="sc">\\</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    &amp;= g_{i-1} + g_{i-2}p_{i-1} + c_{i-2}p_{i-2}p_{i-1} <span class="sc">\\</span></span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    &amp;= g_{i-1} + g_{i-2}p_{i-1} + g_{i-3}p_{i-2}p_{i-1} + c_{i-3}p_{i-3}p_{i-2}p_{i-1}</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>\end{aligned}</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>一直展开到最后一个乘积项含有 $c_0 = c_{in}$ 为止。展开式的读法极其直观：**进位进入第 $i$ 位，当且仅当**它在第 $i-1$ 位生成；或者它在第 $i-2$ 位生成、并被第 $i-1$ 位传播；或者它在第 $i-3$ 位生成、并被第 $i-2$ 与第 $i-1$ 位接力传播……每一项都是"某个低位生成 + 中间一路传播"的组合。</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="解读"}</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>展开（unrolling）是硬件设计里"面积换时间"的最古老手法：把递推的时序维度压扁成组合逻辑的空间维度。本章后面的一切结构——多级 lookahead、Ling、前缀网络——都可以看成对"完全展开不可行"这一现实的补救：**只展开有限的跨度，然后用层次结构把跨度接力起来**。理解 CLA 的最好方式，就是把它当成"受控的、分层的展开"。</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>看一个具体例子。设 $x = 1011_2$、$y = 0111_2$、$c_{in} = 0$，则位级信号为 $g = (g_3 g_2 g_1 g_0) = 0011$、$p = (p_3 p_2 p_1 p_0) = 1100$。逐位套用展开式：</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>c_1 = g_0 + p_0 c_0 = 1,\qquad</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>c_2 = g_1 + p_1 g_0 + p_1 p_0 c_0 = 1,\qquad</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>c_3 = g_2 + p_2 g_1 = 1,\qquad</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>c_4 = g_3 + p_3 g_2 + p_3 p_2 g_1 = 1</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>$c_4 = 1$ 的来历是：第 1 位生成的进位被第 2、3 位一路传播了上去。最终和位 $s_i = p_i \oplus c_i$ 给出 $s = 0010$、进位输出 $c_4 = 1$，合起来 $10010_2 = 18$，与 $11 + 7$ 相符。</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>$k = 4$ 时把四个进位全部写开，就是教科书上最经典的一组式子：</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>\begin{aligned}</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>c_1 &amp;= g_0 + c_0 p_0<span class="sc">\\</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>c_2 &amp;= g_1 + g_0 p_1 + c_0 p_0 p_1<span class="sc">\\</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>c_3 &amp;= g_2 + g_1 p_2 + g_0 p_1 p_2 + c_0 p_0 p_1 p_2<span class="sc">\\</span></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>c_4 &amp;= g_3 + g_2 p_3 + g_1 p_2 p_3 + g_0 p_1 p_2 p_3 + c_0 p_0 p_1 p_2 p_3</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>\end{aligned}</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>每一项的"文字数"恰好比进位下标多 1——$c_4$ 的最长项含 5 个文字。配上产生 $g_i$ 的二输入与门、产生 $p_i$ 与和位的二输入异或门，这组式子就是一个**全超前（full lookahead）4 位加法器**的全部进位逻辑。</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>理论上，**任意 $k$ 位的进位都能用两级与或逻辑直接算出**，最大扇入为 $k+1$。这既是好消息也是坏消息：$k = 31$ 时 $c_{31}$ 的展开式有 32 个乘积项、最大项含 32 个文字，这种规模的与门/或门在 CMOS 里并不存在，只能拆成门树实现，延迟又被"还"了回来。顺带把 4 位全超前的门账记下来：四个进位共 $1+2+3+4 = 10$ 个乘积项，合计 $2+3+4+5 = 14$ 个文字，即 10 个与门（共 14 输入）加 4 个或门（共 10 输入）——这个基数是后面比较各种改进方案（如 Ling）时的参照系。</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>面对扇入爆炸，教科书给出两条出路：</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**高基数加法（high-radix addition）**：把相邻 $h$ 位合并成一个基数 $2^h$ 的数字，进位链长度立刻除以 $h$；代价是生成 $g, p$ 信号与求和数字的逻辑变复杂。给定工艺下可能存在一个最优基数。一个简化的分析模型能说明这种权衡的形态：设数字级 $g, p$ 的产生与和数字的计算共花 $\delta h$ 时间（与 $h$ 成正比），进位网络用单位时间的 2 位 lookahead 生成器逐层搭建，则总延迟形如 $\delta h + O(\log_2(k/h))$ 的级数乘以级延迟——$h$ 增大时前一项线性涨、后一项对数降，交点即最优基数。这个模型与 6.2 节"组宽最优在 4 附近"的经验结论互为印证。</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**多级超前进位（multilevel lookahead）**：保持二进制，改用"块 → 块的块 → ……"的层次化 lookahead。这是工业界的实际选择，即 6.2 节的主题。</span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>**4 位 CLA 模块**是这条路上的甜蜜点：组内 4 位进位用两级与或逻辑直接展开，同时产出**组生成 $G$ 与组传播 $P$**（即所谓的块信号 block signals）：</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>G = g_3 + p_3 g_2 + p_3 p_2 g_1 + p_3 p_2 p_1 p_0, \qquad P = p_3 p_2 p_1 p_0</span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>组与组之间再用同样的递推——多级 CLA（multilevel CLA）由此而来，总延迟 $O(\log k)$。</span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>需要注意 $c_4$ 并不参与任何和位的计算，因此不必走完整的展开式，用更省的一级形式 $c_4 = g_3 + p_3 c_3$ 事后补算即可，几乎不损失速度。原书图 6.1 给出的正是这样一个 4 位全超前进位（full lookahead）进位网络。把它的 $c_4$ 部分替换为块信号产生电路，就得到下面这个可以级联的标准积木。</span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 6.2](images/ch06/fig06_02.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>回到前面那个算例：该组的 $(G, P) = (1, 0)$。下游电路只要看到这两个比特就知道"无论 $c_{in}$ 是什么，进位都会被生成"，完全不必关心组内到底发生了什么。**块信号把 4 位的内部结构压缩成两个比特**，这正是多级 lookahead 能够层层套娃的根本原因。</span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>再把块信号的三种典型形态记熟，后面读图会快得多：$(G, P) = (0, 0)$ 意味着该块**吸收**（无论进位输入是什么，块输出进位恒为 0，组内必有某位 $x_i = y_i = 0$ 截断了传播链）；$(0, 1)$ 意味着**传播**（块输出进位就等于块输入进位，组内每位都恰好一进一出）；$(1, \cdot)$ 意味着**生成**（块输入进位无关紧要）。三级判断共用一套 $(g, p)$ 合并逻辑——这也是把第 5 章的"进位完成检测"电路换成 lookahead 结构时几乎不用改设计的原因。</span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a><span class="fu">### RTL 实践：`rtl/ch6_2_carry_lookahead_adder`</span></span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>两级结构：4 位 CLA 组生成局部 $g, p$，组级再用 lookahead 逻辑产生组间进位：</span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a><span class="in">```systemverilog</span></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a><span class="in">module cla4 (</span></span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a><span class="in">    input  logic [3:0] a, b,</span></span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a><span class="in">    input  logic       cin,</span></span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a><span class="in">    output logic [3:0] s,</span></span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a><span class="in">    output logic       pg, gg    // 组传播、组生成</span></span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a><span class="in">);</span></span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a><span class="in">    logic [3:0] g, p;</span></span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a><span class="in">    logic [4:0] c;</span></span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a><span class="in">    assign g = a &amp; b;</span></span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a><span class="in">    assign p = a ^ b;</span></span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a><span class="in">    assign c[0]  = cin;</span></span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a><span class="in">    assign c[1]  = g[0] | (p[0] &amp; c[0]);</span></span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a><span class="in">    assign c[2]  = g[1] | (p[1] &amp; g[0]) | (p[1] &amp; p[0] &amp; c[0]);</span></span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a><span class="in">    assign c[3]  = g[2] | (p[2] &amp; g[1]) | (p[2] &amp; p[1] &amp; g[0])</span></span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a><span class="in">                 | (p[2] &amp; p[1] &amp; p[0] &amp; c[0]);</span></span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a><span class="in">    assign c[4]  = g[3] | (p[3] &amp; g[2]) | (p[3] &amp; p[2] &amp; g[1])</span></span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a><span class="in">                 | (p[3] &amp; p[2] &amp; p[1] &amp; g[0])</span></span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a><span class="in">                 | (p[3] &amp; p[2] &amp; p[1] &amp; p[0] &amp; c[0]);</span></span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a><span class="in">    assign s  = p ^ c[3:0];</span></span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a><span class="in">    assign pg = &amp;p;                       // p3 p2 p1 p0</span></span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a><span class="in">    assign gg = g[3] | (p[3]&amp;g[2]) | (p[3]&amp;p[2]&amp;g[1])</span></span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a><span class="in">              | (p[3]&amp;p[2]&amp;p[1]&amp;g[0]);    // 不含 cin 的组生成</span></span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a><span class="in">endmodule</span></span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a>16 位版本用 4 个 <span class="in">`cla4`</span> + 一个组间 lookahead 单元；testbench 与黄金模型全面对比（含 $c_{in}$ 两种取值）。</span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a><span class="fu">## 6.2 超前进位加法器设计（Carry-Lookahead Adder Design）</span></span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a>把二进制加法按 4 位一组"打包"来看，它等价于一次**基数 16 的加法**：每个 radix-16 数字位覆盖原二进制的第 $i$ 到第 $i+3$ 位（$i$ 为 4 的倍数），其块生成与块传播信号为：</span>
+<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a>g_{<span class="co">[</span><span class="ot">i,i+3</span><span class="co">]</span>} = g_{i+3} + g_{i+2}p_{i+3} + g_{i+1}p_{i+2}p_{i+3} + g_i p_{i+1}p_{i+2}p_{i+3},</span>
+<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a>\qquad</span>
+<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a>p_{<span class="co">[</span><span class="ot">i,i+3</span><span class="co">]</span>} = p_i p_{i+1} p_{i+2} p_{i+3}</span>
+<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a>读法与 6.1 节的展开式完全一致：四个位**共同传播**进入的进位，当且仅当四个位各自都传播；它们**共同生成**进位，当最高位自己生成，或次高位生成并被最高位传播，以此类推。一句话概括：**在位块这一层，"传播"是 AND，"生成"是带传播链的 OR**。这两条式子就是整个多级 CLA 的公理。</span>
+<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a>更一般地，对 $i_0 &lt; i_1 &lt; i_2$，任意宽度的相邻块都可以合并：</span>
+<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a>g_{<span class="co">[</span><span class="ot">i_0,i_2-1</span><span class="co">]</span>} = g_{<span class="co">[</span><span class="ot">i_1,i_2-1</span><span class="co">]</span>} + g_{<span class="co">[</span><span class="ot">i_0,i_1-1</span><span class="co">]</span>}\,p_{<span class="co">[</span><span class="ot">i_1,i_2-1</span><span class="co">]</span>},</span>
+<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a>\qquad</span>
+<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a>p_{<span class="co">[</span><span class="ot">i_0,i_2-1</span><span class="co">]</span>} = p_{<span class="co">[</span><span class="ot">i_0,i_1-1</span><span class="co">]</span>}\,p_{<span class="co">[</span><span class="ot">i_1,i_2-1</span><span class="co">]</span>}</span>
+<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a>而且参与合并的两块**不必毗连，允许互相重叠**：对满足 $i_0 \le i_1-1 \le j_0 &lt; j_1$ 的区间 $<span class="co">[</span><span class="ot">i_1, j_1</span><span class="co">]</span>$ 与 $<span class="co">[</span><span class="ot">i_0, j_0</span><span class="co">]</span>$，同样有</span>
+<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a>g_{<span class="co">[</span><span class="ot">i_0,j_1</span><span class="co">]</span>} = g_{<span class="co">[</span><span class="ot">i_1,j_1</span><span class="co">]</span>} + g_{<span class="co">[</span><span class="ot">i_0,j_0</span><span class="co">]</span>}\,p_{<span class="co">[</span><span class="ot">i_1,j_1</span><span class="co">]</span>},</span>
+<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a>\qquad</span>
+<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a>p_{<span class="co">[</span><span class="ot">i_0,j_1</span><span class="co">]</span>} = p_{<span class="co">[</span><span class="ot">i_0,j_0</span><span class="co">]</span>}\,p_{<span class="co">[</span><span class="ot">i_1,j_1</span><span class="co">]</span>}</span>
+<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a>这条性质看似只是数学脚注，实则是后面并行前缀结构的自由度来源：前缀网络里大量节点共享部分区间的结果，正是靠"重叠块也能合并"才合法。证明只需把两个重叠块各自按"不重叠的三段"拆开写两遍：设 $A = <span class="co">[</span><span class="ot">i_0, i_1-1</span><span class="co">]</span>$、$B = <span class="co">[</span><span class="ot">i_1, j_0</span><span class="co">]</span>$、$C = <span class="co">[</span><span class="ot">j_0+1, j_1</span><span class="co">]</span>$，则 $<span class="co">[</span><span class="ot">i_0, j_0</span><span class="co">]</span> = AB$、$<span class="co">[</span><span class="ot">i_1, j_1</span><span class="co">]</span> = BC$，代入合并式得 $g_{<span class="co">[</span><span class="ot">i_0,j_1</span><span class="co">]</span>} = g_{BC} + g_{AB}p_{BC} = (g_C + g_B p_C) + (g_B + g_A p_B)(p_B p_C)$，展开后 $g_B$ 项合并、冗余项吸收，结果与直接对 $ABC$ 三段合并完全一致——重叠部分 $B$ 被"算了两次"却不出错，因为块生成/传播是幂等意义下的区间性质，而不是计数。</span>
+<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a><span class="al">![图 6.3 用 4 位 lookahead 进位生成器把相邻（或重叠）块的 $(g, p)$ 信号合并为总块的 $(g, p)$](images/ch06/fig06_03.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a>有了这块积木，搭宽加法器就是纯粹的级联：两级 16 位 CLA = 4 个 4 位加法器 + 1 个 4 位 lookahead 进位生成器（此时后者等价于"预测一次 radix-16 加法中的三个中间进位"）。</span>
+<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a>拿一组 16 位数据把两级流程完整走一遍：$x = (0101\,1000\,1100\,1011)_2$、$y = (1010\,0001\,0011\,0111)_2$、$c_0 = 0$。先逐块算位级信号与块信号：</span>
+<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 块 <span class="pp">|</span> 位 <span class="pp">|</span> $g$ <span class="pp">|</span> $p$ <span class="pp">|</span> $(G, P)$ <span class="pp">|</span> 块类型 <span class="pp">|</span></span>
+<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|---|---|---|</span></span>
+<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 0（位 0–3） <span class="pp">|</span> 1011 / 0111 <span class="pp">|</span> 0011 <span class="pp">|</span> 1100 <span class="pp">|</span> $(1, 0)$ <span class="pp">|</span> 生成 <span class="pp">|</span></span>
+<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 1（位 4–7） <span class="pp">|</span> 1100 / 0011 <span class="pp">|</span> 0000 <span class="pp">|</span> 1111 <span class="pp">|</span> $(0, 1)$ <span class="pp">|</span> 传播 <span class="pp">|</span></span>
+<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 2（位 8–11） <span class="pp">|</span> 1000 / 0001 <span class="pp">|</span> 0000 <span class="pp">|</span> 1001 <span class="pp">|</span> $(0, 0)$ <span class="pp">|</span> 吸收 <span class="pp">|</span></span>
+<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 3（位 12–15） <span class="pp">|</span> 0101 / 1010 <span class="pp">|</span> 0000 <span class="pp">|</span> 1111 <span class="pp">|</span> $(0, 1)$ <span class="pp">|</span> 传播 <span class="pp">|</span></span>
+<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a>lookahead 生成器对这四个 $(G, P)$ 套用同一组展开式：$c_4 = G_0 = 1$；$c_8 = G_1 + P_1 G_0 = 1$；$c_{12} = G_2 + P_2 G_1 + P_2 P_1 G_0 = 0$（吸收块一刀切断了进位链）；$c_{16} = G_3 + P_3 G_2 + \cdots = 0$。各块拿到自己的输入进位后再并行算内部进位与和位：块 0 得 $0010$、块 1 得 $0000$、块 2 得 $1010$、块 3 得 $1111$，拼出 $s = (1111\,1010\,0000\,0010)_2 = 64002 = 22731 + 41271$。注意全过程里四个块算和位是**同时**进行的——lookahead 生成器把"等进位"从串行依赖变成了并行广播。</span>
+<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a>它的关键路径可以逐段拆开：</span>
+<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 关键路径段 <span class="pp">|</span> 门级 <span class="pp">|</span></span>
+<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|</span></span>
+<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 产生位级 $g_i, p_i$ <span class="pp">|</span> 1 <span class="pp">|</span></span>
+<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 产生 4 位块的 $(g, p)$ <span class="pp">|</span> 2 <span class="pp">|</span></span>
+<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 预测块间进位 $c_4, c_8, c_{12}$ <span class="pp">|</span> 2 <span class="pp">|</span></span>
+<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 生成块内部进位 $c_{i+1}$ <span class="pp">|</span> 2 <span class="pp">|</span></span>
+<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 计算和位 $s_i = p_i \oplus c_i$ <span class="pp">|</span> 2 <span class="pp">|</span></span>
+<span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **合计** | **9** <span class="pp">|</span></span>
+<span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a>对比 16 位行波进位加法器的 32 个门级，收益接近 4 倍——而这只是两级 lookahead。</span>
+<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a>再往上叠一级：4 个上述 16 位加法器加一个 4 位 lookahead 生成器，就得到三级 64 位 CLA。一个反直觉的事实先记下来：32 位（$\lceil \log_4 32 \rceil = 3$）也是三级、同样 13 个门级——32 位加法器在这个体系里一点便宜都占不到，这个"字长尴尬"问题留到 7.5 节用混合结构解决。</span>
+<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a>16 位那级内部还有一层时序细节值得展开：lookahead 生成器送出 $c_4, c_8, c_{12}$ 之后，各 4 位块还要用**块内自己的展开式**生成 $c_{i+1}$ 并算和位——这就是延迟表里最后那 "2 + 2" 级的来历。注意块内这 4 级与相邻块的计算完全并行，且块 0 因为没有上级进位要等，实际比其他块早完成；关键路径穿过的是"最后一个拿到组进位的块"。画时序图时，把 lookahead 生成器的输出沿标注在第 5 级、各块和位标注在第 9 级，整条路径的分段延迟就一目了然了。</span>
+<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a><span class="al">![图 6.4 用 16 个 4 位加法器与 5 个 lookahead 进位生成器搭建 64 位超前进位加法器](images/ch06/fig06_04.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a>每增加一级 lookahead，延迟固定增加 4 个门级：向下汇总 $(g, p)$ 用 2 级，向上分发进位再用 2 级。因此基于 4 位 lookahead 块的 $k$ 位 CLA 延迟为</span>
+<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a>T_{\text{lookahead-add}} = 4\log_4 k + 1 \quad \text{个门级}</span>
+<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a>64 位即 $4 \times 3 + 1 = 13$ 级。若字宽不是 4 的整数次幂，部分 lookahead 端口闲置，公式改为 $4\lceil \log_4 k \rceil + 1$。</span>
+<span id="cb3-185"><a href="#cb3-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-186"><a href="#cb3-186" aria-hidden="true" tabindex="-1"></a>把 13 级与行波的 128 级放在一起，再对照 6.1 节开头的下界 $\log_2(2 \times 64) = 7$ 级（二输入门），可以看出三级 CLA 已经把理论下界追到了 2 倍以内——继续逼近的部分就要靠前缀网络（6.5 节）和工艺技巧（6.6 节）去抠了。元件账也顺手算一下：16 个 4 位加法器、5 个 lookahead 生成器，每个生成器内部是十几个与或门，整个进位网络的规模仍然只是 $O(k)$ 量级——多级 lookahead 用线性硬件买到了对数延迟，这是它战胜"全展开"的根本原因。</span>
+<span id="cb3-187"><a href="#cb3-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-188"><a href="#cb3-188" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="设计取舍"}</span>
+<span id="cb3-189"><a href="#cb3-189" aria-hidden="true" tabindex="-1"></a>组宽并非越大越好。改用 6 位或 8 位 lookahead 块能减少 lookahead 的**级数**，但每级内部与或门的扇入随之上升，而 CMOS 里高扇入门的延迟与面积都是超线性增长的。总延迟大致是"（每级门延迟，随组宽 $r$ 上升）$\times$（级数 $\log_r k$，随 $r$ 下降）"，二者相乘在某个 $r$ 处取极小——实践中这个最优点落在 4 附近，这也是 4 位 CLA 组成为事实标准的原因。</span>
+<span id="cb3-190"><a href="#cb3-190" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-191"><a href="#cb3-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-192"><a href="#cb3-192" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="历史注脚"}</span>
+<span id="cb3-193"><a href="#cb3-193" aria-hidden="true" tabindex="-1"></a>4 位 lookahead 块的标准化有深刻的历史惯性：TTL 时代的 74181 ALU 直接输出组信号 $\overline{G}, \overline{P}$，配套的 74182 正是"4 位 lookahead 进位生成器"本尊——多级 CLA 在 1970 年代就是两颗标准芯片的对插。今天 SoC 里的加法器早已不用分立芯片，但"4 位组 + $(G, P)$ 接口"的模块划分原封不动地活在每一个综合出来的 CLA 里。</span>
+<span id="cb3-194"><a href="#cb3-194" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-195"><a href="#cb3-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-196"><a href="#cb3-196" aria-hidden="true" tabindex="-1"></a>最后一个容易被忽略的工程细节：图 6.4 的多级结构天然不产生最高进位 $c_{64}$，而溢出判断、多字长拼接等场景都必须要它。业内有两个补救办法：其一是按最高位的辅助信号直接构造</span>
+<span id="cb3-197"><a href="#cb3-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-198"><a href="#cb3-198" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-199"><a href="#cb3-199" aria-hidden="true" tabindex="-1"></a>c_{out} = g_{<span class="co">[</span><span class="ot">0,k-1</span><span class="co">]</span>} + c_0\,p_{<span class="co">[</span><span class="ot">0,k-1</span><span class="co">]</span>} = x_{k-1}y_{k-1} + s_{k-1}\left(x_{k-1} + y_{k-1}\right)</span>
+<span id="cb3-200"><a href="#cb3-200" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-201"><a href="#cb3-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-202"><a href="#cb3-202" aria-hidden="true" tabindex="-1"></a>后一个等号的推导值得看一眼：$c_{out} = 1$ 当最高位两个操作数都是 1（$x_{k-1}y_{k-1}$），或者和位为 1 且至少一个操作数为 1——后一种情形恰好覆盖"低位进位传上来"的全部可能（$s_{k-1} = 1$ 而 $x_{k-1}y_{k-1} = 0$ 时，两操作数必为一个 1 一个 0，$c_{out}$ 就等于 $c_{k-1}$，而 $x_{k-1} + y_{k-1} = 1$ 把它选中）。这个形式完全绕开了进位网络，用最高位的本地信号几个门就搞定。其二是干脆把加法器做宽 1 位（需要 60 位就做 61 位），直接把多出来的那个和位当作进位输出——粗暴但极其好用，许多综合出来的"进位输出"就是这么来的。</span>
+<span id="cb3-203"><a href="#cb3-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-204"><a href="#cb3-204" aria-hidden="true" tabindex="-1"></a><span class="fu">## 6.3 Ling 加法器与相关设计（Ling Adder and Related Designs）</span></span>
+<span id="cb3-205"><a href="#cb3-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-206"><a href="#cb3-206" aria-hidden="true" tabindex="-1"></a>Ling 的观察：进位 $c_{i+1} = g_i + p_i c_i$ 里，若改用**伪进位（pseudo-carry）** $h_{i+1} = c_i + c_{i+1}$（定义不同，递推更简单），可以使每个 lookahead 项少一个因子，扇入降低、速度提升，代价是末级和位要多一级修正逻辑。</span>
+<span id="cb3-207"><a href="#cb3-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-208"><a href="#cb3-208" aria-hidden="true" tabindex="-1"></a>推导只用两个在二进制下恒成立的事实：$g_i p_i = 0$（同一位不可能既生成又传播），以及 $g_{i-1} \Rightarrow c_i$（一旦生成，进位必为 1）。于是</span>
+<span id="cb3-209"><a href="#cb3-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-210"><a href="#cb3-210" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-211"><a href="#cb3-211" aria-hidden="true" tabindex="-1"></a>c_{i-1}p_{i-1} = \underbrace{g_{i-1}p_{i-1}}_{=\,0} + c_{i-1}p_{i-1} + \underbrace{c_i p_{i-1}}_{=\,c_{i-1}p_{i-1}} = (c_{i-1} + c_i)\,p_{i-1} = h_i p_{i-1}</span>
+<span id="cb3-212"><a href="#cb3-212" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-213"><a href="#cb3-213" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-214"><a href="#cb3-214" aria-hidden="true" tabindex="-1"></a>进而由 $g_{i-1} \Rightarrow h_i$ 得</span>
+<span id="cb3-215"><a href="#cb3-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-216"><a href="#cb3-216" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-217"><a href="#cb3-217" aria-hidden="true" tabindex="-1"></a>c_i = g_{i-1} + c_{i-1}p_{i-1} = h_i g_{i-1} + h_i p_{i-1} = h_i\,(g_{i-1} + p_{i-1}) = h_i\,t_{i-1}</span>
+<span id="cb3-218"><a href="#cb3-218" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-219"><a href="#cb3-219" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-220"><a href="#cb3-220" aria-hidden="true" tabindex="-1"></a>伪进位自己的递推则是</span>
+<span id="cb3-221"><a href="#cb3-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-222"><a href="#cb3-222" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-223"><a href="#cb3-223" aria-hidden="true" tabindex="-1"></a>h_i = c_i + c_{i-1} = g_{i-1} + c_{i-1} = g_{i-1} + h_{i-1}t_{i-2}</span>
+<span id="cb3-224"><a href="#cb3-224" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-225"><a href="#cb3-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-226"><a href="#cb3-226" aria-hidden="true" tabindex="-1"></a>把它同样展开四级（展开中用 $t_{i-2}g_{i-2} = g_{i-2}$ 吸收冗余项，这是 $h_i$ 比 $c_i$ 短一截的直接原因）：</span>
+<span id="cb3-227"><a href="#cb3-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-228"><a href="#cb3-228" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-229"><a href="#cb3-229" aria-hidden="true" tabindex="-1"></a>h_i = g_{i-1} + g_{i-2} + g_{i-3}t_{i-3}t_{i-2} + g_{i-4}t_{i-3}t_{i-2} + h_{i-4}t_{i-4}t_{i-3}t_{i-2}</span>
+<span id="cb3-230"><a href="#cb3-230" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-231"><a href="#cb3-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-232"><a href="#cb3-232" aria-hidden="true" tabindex="-1"></a>结构上的差距一眼可见：前两个乘积项是"裸"的 $g$，最大的乘积项只含 4 个文字；而 $c_i$ 的同跨度展开里每一项都挂着 $t_{i-1}$ 这根链条，最大项含 5 个文字。根源在于 $h$ 的递推 $h_i = g_{i-1} + h_{i-1}t_{i-2}$ 每一步只挂一个"延迟两拍"的 $t$，而 $c$ 的递推每步都挂相邻的 $t_{i-1}$——链条天然短一环，扇入因此整体降一档。</span>
+<span id="cb3-233"><a href="#cb3-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-234"><a href="#cb3-234" aria-hidden="true" tabindex="-1"></a>账要这么算：表达 $h_i$ 需要 5 个乘积项、最大 **4 输入**与门、合计 **14 个门输入**；而表达 $c_i$ 同样 5 项，却要 **5 输入**与门、合计 **19 个门输入**。若工艺支持**线与/线或（wired-OR）**，差距更夸张——3 个门 9 个输入对 4 个门 14 个输入。扇入降一档、总输入数降三成，在版图面积与功耗上都是实打实的收益。把两种方案的关键指标并排放：</span>
+<span id="cb3-235"><a href="#cb3-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-236"><a href="#cb3-236" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 指标 <span class="pp">|</span> 传统 $c_i$ 展开 <span class="pp">|</span> Ling $h_i$ 展开 <span class="pp">|</span></span>
+<span id="cb3-237"><a href="#cb3-237" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|</span></span>
+<span id="cb3-238"><a href="#cb3-238" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 乘积项数 <span class="pp">|</span> 5 <span class="pp">|</span> 5 <span class="pp">|</span></span>
+<span id="cb3-239"><a href="#cb3-239" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 最大与门扇入 <span class="pp">|</span> 5 <span class="pp">|</span> 4 <span class="pp">|</span></span>
+<span id="cb3-240"><a href="#cb3-240" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 门输入总数 <span class="pp">|</span> 19 <span class="pp">|</span> 14（约省 26%） <span class="pp">|</span></span>
+<span id="cb3-241"><a href="#cb3-241" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> wired-OR 实现 <span class="pp">|</span> 4 门 / 14 输入 <span class="pp">|</span> 3 门 / 9 输入 <span class="pp">|</span></span>
+<span id="cb3-242"><a href="#cb3-242" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 末级和位逻辑 <span class="pp">|</span> $p_i \oplus c_i$（1 级 XOR） <span class="pp">|</span> $p_i \oplus h_i t_{i-1}$（多 1 级 AND） <span class="pp">|</span></span>
+<span id="cb3-243"><a href="#cb3-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-244"><a href="#cb3-244" aria-hidden="true" tabindex="-1"></a>表格最后一行就是全部代价所在——Ling 加法器本质上是"把进位网络内部省下的逻辑，挪一小部分到末级和位上"的再平衡。</span>
+<span id="cb3-245"><a href="#cb3-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-246"><a href="#cb3-246" aria-hidden="true" tabindex="-1"></a>代价在最后一步：由于真正的进位是 $c_i = h_i t_{i-1}$，和位不再是朴素的 $s_i = p_i \oplus c_i$，而要写成</span>
+<span id="cb3-247"><a href="#cb3-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-248"><a href="#cb3-248" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-249"><a href="#cb3-249" aria-hidden="true" tabindex="-1"></a>s_i = p_i \oplus h_i t_{i-1}</span>
+<span id="cb3-250"><a href="#cb3-250" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-251"><a href="#cb3-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-252"><a href="#cb3-252" aria-hidden="true" tabindex="-1"></a>多出一级与门。这笔交易划算与否取决于工艺：只要 lookahead 网络本身在关键路径上占大头（宽位加法器正是如此），牺牲末级一级换内部每级一档扇入，几乎总是赢。</span>
+<span id="cb3-253"><a href="#cb3-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-254"><a href="#cb3-254" aria-hidden="true" tabindex="-1"></a>用 6.1 节那组数据把 Ling 递推也跑一遍：$g = 0011$、$p = 1100$、$t = g + p = 1111$、$c_0 = 0$。由 $h_{i+1} = g_i + h_i t_{i-1}$（$h_0 = c_0 = 0$）逐位算：$h_1 = g_0 = 1$，$h_2 = g_1 + h_1 t_0 = 1$，$h_3 = g_2 + h_2 t_1 = 1$，$h_4 = g_3 + h_3 t_2 = 1$。再验证和位：$s_1 = p_1 \oplus h_1 t_0 = 0 \oplus 1 = 1$，$s_2 = p_2 \oplus h_2 t_1 = 1 \oplus 1 = 0$，$s_3 = p_3 \oplus h_3 t_2 = 1 \oplus 1 = 0$，加上 $s_0 = 0$，得 $s = 0010$——与传统进位版本的结果分毫不差。注意这里 $t$ 全为 1，于是 $h_i = c_i$ 恰好成立；一般情况下 $h_i$ 比 $c_i$ "胖"（$h_i = c_i + c_{i-1} \ge c_i$），正是这份冗余换回了递推式的低扇入。</span>
+<span id="cb3-255"><a href="#cb3-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-256"><a href="#cb3-256" aria-hidden="true" tabindex="-1"></a>Doran 后来把这招系统化：干脆传播一个一般的函数 $\eta$ 而非 $c$，其中</span>
+<span id="cb3-257"><a href="#cb3-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-258"><a href="#cb3-258" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-259"><a href="#cb3-259" aria-hidden="true" tabindex="-1"></a>\eta_{i+1} = f(x_i, y_i, c_i) = \psi(x_i, y_i)\,c_i + \phi(x_i, y_i)\,\bar{c}_i</span>
+<span id="cb3-260"><a href="#cb3-260" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-261"><a href="#cb3-261" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-262"><a href="#cb3-262" aria-hidden="true" tabindex="-1"></a>这是 $f$ 关于 $c_i$ 的香农展开，$\psi$ 与 $\phi$ 必须对 $x_i, y_i$ **对称**（否则同一位的贡献会依赖操作数顺序）。两个变量的对称布尔函数只有 8 个，因此形式上共 $8 \times 8 = 64$ 种组合；把它们划分为不相交的两组 $\{0, \bar{t}_i, g_i, \bar{p}_i\}$ 与 $\{1, t_i, \bar{g}_i, p_i\}$ 后可以证明：$\psi$ 与 $\phi$ 若同属一组，和位就无法由 $\eta_i$ 复原。于是合法的加法器只剩 $8 \times 4 = 32$ 种，其中 4 种具备 Ling 加法器的优良性质，而 Ling 加法器本身就是 $\psi = 1$、$\phi = g_i = x_i y_i$ 的那个特例。Doran 这套枚举的价值不在于"又多了 31 种加法器"，而在于它给出了一个**可搜索的设计空间**：把"递推传播什么信号"参数化之后，扇入、门数、末级修正成本都成了空间坐标，可以按工艺指标系统地寻优——这与 6.5 节前缀网络的"不可能三角"是同一种方法论。</span>
+<span id="cb3-263"><a href="#cb3-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-264"><a href="#cb3-264" aria-hidden="true" tabindex="-1"></a>顺带一提，Ling 结构做成减法器几乎免费：把 $g_i, p_i$ 换成借位生成/借位传播信号即可（6.1 节开头说过进位网络与借位网络同构），唯一要改的是末级修正逻辑里 $t_{i-1}$ 的定义——这也是"信号重解释"红利的又一次兑现。</span>
+<span id="cb3-265"><a href="#cb3-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-266"><a href="#cb3-266" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="解读"}</span>
+<span id="cb3-267"><a href="#cb3-267" aria-hidden="true" tabindex="-1"></a>Ling 加法器是"**改变递推形式以降低每级逻辑深度**"的范例。这类"数学等价但电路更优"的变换是算术设计的高级技巧——同样的思路后来也出现在进位选择、前缀融合等设计中。IBM 的若干高性能处理器曾采用 Ling 结构。</span>
+<span id="cb3-268"><a href="#cb3-268" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-269"><a href="#cb3-269" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-270"><a href="#cb3-270" aria-hidden="true" tabindex="-1"></a>Ling 思想与前缀框架也能嫁接。观察展开式 $h_4 = g_3 + g_2 + g_1 t_2 + g_0 t_1 t_2 + h_0 t_0 t_1 t_2$（下标平移后的写法），可以重新加括号成</span>
+<span id="cb3-271"><a href="#cb3-271" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-272"><a href="#cb3-272" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-273"><a href="#cb3-273" aria-hidden="true" tabindex="-1"></a>h_4 = (g_3 + g_2) + (t_3 t_2)\,(g_1 + g_0) + (t_3 t_2)(t_1 t_0)\,h_0</span>
+<span id="cb3-274"><a href="#cb3-274" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-275"><a href="#cb3-275" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-276"><a href="#cb3-276" aria-hidden="true" tabindex="-1"></a>——相邻两位先各自归并成 $(g_{2i+1} + g_{2i},\; t_{2i+1} t_{2i})$ 形式的"超信号"，之后就是一个标准的两两合并前缀结构。沿这条路走下去，奇数下标与偶数下标的"Ling 进位"可以分别用两棵较浅的前缀树并行算出（Dimitrakopoulos 等人的并行前缀 Ling 加法器），把 Ling 的低扇入优势与前缀网络的对数深度叠加到了一起。</span>
+<span id="cb3-277"><a href="#cb3-277" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-278"><a href="#cb3-278" aria-hidden="true" tabindex="-1"></a><span class="fu">## 6.4 进位确定即前缀计算（Carry Determination as Prefix Computation）</span></span>
+<span id="cb3-279"><a href="#cb3-279" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-280"><a href="#cb3-280" aria-hidden="true" tabindex="-1"></a>把视角再抬高一层。定义**进位算子（carry operator）** $\odot$（也称前缀算子）：</span>
+<span id="cb3-281"><a href="#cb3-281" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-282"><a href="#cb3-282" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-283"><a href="#cb3-283" aria-hidden="true" tabindex="-1"></a>(g, p) \odot (g', p') = (g + p\,g',\; p\,p')</span>
+<span id="cb3-284"><a href="#cb3-284" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-285"><a href="#cb3-285" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-286"><a href="#cb3-286" aria-hidden="true" tabindex="-1"></a>这里的直觉顺序是"右操作数在低位、左操作数在高位"：合并后的一大块要生成进位，当**高位块自己生成**，或者**低位块生成且被高位块传播**；要传播，则两块都必须传播。注意它和 6.2 节的块合并式是同一件事，只是剥掉了下标——下标本就无关紧要，任意两个相邻（或重叠）的位组都能这么合。</span>
+<span id="cb3-287"><a href="#cb3-287" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-288"><a href="#cb3-288" aria-hidden="true" tabindex="-1"></a>电路实现上，$\odot$ 的与或形式 $g = g'' + g'p''$、$p = p'p''$ 并不是唯一选择。代数变形 $g = (g' + g'')(p'' + g')$ 可以让 $g$ 与 $p$ 都走**两级 NOR**（或 NOT-NOR）逻辑——在 NOR 门比 AND/OR 更快的工艺（如某些 domino 逻辑风格）里，这个变形让整个前缀网络的每一级都省出可观的延迟。读前缀加法器论文时看到形状陌生的算子电路，多半就是这类等价变形。</span>
+<span id="cb3-289"><a href="#cb3-289" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-290"><a href="#cb3-290" aria-hidden="true" tabindex="-1"></a><span class="al">![图 6.5 用进位算子 $\odot$ 把相邻（或重叠）两块 $B'$、$B''$ 的 $(g, p)$ 信号合并为总块 $B$ 的 $(g, p)$](images/ch06/fig06_05.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-291"><a href="#cb3-291" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-292"><a href="#cb3-292" aria-hidden="true" tabindex="-1"></a>进位递推 $c_{i+1} = g_i + p_i c_i$ 恰好可以写成前缀积：记 $(G_{i:j}, P_{i:j}) = (g_i, p_i) \odot (g_{i-1}, p_{i-1}) \odot \cdots \odot (g_j, p_j)$，则</span>
+<span id="cb3-293"><a href="#cb3-293" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-294"><a href="#cb3-294" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-295"><a href="#cb3-295" aria-hidden="true" tabindex="-1"></a>c_{i+1} = G_{i:0} + P_{i:0}\,c_0</span>
+<span id="cb3-296"><a href="#cb3-296" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-297"><a href="#cb3-297" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-298"><a href="#cb3-298" aria-hidden="true" tabindex="-1"></a>$\odot$ 满足**结合律**（但不满足交换律）——即 $\big((g',p')\odot(g'',p'')\big)\odot(g''',p''')$ 与 $(g',p')\odot\big((g'',p'')\odot(g''',p''')\big)$ 恒等，但一般 $g'' + p''g' \ne g' + p'g''$。这意味着$(g, p)$ 序列可以任意加括号，**计算所有前缀 $(G_{i:0}, P_{i:0})$ 就成为一个并行前缀（parallel prefix / scan）问题**，任何前缀网络都能求解它。形式化地写：</span>
+<span id="cb3-299"><a href="#cb3-299" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-300"><a href="#cb3-300" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-301"><a href="#cb3-301" aria-hidden="true" tabindex="-1"></a>\text{给定}\ (g_0,p_0), (g_1,p_1), \ldots, (g_{k-1},p_{k-1})</span>
+<span id="cb3-302"><a href="#cb3-302" aria-hidden="true" tabindex="-1"></a>\quad\Longrightarrow\quad</span>
+<span id="cb3-303"><a href="#cb3-303" aria-hidden="true" tabindex="-1"></a>\text{求}\ (G_{0:0},P_{0:0}), (G_{1:0},P_{1:0}), \ldots, (G_{k-1:0},P_{k-1:0})</span>
+<span id="cb3-304"><a href="#cb3-304" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-305"><a href="#cb3-305" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-306"><a href="#cb3-306" aria-hidden="true" tabindex="-1"></a>带 $c_{in}$ 的加法也不用特殊处理：把 $c_{in}=1$ 看成"第 $-1$ 级生成的进位"，令 $p_{-1} = 0$、$g_{-1} = c_{in}$，然后照常计算所有前缀即可——只是级数从 $k$ 级变成 $k+1$ 级。</span>
+<span id="cb3-307"><a href="#cb3-307" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-308"><a href="#cb3-308" aria-hidden="true" tabindex="-1"></a>顺便指出一个文献中的等价表述：整个前缀框架也可以建立在 $(g, a)$（生成/吸收）而非 $(g, p)$ 信号对上——进位递推 $c_{i+1} = g_i + \bar{a}_i c_i$ 同样给出结合律算子。两种表述在数学上完全平行，差别只在电路实现的细节（$p$ 用 XOR 产生、$a$ 用 NOR 产生，不同工艺下成本各异），以及行波型前缀电路在 $(g, a)$ 表述下会自然退化成第 5 章的曼彻斯特式结构。后文统一用 $(g, p)$。</span>
+<span id="cb3-309"><a href="#cb3-309" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-310"><a href="#cb3-310" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 6.6](images/ch06/fig06_06.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-311"><a href="#cb3-311" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-312"><a href="#cb3-312" aria-hidden="true" tabindex="-1"></a>图上这张四输入网络值得照着算一遍。原书给 (a) 图喂的输入（从右往左）是 $x_0 = 5$、$x_1 = 2$、$x_2 = -1$、$x_3 = 6$：第一级两个加法器并行算出 $x_0 + x_1 = 7$ 与 $x_2 + x_3 = 5$；第二级把 $7$ 与 $-1$、$5$ 分别组合，四个输出依次为 $s_0 = 5$、$s_1 = 7$、$s_2 = 7 + (-1) = 6$、$s_3 = 7 + 5 = 12$。把每个加法单元替换成 $\odot$ 算子，就得到对应的进位网络（图中 (a) 与 (b) 的拓扑完全相同，(b) 的输出即 $c_1$ 到 $c_4$ 所需的 $(g_{<span class="co">[</span><span class="ot">0,i</span><span class="co">]</span>}, p_{<span class="co">[</span><span class="ot">0,i</span><span class="co">]</span>})$）。不过有一处必须小心：**整数加法是可交换的**，随意组合部分和也能得到正确结果，但那样画出来的网络**不能直接搬去做进位网络**——只要被合并的块始终保持连续、且顺序不被打乱，才是安全的。</span>
+<span id="cb3-313"><a href="#cb3-313" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-314"><a href="#cb3-314" aria-hidden="true" tabindex="-1"></a>反过来，$(g, p)$ 给我们比加法更多的自由：由于重叠块的合并同样合法，前缀网络可以复用部分区间的结果（加法里这么做会导致重复计数）。这一份额外自由度，正是第 6.5 节各种花式前缀图能存在的原因。</span>
+<span id="cb3-315"><a href="#cb3-315" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-316"><a href="#cb3-316" aria-hidden="true" tabindex="-1"></a>动手练习一下这个翻译过程（8 输入）：画一个三级前缀网络——第一级两两合并 $(x_0,x_1), (x_2,x_3), (x_4,x_5), (x_6,x_7)$；第二级合并相邻对得 $s_1, s_3, s_5, s_7$；第三级补齐偶数下标 $s_2 = s_1 \odot x_2$ 之类——再把每个加法器换成 $\odot$ 算子，就得到一个 8 位进位网络（这正是 Brent-Kung 的 8 输入实例）。若要支持 $c_{in}$，按前面的办法在最右端补一个 $(g_{-1}, p_{-1}) = (c_{in}, 0)$ 节点即可。这个"先画整数网络、再整体换算子"的工作流，是设计自定义前缀加法器的标准起手式。</span>
+<span id="cb3-317"><a href="#cb3-317" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-318"><a href="#cb3-318" aria-hidden="true" tabindex="-1"></a>最后提醒一个容易看错图的约定：**进位网络图按从右到左编号**（因为它对应位置记数法里从低位到高位的下标顺序），所以图上"从左往右读"的方向其实是高到低。严格说我们算的是后缀和，但按惯例仍称"前缀和/并行前缀网络"。</span>
+<span id="cb3-319"><a href="#cb3-319" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-320"><a href="#cb3-320" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip title="工程视角"}</span>
+<span id="cb3-321"><a href="#cb3-321" aria-hidden="true" tabindex="-1"></a>前缀框架最大的实用价值是**可综合性**：$(g, p)$ 初始化 + $\odot$ 算子 + 求和 XOR 都是固定单元，唯一的变量是"前缀图怎么连"。现代 EDA 的 arithmetic synthesis 正是这么做的——把 <span class="in">`+`</span> 映射成一个参数化前缀图，按时序约束在 Kogge-Stone / Han-Carlson / Brent-Kung 族里挑拓扑。手写前缀结构的意义因此不在"工具不会"，而在约束极端（超高频、超低功耗、异形字宽）时给出工具搜索空间之外的拓扑。</span>
+<span id="cb3-322"><a href="#cb3-322" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-323"><a href="#cb3-323" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-324"><a href="#cb3-324" aria-hidden="true" tabindex="-1"></a>把前缀框架推到极端还有一个 sanity check 的价值：最朴素的前缀网络是**串行的**——每个前缀依次由前一个前缀与当前输入合并得到。把它翻译成进位网络，每一级就是 $c_{i+1} = g_i + p_i c_i$，整个电路恰好退化成第 5 章的行波进位加法器。也就是说，"前缀计算"这个抽象把行波、CLA、Kogge-Stone 全部收进同一个家族：它们只是同一个问题在（延迟, 面积, 扇出）空间里不同落点的实例。这也是本书反复强调的方法论——**先把问题抽象对，再谈结构创新**。</span>
+<span id="cb3-325"><a href="#cb3-325" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-326"><a href="#cb3-326" aria-hidden="true" tabindex="-1"></a><span class="fu">## 6.5 其他并行前缀网络（Alternative Parallel Prefix Networks）</span></span>
+<span id="cb3-327"><a href="#cb3-327" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-328"><a href="#cb3-328" aria-hidden="true" tabindex="-1"></a>前缀网络的谱系由两种截然不同的"分治"策略拉开。**Ladner-Fischer** 走的是"先各自算、再一次性对齐"的路：低 $k/2$ 位交给右子网络算出它们自己的全部前缀和；高 $k/2$ 位交给左子网络算出**局部**前缀和；最后把右网络最左端的那个输出（即 $s_{k/2-1}$）一次性加到左边的所有输出上。它的延迟与代价递推是</span>
+<span id="cb3-329"><a href="#cb3-329" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-330"><a href="#cb3-330" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-331"><a href="#cb3-331" aria-hidden="true" tabindex="-1"></a>D(k) = D(k/2) + 1 = \log_2 k,\qquad</span>
+<span id="cb3-332"><a href="#cb3-332" aria-hidden="true" tabindex="-1"></a>C(k) = 2C(k/2) + k/2 = (k/2)\log_2 k</span>
+<span id="cb3-333"><a href="#cb3-333" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-334"><a href="#cb3-334" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-335"><a href="#cb3-335" aria-hidden="true" tabindex="-1"></a>延迟已经达到"只允许二输入算子"时的理论下界，但代价却接近 Kogge-Stone。把代价递推展开验证一遍：$C(2) = 1$，$C(4) = 2 \times 1 + 2 = 4$，$C(8) = 2 \times 4 + 4 = 12$，$C(16) = 2 \times 12 + 8 = 32 = (16/2)\log_2 16$——与闭式吻合。更要命的是扇出：$s_{k/2-1}$ 这一根信号线要驱动左边 $k/2$ 个加法单元，直接实现必须插缓冲链，反而把理论优势吃掉一截。对 16 输入的实例，这个节点的扇出是 8——在标准单元库设计里，8 倍扇出的网络通常要拆成 2-3 级缓冲树，相当于凭空多出约一级有效延迟，Ladner-Fischer 的"理论最快"因此常常兑现不了。</span>
+<span id="cb3-336"><a href="#cb3-336" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-337"><a href="#cb3-337" aria-hidden="true" tabindex="-1"></a><span class="al">![图 6.7 Ladner–Fischer 并行前缀网络由两个 $k/2$ 输入子网络加 $k/2$ 个加法单元构成](images/ch06/fig06_07.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-338"><a href="#cb3-338" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-339"><a href="#cb3-339" aria-hidden="true" tabindex="-1"></a>**Brent-Kung** 的分治则更加精打细算：先把输入两两相加，得到长度为 $k/2$ 的新序列</span>
+<span id="cb3-340"><a href="#cb3-340" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-341"><a href="#cb3-341" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-342"><a href="#cb3-342" aria-hidden="true" tabindex="-1"></a>x_0+x_1,\; x_2+x_3,\; x_4+x_5,\; \ldots,\; x_{k-2}+x_{k-1}</span>
+<span id="cb3-343"><a href="#cb3-343" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-344"><a href="#cb3-344" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-345"><a href="#cb3-345" aria-hidden="true" tabindex="-1"></a>对这个新序列求前缀和，得到的恰好就是原序列的**奇数下标**前缀和 $s_1, s_3, s_5, \ldots$（因为 $s_3 = (x_0+x_1) + (x_2+x_3)$）；偶数下标再用最后一级加法补齐：$s_{2j} = s_{2j-1} + x_{2j}$。于是</span>
+<span id="cb3-346"><a href="#cb3-346" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-347"><a href="#cb3-347" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-348"><a href="#cb3-348" aria-hidden="true" tabindex="-1"></a>D(k) = D(k/2) + 2 = 2\log_2 k - 2,\qquad</span>
+<span id="cb3-349"><a href="#cb3-349" aria-hidden="true" tabindex="-1"></a>C(k) = C(k/2) + k - 1 = 2k - 2 - \log_2 k</span>
+<span id="cb3-350"><a href="#cb3-350" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-351"><a href="#cb3-351" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-352"><a href="#cb3-352" aria-hidden="true" tabindex="-1"></a>延迟几乎翻倍，节点数却只有 $2k$ 量级——Brent 与 Kung 当年正是为了压制 VLSI 版图面积才提出它的。把 16 输入的三组数字摆在一起更能看清格局：Ladner-Fischer 4 级 32 单元（但有一个扇出 8 的节点）、Brent-Kung 6 级 26 单元、Kogge-Stone 4 级 49 单元。Kogge-Stone 的节点多的另一面是**连线长**：第 $j$ 级的合并距离是 $2^{j-1}$，最后一级要跨越整个字长的一半——在"线延迟与门延迟同量级"的工艺节点上，这几根长线往往才是真正的关键路径，这也是混合结构与稀疏结构存在的现实理由。</span>
+<span id="cb3-353"><a href="#cb3-353" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-354"><a href="#cb3-354" aria-hidden="true" tabindex="-1"></a><span class="al">![图 6.8 由一个 $k/2$ 输入子网络加 $k-1$ 个加法单元构成的 Brent–Kung 前缀网络](images/ch06/fig06_08.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-355"><a href="#cb3-355" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-356"><a href="#cb3-356" aria-hidden="true" tabindex="-1"></a>主流前缀网络的折中谱系（$k$ 位）：</span>
+<span id="cb3-357"><a href="#cb3-357" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-358"><a href="#cb3-358" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 网络 <span class="pp">|</span> 级数 <span class="pp">|</span> 节点数 <span class="pp">|</span> 扇出 <span class="pp">|</span> 特点 <span class="pp">|</span></span>
+<span id="cb3-359"><a href="#cb3-359" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|---|---|</span></span>
+<span id="cb3-360"><a href="#cb3-360" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Kogge-Stone <span class="co">[</span><span class="ot">@kogge1973</span><span class="co">]</span> <span class="pp">|</span> $\log_2 k$ <span class="pp">|</span> $k\log_2 k$ <span class="pp">|</span> 2 <span class="pp">|</span> 最快、节点多、布线长 <span class="pp">|</span></span>
+<span id="cb3-361"><a href="#cb3-361" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Brent-Kung <span class="co">[</span><span class="ot">@brent1982</span><span class="co">]</span> <span class="pp">|</span> $2\log_2 k - 1$ <span class="pp">|</span> $2k$ <span class="pp">|</span> 小 <span class="pp">|</span> 最省、级数多一倍 <span class="pp">|</span></span>
+<span id="cb3-362"><a href="#cb3-362" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Han-Carlson <span class="pp">|</span> $\log_2 k + 1$ <span class="pp">|</span> 介于两者 <span class="pp">|</span> 中 <span class="pp">|</span> 两者的杂交 <span class="pp">|</span></span>
+<span id="cb3-363"><a href="#cb3-363" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Ladner-Fischer <span class="pp">|</span> $\log_2 k$ <span class="pp">|</span> 较少 <span class="pp">|</span> 高 <span class="pp">|</span> 高扇出需缓冲 <span class="pp">|</span></span>
+<span id="cb3-364"><a href="#cb3-364" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-365"><a href="#cb3-365" aria-hidden="true" tabindex="-1"></a>表里没展开说的 **Han-Carlson** 网络值得补一笔：它先用一级 Brent-Kung 式的两两合并把问题降到 $k/2$，中段用 Kogge-Stone 只对**奇数下标**（或偶数下标）做完整前缀，末段再用一级 Brent-Kung 把缺失的下标补齐。奇偶分流使中段网络的节点数只有同宽 Kogge-Stone 的一半，延迟却只比最优多一级——在 64 位以上的处理器数据通路里，Han-Carlson 是比纯 Kogge-Stone 更常见的落地方案。前缀图的整个设计空间已被系统研究过（Harris 的分类工作给出了统一视角）：以（级数, 节点数, 最大扇出）为坐标，经典网络全都落在一条"不可能三角"的边界上，新设计无非是在边界上挑选新的落点。</span>
+<span id="cb3-366"><a href="#cb3-366" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-367"><a href="#cb3-367" aria-hidden="true" tabindex="-1"></a>**Kogge-Stone** 的规则网格结构在版图上极其友好（等长线、可平铺），是高性能处理器最常见的选择：$k$ 输入时延迟 $\log_2 k$ 级、代价 $k\log_2 k - k + 1$ 个单元，是二输入限制下最快的方案；**Brent-Kung** 在面积/功耗敏感时占优，代价仅 $2k-2-\log_2 k$。Kogge-Stone 的构造也可以写成递推：把 $k$ 个输入的问题拆成两个 $k/2$ 子问题，再把右半的全部结果分别与左半对应输出合并一次，$D(k) = D(k/2) + 1$、$C(k) = 2C(k/2) + k$——与 Ladner-Fischer 同款的延迟递推，但它把"一根信号扇出 $k/2$ 次"换成了"$k/2$ 对信号各自扇出 2 次"，用节点数换掉了扇出隐患。另有一个看图时的陷阱：图 6.9 的 Brent-Kung 画出 7 层节点，但中间两层彼此独立、可并行执行，实际延迟只有 6 级，这就是 $2\log_2 k - 2$ 里那个 $-2$ 的来历。</span>
+<span id="cb3-368"><a href="#cb3-368" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-369"><a href="#cb3-369" aria-hidden="true" tabindex="-1"></a>既然两个极点各有痛点，自然会想到把它们杂交。以 16 位为例把四种结构的账并排（级数含单元自身延迟，节点数按递推精确计算）：</span>
+<span id="cb3-370"><a href="#cb3-370" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-371"><a href="#cb3-371" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 16 输入网络 <span class="pp">|</span> 级数 <span class="pp">|</span> 单元数 <span class="pp">|</span> 最大扇出 <span class="pp">|</span> 一句话点评 <span class="pp">|</span></span>
+<span id="cb3-372"><a href="#cb3-372" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|---|---|</span></span>
+<span id="cb3-373"><a href="#cb3-373" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Ladner-Fischer <span class="pp">|</span> 4 <span class="pp">|</span> 32 <span class="pp">|</span> 8 <span class="pp">|</span> 理论最快，扇出埋雷 <span class="pp">|</span></span>
+<span id="cb3-374"><a href="#cb3-374" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Brent-Kung <span class="pp">|</span> 6 <span class="pp">|</span> 26 <span class="pp">|</span> 2 <span class="pp">|</span> 最省，慢两级 <span class="pp">|</span></span>
+<span id="cb3-375"><a href="#cb3-375" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Kogge-Stone <span class="pp">|</span> 4 <span class="pp">|</span> 49 <span class="pp">|</span> 2 <span class="pp">|</span> 最快最规整，节点近翻倍 <span class="pp">|</span></span>
+<span id="cb3-376"><a href="#cb3-376" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> BK/KS 混合（图 6.11） <span class="pp">|</span> 5 <span class="pp">|</span> 32 <span class="pp">|</span> 2 <span class="pp">|</span> 多一级，省三分之一 <span class="pp">|</span></span>
+<span id="cb3-377"><a href="#cb3-377" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-378"><a href="#cb3-378" aria-hidden="true" tabindex="-1"></a>把图 6.9 中间那个"八输入前缀计算"部分换成八输入 Kogge-Stone 网络后，得到的混合图是 **5 级 32 个单元**——只比最快方案多一级，却省掉三分之一的单元。</span>
+<span id="cb3-379"><a href="#cb3-379" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-380"><a href="#cb3-380" aria-hidden="true" tabindex="-1"></a><span class="al">![图 6.11 面向 16 输入的 Brent–Kung/Kogge–Stone 混合并行前缀图](images/ch06/fig06_11.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-381"><a href="#cb3-381" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-382"><a href="#cb3-382" aria-hidden="true" tabindex="-1"></a>一般化地，两端各保留一级 Brent-Kung、中间用 $k/2$ 输入的 Kogge-Stone，得到</span>
+<span id="cb3-383"><a href="#cb3-383" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-384"><a href="#cb3-384" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-385"><a href="#cb3-385" aria-hidden="true" tabindex="-1"></a>D(k) = \log_2 k + 1,\qquad C(k) = (k/2)\log_2 k</span>
+<span id="cb3-386"><a href="#cb3-386" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-387"><a href="#cb3-387" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-388"><a href="#cb3-388" aria-hidden="true" tabindex="-1"></a>即"延迟仅比最优多一级，代价砍半"。实践中这个混合模板非常受欢迎：它可以按工艺的线/门延迟比连续调节两段的比例，而不必在两个极端之间二选一。更一般地，两端各保留 $\ell$ 级 Brent-Kung、中间用 $k/2^\ell$ 输入的 Kogge-Stone，延迟成为 $\log_2 k + \ell$、代价约 $(k/2)\log_2(k/2^{\ell-1})$ 量级——$\ell$ 就是延迟-面积折中旋钮。Sugla 与 Carlson 当年正是沿着这条线系统研究了面积极端受限时的折中空间；对给定的字宽和工艺，最优 $\ell$ 可以用"代价×延迟"指标扫出来。</span>
+<span id="cb3-389"><a href="#cb3-389" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-390"><a href="#cb3-390" aria-hidden="true" tabindex="-1"></a><span class="fu">### RTL 实践：`rtl/ch6_4_kogge_stone_adder`</span></span>
+<span id="cb3-391"><a href="#cb3-391" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-392"><a href="#cb3-392" aria-hidden="true" tabindex="-1"></a>参数化 Kogge-Stone 前缀加法器——generate 循环按"距离 $2^j$"逐级合并 $(G, P)$：</span>
+<span id="cb3-393"><a href="#cb3-393" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-394"><a href="#cb3-394" aria-hidden="true" tabindex="-1"></a><span class="in">```systemverilog</span></span>
+<span id="cb3-395"><a href="#cb3-395" aria-hidden="true" tabindex="-1"></a><span class="in">module kogge_stone_adder #(parameter int N = 16) (</span></span>
+<span id="cb3-396"><a href="#cb3-396" aria-hidden="true" tabindex="-1"></a><span class="in">    input  logic [N-1:0] a, b,</span></span>
+<span id="cb3-397"><a href="#cb3-397" aria-hidden="true" tabindex="-1"></a><span class="in">    input  logic         cin,</span></span>
+<span id="cb3-398"><a href="#cb3-398" aria-hidden="true" tabindex="-1"></a><span class="in">    output logic [N-1:0] s,</span></span>
+<span id="cb3-399"><a href="#cb3-399" aria-hidden="true" tabindex="-1"></a><span class="in">    output logic         cout</span></span>
+<span id="cb3-400"><a href="#cb3-400" aria-hidden="true" tabindex="-1"></a><span class="in">);</span></span>
+<span id="cb3-401"><a href="#cb3-401" aria-hidden="true" tabindex="-1"></a><span class="in">    localparam int L = $clog2(N);</span></span>
+<span id="cb3-402"><a href="#cb3-402" aria-hidden="true" tabindex="-1"></a><span class="in">    logic [N-1:0] G [0:L];</span></span>
+<span id="cb3-403"><a href="#cb3-403" aria-hidden="true" tabindex="-1"></a><span class="in">    logic [N-1:0] P [0:L];</span></span>
+<span id="cb3-404"><a href="#cb3-404" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-405"><a href="#cb3-405" aria-hidden="true" tabindex="-1"></a><span class="in">    // 第 0 级：位级 g/p（g0 注入 cin）</span></span>
+<span id="cb3-406"><a href="#cb3-406" aria-hidden="true" tabindex="-1"></a><span class="in">    assign G[0][0] = a[0] &amp; b[0] | ((a[0] ^ b[0]) &amp; cin);</span></span>
+<span id="cb3-407"><a href="#cb3-407" aria-hidden="true" tabindex="-1"></a><span class="in">    assign P[0][0] = 1'b0;   // 该位不再传播（cin 已吸收）</span></span>
+<span id="cb3-408"><a href="#cb3-408" aria-hidden="true" tabindex="-1"></a><span class="in">    genvar i;</span></span>
+<span id="cb3-409"><a href="#cb3-409" aria-hidden="true" tabindex="-1"></a><span class="in">    generate</span></span>
+<span id="cb3-410"><a href="#cb3-410" aria-hidden="true" tabindex="-1"></a><span class="in">        for (i = 1; i &lt; N; i++) begin : g_init</span></span>
+<span id="cb3-411"><a href="#cb3-411" aria-hidden="true" tabindex="-1"></a><span class="in">            assign G[0][i] = a[i] &amp; b[i];</span></span>
+<span id="cb3-412"><a href="#cb3-412" aria-hidden="true" tabindex="-1"></a><span class="in">            assign P[0][i] = a[i] ^ b[i];</span></span>
+<span id="cb3-413"><a href="#cb3-413" aria-hidden="true" tabindex="-1"></a><span class="in">        end</span></span>
+<span id="cb3-414"><a href="#cb3-414" aria-hidden="true" tabindex="-1"></a><span class="in">        // 前缀级</span></span>
+<span id="cb3-415"><a href="#cb3-415" aria-hidden="true" tabindex="-1"></a><span class="in">        for (int j = 1; j &lt;= L; j++) begin : g_stage</span></span>
+<span id="cb3-416"><a href="#cb3-416" aria-hidden="true" tabindex="-1"></a><span class="in">            for (i = 0; i &lt; N; i++) begin : g_node</span></span>
+<span id="cb3-417"><a href="#cb3-417" aria-hidden="true" tabindex="-1"></a><span class="in">                if (i &gt;= (1 &lt;&lt; (j-1))) begin</span></span>
+<span id="cb3-418"><a href="#cb3-418" aria-hidden="true" tabindex="-1"></a><span class="in">                    assign G[j][i] = G[j-1][i] |</span></span>
+<span id="cb3-419"><a href="#cb3-419" aria-hidden="true" tabindex="-1"></a><span class="in">                        (P[j-1][i] &amp; G[j-1][i - (1 &lt;&lt; (j-1))]);</span></span>
+<span id="cb3-420"><a href="#cb3-420" aria-hidden="true" tabindex="-1"></a><span class="in">                    assign P[j][i] = P[j-1][i] &amp; P[j-1][i - (1 &lt;&lt; (j-1))];</span></span>
+<span id="cb3-421"><a href="#cb3-421" aria-hidden="true" tabindex="-1"></a><span class="in">                end else begin</span></span>
+<span id="cb3-422"><a href="#cb3-422" aria-hidden="true" tabindex="-1"></a><span class="in">                    assign G[j][i] = G[j-1][i];</span></span>
+<span id="cb3-423"><a href="#cb3-423" aria-hidden="true" tabindex="-1"></a><span class="in">                    assign P[j][i] = P[j-1][i];</span></span>
+<span id="cb3-424"><a href="#cb3-424" aria-hidden="true" tabindex="-1"></a><span class="in">                end</span></span>
+<span id="cb3-425"><a href="#cb3-425" aria-hidden="true" tabindex="-1"></a><span class="in">            end</span></span>
+<span id="cb3-426"><a href="#cb3-426" aria-hidden="true" tabindex="-1"></a><span class="in">        end</span></span>
+<span id="cb3-427"><a href="#cb3-427" aria-hidden="true" tabindex="-1"></a><span class="in">    endgenerate</span></span>
+<span id="cb3-428"><a href="#cb3-428" aria-hidden="true" tabindex="-1"></a><span class="in">    assign s    = (a ^ b) ^ {G[L][N-2:0], cin};</span></span>
+<span id="cb3-429"><a href="#cb3-429" aria-hidden="true" tabindex="-1"></a><span class="in">    assign cout = G[L][N-1];</span></span>
+<span id="cb3-430"><a href="#cb3-430" aria-hidden="true" tabindex="-1"></a><span class="in">endmodule</span></span>
+<span id="cb3-431"><a href="#cb3-431" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-432"><a href="#cb3-432" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-433"><a href="#cb3-433" aria-hidden="true" tabindex="-1"></a>（同目录还附 Brent-Kung 版本 <span class="in">`brent_kung_adder.sv`</span> 供对照。）</span>
+<span id="cb3-434"><a href="#cb3-434" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-435"><a href="#cb3-435" aria-hidden="true" tabindex="-1"></a><span class="fu">## 6.6 VLSI 实现考量（VLSI Implementation Aspects）</span></span>
+<span id="cb3-436"><a href="#cb3-436" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-437"><a href="#cb3-437" aria-hidden="true" tabindex="-1"></a>门级模型里的"最优"，落地到真实芯片上往往不是最优。图 6.9 那样的 Brent-Kung 图确实很适合 VLSI（节点少、连线短），但对高性能宽字长设计仍偏慢。真正流片时，工程师会结合工艺特性重新设计网络形态。</span>
+<span id="cb3-438"><a href="#cb3-438" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-439"><a href="#cb3-439" aria-hidden="true" tabindex="-1"></a>一个经典案例是 AMD Am29050 微处理器里的加法器（原书以 64 位版本说明）：它做的是**基数 256 的加法**，因而只需要算出 $c_8, c_{16}, c_{24}, \ldots, c_{56}$ 这 7 个稀疏进位——**不用的进位一个都不算**，这是省硬件的第一步。</span>
+<span id="cb3-440"><a href="#cb3-440" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-441"><a href="#cb3-441" aria-hidden="true" tabindex="-1"></a>其核心构件是 **曼彻斯特进位链（Manchester carry chain, MCC）**：用预充电的传输管（图 6.12 中标为 PH2 的时钟相位）实现"传播链"，进位沿链传播而不是逐级进门，因此同样的门延时能覆盖更多位。MCC 的工作节奏分两相：预充电相把链上的关键节点充到高电平；求值相里，若某位 $g_i = 1$ 则对应节点经条件放电管直接拉低（生成），若 $p_i = 1$ 则该位传输管导通、把放电路径向高位传递（传播），若两者皆 0 则路径被切断（吸收）。整条链的延迟近似与位数的平方成正比（$RC$ 阶梯效应），这正是 7.1 节"曼彻斯特链里块内行波延迟随块宽平方增长"这一假设的物理出处。图 6.12 给出两种 CMOS 实现：</span>
+<span id="cb3-442"><a href="#cb3-442" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-443"><a href="#cb3-443" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**(a) 型**：只输出整块的 $(g_{[0,3]}, p_{<span class="co">[</span><span class="ot">0,3</span><span class="co">]</span>})$，四个位的 $g_i$ 经条件放电、$p_i$ 经传输管串联，结构最紧凑；</span>
+<span id="cb3-444"><a href="#cb3-444" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**(b) 型**：除了整体信号 $[0,3]$，还额外输出中间前缀 $[0,1]$ 与 $[0,2]$ 的 $(g, p)$ 信号——代价是多几根抽头，收益是**一个 MCC 顺带算出多个前缀**，把本该独立节点完成的结果捎带出来。</span>
+<span id="cb3-445"><a href="#cb3-445" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-446"><a href="#cb3-446" aria-hidden="true" tabindex="-1"></a><span class="al">![图 6.12 CMOS 工艺下两种 4 位曼彻斯特进位链设计示例](images/ch06/fig06_12.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-447"><a href="#cb3-447" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-448"><a href="#cb3-448" aria-hidden="true" tabindex="-1"></a>把 (a) 型与 (b) 型按三层组织起来，就得到一棵"生成树（spanning tree）"式的进位网络：第一层 16 个 4 位 (a) 型 MCC 产生 $<span class="co">[</span><span class="ot">0,3</span><span class="co">]</span>, <span class="co">[</span><span class="ot">4,7</span><span class="co">]</span>, \ldots, <span class="co">[</span><span class="ot">60,63</span><span class="co">]</span>$；第二层用 1 个 5 位和 3 个 4 位 (b) 型 MCC 把它们合并，顺带产出 $<span class="co">[</span><span class="ot">16,23</span><span class="co">]</span>$、$<span class="co">[</span><span class="ot">16,27</span><span class="co">]</span>$ 之类的中间前缀；第三层再两个 MCC 收口，最终得到 $<span class="co">[</span><span class="ot">0,63</span><span class="co">]</span>$ 与所需的各个稀疏进位。对照原书图 6.13 看，第二层 (b) 型 MCC 的"中间抽头"是整套设计的点睛之笔：$c_{24}$ 需要 $<span class="co">[</span><span class="ot">{-1},23</span><span class="co">]</span>$、$c_{32}$ 需要 $<span class="co">[</span><span class="ot">{-1},31</span><span class="co">]</span>$，二者共享 $<span class="co">[</span><span class="ot">16,23</span><span class="co">]</span>$ 这个中间结果，正是 6.4 节"重叠块合法合并"在晶体管层面的兑现。整个过程只有三层，且每一层的连线都局限在相邻范围——位片化（bit-sliced）版图可以等高平铺，时钟树与数据通路布线都可控。</span>
+<span id="cb3-449"><a href="#cb3-449" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-450"><a href="#cb3-450" aria-hidden="true" tabindex="-1"></a>这个案例说明了一条普适经验：**最优网络是在给定工艺下的最优，不是门级模型下的最优**。许多并行前缀加法器在"只计节点延迟"时同为最优，一旦把互连（扇入、扇出、线延时）计入，排序就会明显改变。深亚微米工艺下的系统性研究（如 Huang 与 Ercegovac 对前缀加法器线延迟影响的分析、Knowles 的加法器族谱工作）给出的结论相当一致：门级模型里的"平手"在计入布线后往往拉开明显差距，而版图规整、连线等长的结构会把理论优势兑现得更多。</span>
+<span id="cb3-451"><a href="#cb3-451" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-452"><a href="#cb3-452" aria-hidden="true" tabindex="-1"></a>渐近分析之外，真实芯片里决定成败的是：</span>
+<span id="cb3-453"><a href="#cb3-453" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-454"><a href="#cb3-454" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**布线电容**：前缀网络的长线（Kogge-Stone 的跨距连线）在深亚微米下比门延迟更致命——线延迟随长度平方增长（分布 $RC$），一根横跨 32 位的连线可能需要中途插中继器，等效于在网络上又加了一级；</span>
+<span id="cb3-455"><a href="#cb3-455" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**扇出缓冲**：高扇出节点（Ladner-Fischer）需要缓冲链，吃掉理论优势；</span>
+<span id="cb3-456"><a href="#cb3-456" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**门级实现**：$g + p\,g'$ 用 AOI/OAI 复合门一级完成，比分立门快得多——CMOS 里"与或非"本来就是单级结构，把算子映射到 AOI21/AOI22 这类单元后，前缀网络每级的实际延迟常常只有名义"两级与或"的六成左右；</span>
+<span id="cb3-457"><a href="#cb3-457" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**位片化（bit-slice）版图**：让每位的版图等高可平铺，时钟树与数据通路布线才可控。</span>
+<span id="cb3-458"><a href="#cb3-458" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-459"><a href="#cb3-459" aria-hidden="true" tabindex="-1"></a>还有一个跳出同步框架的思路值得知道：异步设计里，行波进位的**平均**延迟是 $O(1)$（随机数据下进位链平均只传播很短的距离），而超前进位保证**最坏** $O(\log k)$。把两者并行实现、谁先出结果用谁，理论上可以造出平均 $O(\log\log k)$ 的异步加法器——这是"最坏情况设计"与"平均情况设计"杂交的一个优雅样本，虽然工业界很少为此付出异步设计的验证成本。</span>
+<span id="cb3-460"><a href="#cb3-460" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-461"><a href="#cb3-461" aria-hidden="true" tabindex="-1"></a>把本章主要方案的"字长-延迟-硬件"账本汇总成一张表，作为选型起点（门级模型、4 位 lookahead 块）：</span>
+<span id="cb3-462"><a href="#cb3-462" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-463"><a href="#cb3-463" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 方案 <span class="pp">|</span> 16 位 <span class="pp">|</span> 32 位 <span class="pp">|</span> 64 位 <span class="pp">|</span> 硬件量级 <span class="pp">|</span> 备注 <span class="pp">|</span></span>
+<span id="cb3-464"><a href="#cb3-464" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|---|---|---|</span></span>
+<span id="cb3-465"><a href="#cb3-465" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 行波进位 <span class="pp">|</span> 32 级 <span class="pp">|</span> 64 级 <span class="pp">|</span> 128 级 <span class="pp">|</span> $O(k)$ <span class="pp">|</span> 基准 <span class="pp">|</span></span>
+<span id="cb3-466"><a href="#cb3-466" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 多级 CLA <span class="pp">|</span> 9 级 <span class="pp">|</span> 13 级 <span class="pp">|</span> 13 级 <span class="pp">|</span> $O(k)$ <span class="pp">|</span> 32 位不占便宜 <span class="pp">|</span></span>
+<span id="cb3-467"><a href="#cb3-467" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Ling CLA <span class="pp">|</span> ≈8 级 <span class="pp">|</span> ≈12 级 <span class="pp">|</span> ≈12 级 <span class="pp">|</span> $O(k)$，省约 1/4 门输入 <span class="pp">|</span> 末级多 1 级 <span class="pp">|</span></span>
+<span id="cb3-468"><a href="#cb3-468" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Kogge-Stone <span class="pp">|</span> 4+3 级 <span class="pp">|</span> 5+3 级 <span class="pp">|</span> 6+3 级 <span class="pp">|</span> $O(k\log k)$ <span class="pp">|</span> 前缀级 + 输入/求和 3 级 <span class="pp">|</span></span>
+<span id="cb3-469"><a href="#cb3-469" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Brent-Kung <span class="pp">|</span> 6+3 级 <span class="pp">|</span> 8+3 级 <span class="pp">|</span> 10+3 级 <span class="pp">|</span> $O(k)$ <span class="pp">|</span> 面积敏感首选 <span class="pp">|</span></span>
+<span id="cb3-470"><a href="#cb3-470" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-471"><a href="#cb3-471" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章小结</span></span>
+<span id="cb3-472"><a href="#cb3-472" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-473"><a href="#cb3-473" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>CLA：展开进位递推为两级逻辑，4 位组 + 多级组间 lookahead → $O(\log k)$；64 位三级结构约 13 个门级。</span>
+<span id="cb3-474"><a href="#cb3-474" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Ling：变换递推形式（传播伪进位 $h$ 而非 $c$）把最大扇入从 5 降到 4、门输入数从 19 降到 14，代价是末级和位多一级。</span>
+<span id="cb3-475"><a href="#cb3-475" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>进位计算 = 前缀问题，$\odot$ 算子满足结合律但不满足交换律；Kogge-Stone（快）、Brent-Kung（省）是两个极点，混合图是工业常用折中。</span>
+<span id="cb3-476"><a href="#cb3-476" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>块信号允许**重叠区间**合并，这为前缀网络提供了整数加法所没有的自由度。</span>
+<span id="cb3-477"><a href="#cb3-477" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>VLSI 现实：布线、扇出、复合门、位片版图，往往比渐近级数更决定成败。</span>
+<span id="cb3-478"><a href="#cb3-478" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-479"><a href="#cb3-479" aria-hidden="true" tabindex="-1"></a><span class="fu">## 原书插图</span></span>
+<span id="cb3-480"><a href="#cb3-480" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-481"><a href="#cb3-481" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 6.1](images/ch06/fig06_01.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-482"><a href="#cb3-482" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-483"><a href="#cb3-483" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 6.9](images/ch06/fig06_09.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb3-484"><a href="#cb3-484" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-485"><a href="#cb3-485" aria-hidden="true" tabindex="-1"></a><span class="al">![原书 Fig. 6.10](images/ch06/fig06_10.png)</span>{fig-align="center" width="85%"}</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

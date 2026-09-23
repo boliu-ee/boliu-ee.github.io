@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-Hans" xml:lang="zh-Hans"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>第1章 数与算术（Numbers and Arithmetic） – 计算机算术：算法与硬件设计（中文解读版）</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./ch02.html" rel="next">
+<link href="./index.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-bb62276ab45c84d9efd712f51ff97b5a.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-77d2b90c99eeff80c5837adab8b96ac7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "没有结果",
+    "search-matching-documents-text": "匹配的文档",
+    "search-copy-link-title": "复制搜索链接",
+    "search-hide-matches-text": "隐藏其它匹配结果",
+    "search-more-match-text": "更多匹配结果",
+    "search-more-matches-text": "更多匹配结果",
+    "search-clear-button-title": "清除",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "取消",
+    "search-submit-button-title": "提交",
+    "search-label": "搜索"
+  }
+}</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch01.html">第一部分 数的表示 (Number Representation)</a></li><li class="breadcrumb-item"><a href="./ch01.html"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="展开或折叠侧边栏导航" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="搜索" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">计算机算术：算法与硬件设计（中文解读版）</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="搜索"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">前言</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">第一部分 数的表示 (Number Representation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch01.html" class="sidebar-item-text sidebar-link active"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch02.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch03.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第3章 冗余数系（Redundant Number Systems）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch04.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第4章 剩余数系（Residue Number Systems）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">第二部分 加法与减法 (Addition/Subtraction)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch05.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第5章 基本加法与计数（Basic Addition and Counting）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch06.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第6章 超前进位加法器（Carry-Lookahead Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch07.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第7章 快速加法器的变体（Variations in Fast Adders）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch08.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第8章 多操作数加法（Multioperand Addition）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">第三部分 乘法 (Multiplication)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch09.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第9章 基本乘法方案（Basic Multiplication Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch10.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第10章 高基数乘法器（High-Radix Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch11.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第11章 树形与阵列乘法器（Tree and Array Multipliers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch12.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第12章 乘法器的变体（Variations in Multipliers）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">第四部分 除法 (Division)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch13.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第13章 基本除法方案（Basic Division Schemes）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch14.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第14章 高基数除法器（High-Radix Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch15.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第15章 除法器的变体（Variations in Dividers）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch16.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第16章 收敛法除法（Division by Convergence）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">第五部分 实数运算 (Real Arithmetic)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch17.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第17章 浮点数表示（Floating-Point Representations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch18.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第18章 浮点运算（Floating-Point Operations）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch19.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第19章 误差与误差控制（Errors and Error Control）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch20.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第20章 精确与可证算术（Precise and Certifiable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">第六部分 函数求值 (Function Evaluation)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch21.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第21章 开平方方法（Square-Rooting Methods）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch22.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第22章 CORDIC 算法（The CORDIC Algorithms）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch23.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第23章 函数求值的变体（Variations in Function Evaluation）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch24.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第24章 查表算术（Arithmetic by Table Lookup）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true">
+ <span class="menu-text">第七部分 实现专题 (Implementation Topics)</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-7" role="navigation" aria-expanded="true" aria-label="展开或折叠此栏">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-7" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch25.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第25章 高吞吐算术（High-Throughput Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch26.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第26章 低功耗算术（Low-Power Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch27.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第27章 容错算术（Fault-Tolerant Arithmetic）</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./ch28.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">第28章 可重构算术（Reconfigurable Arithmetic）</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./appendix.html" class="sidebar-item-text sidebar-link"><span class="chapter-title">附录 过去、现在与未来（Past, Present, and Future）</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">参考文献</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">目录</h2>
+   
+  <ul>
+  <li><a href="#本章导读" id="toc-本章导读" class="nav-link active" data-scroll-target="#本章导读">本章导读</a></li>
+  <li><a href="#什么是计算机算术what-is-computer-arithmetic" id="toc-什么是计算机算术what-is-computer-arithmetic" class="nav-link" data-scroll-target="#什么是计算机算术what-is-computer-arithmetic">1.1 什么是计算机算术？（What is Computer Arithmetic?）</a></li>
+  <li><a href="#动机实例motivating-examples" id="toc-动机实例motivating-examples" class="nav-link" data-scroll-target="#动机实例motivating-examples">1.2 动机实例（Motivating Examples）</a></li>
+  <li><a href="#数及其编码numbers-and-their-encodings" id="toc-数及其编码numbers-and-their-encodings" class="nav-link" data-scroll-target="#数及其编码numbers-and-their-encodings">1.3 数及其编码（Numbers and Their Encodings）</a></li>
+  <li><a href="#定基位置数制fixed-radix-positional-number-systems" id="toc-定基位置数制fixed-radix-positional-number-systems" class="nav-link" data-scroll-target="#定基位置数制fixed-radix-positional-number-systems">1.4 定基位置数制（Fixed-Radix Positional Number Systems）</a></li>
+  <li><a href="#进制转换number-radix-conversion" id="toc-进制转换number-radix-conversion" class="nav-link" data-scroll-target="#进制转换number-radix-conversion">1.5 进制转换（Number Radix Conversion）</a></li>
+  <li><a href="#数表示的分类classes-of-number-representations" id="toc-数表示的分类classes-of-number-representations" class="nav-link" data-scroll-target="#数表示的分类classes-of-number-representations">1.6 数表示的分类（Classes of Number Representations）</a></li>
+  <li><a href="#原书插图" id="toc-原书插图" class="nav-link" data-scroll-target="#原书插图">原书插图</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./ch01.html">第一部分 数的表示 (Number Representation)</a></li><li class="breadcrumb-item"><a href="./ch01.html"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-title">第1章 数与算术（Numbers and Arithmetic）</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> 代码</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="本章导读" class="level2">
+<h2 class="anchored" data-anchor-id="本章导读">本章导读</h2>
+<p>这一章回答一个看似幼稚、实则深刻的问题：<strong>计算机里的”数”到底是什么？</strong> 我们从小习惯的十进制纸笔算术，到了硅片上必须重新发明一遍——用比特编码、用逻辑门实现、在有限的面积与延迟预算内完成。本章是全书的地图：它告诉你为什么计算机算术（Computer Arithmetic）是一门独立的学科，而不是”把小学算术写成 Verilog”那么简单。</p>
+</section>
+<section id="什么是计算机算术what-is-computer-arithmetic" class="level2">
+<h2 class="anchored" data-anchor-id="什么是计算机算术what-is-computer-arithmetic">1.1 什么是计算机算术？（What is Computer Arithmetic?）</h2>
+<p>计算机算术研究的是<strong>算术运算的算法与硬件实现之间的映射关系</strong>。同样一个加法，可以是一串行波进位的全加器（慢但省面积），也可以是一棵并行前缀树（快但贵）——数学上完全等价，物理上判若云泥。</p>
+<p>换句话说，这一学科的输入是”要算什么”，输出是”用什么电路算、要花多少钱、多久能算完”。它横跨三个层次：最上层是<strong>数的表示</strong>（第 2-4 章），中间层是<strong>运算算法</strong>（第 5-16 章加减乘除开方），最下层是<strong>实现技术</strong>（第 25-28 章流水、低功耗、可重构）。三个层次相互牵制：换了表示，算法就要重写；换了算法，电路结构与时序就得跟着变。</p>
+<div class="callout callout-style-default callout-important callout-titled" title="工程视角">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">重要</span>工程视角
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>做芯片的人常说”算法即结构，结构即性能”。一个算术部件的延迟、面积、功耗，本质上由你选择的<strong>算法</strong>决定，逻辑综合工具能做的优化只是锦上添花。这就是本书反复出现的主线：<strong>先选算法，再谈实现</strong>。</p>
+</div>
+</div>
+<p>评价一个算术部件，业内有三个公认的度量口径，本书后文会反复拿来比较各种方案：</p>
+<ul>
+<li><strong>延迟（latency）</strong>：从输入有效到输出有效的时间。早期文献用”门级延迟数”计量，现代设计更常用 FO4（一个反相器驱动四个相同反相器的延迟）或直接的 ps/ns。</li>
+<li><strong>面积/成本（cost）</strong>：晶体管数、标准单元数，或版图意义上的 <span class="math inline">\(\lambda^2\)</span> 面积。规则性（regularity）往往比纯粹的单元数量更决定实际面积，因为布线拥塞会吃掉大量硅片。</li>
+<li><strong>功耗/能耗（power/energy）</strong>：动态功耗 <span class="math inline">\(\propto C V^2 f\)</span>，算术部件的功耗大头往往不是有用的计算，而是<strong>毛刺（glitch）</strong>与冗余翻转（第 26 章会专门讨论）。</li>
+</ul>
+<p>三者构成一个不可能三角：想延迟低就得并行铺硬件，面积和功耗跟着涨；想面积小就串行复用，延迟又上去了。<strong>所有算术设计，本质上都是在这个三角里挑一个点。</strong></p>
+<p>几个贯穿全书的核心矛盾在本章就已埋下伏笔：</p>
+<ul>
+<li><strong>延迟 vs.&nbsp;面积</strong>：串行（bit-serial）方案用 1 位硬件反复算 <span class="math inline">\(k\)</span> 次；并行方案一次铺开 <span class="math inline">\(k\)</span> 位硬件。这是算术电路设计的第一性权衡。</li>
+<li><strong>规则性 vs.&nbsp;性能</strong>：行波进位加法器（ripple-carry adder）结构极其规整、版图友好，但进位链是它的阿喀琉斯之踵。</li>
+<li><strong>精确性 vs.&nbsp;成本</strong>：浮点运算的舍入（rounding）让”正确”本身变成一种需要精心设计的行为。</li>
+</ul>
+</section>
+<section id="动机实例motivating-examples" class="level2">
+<h2 class="anchored" data-anchor-id="动机实例motivating-examples">1.2 动机实例（Motivating Examples）</h2>
+<p>原书用几个著名的工程事故说明”算术出错，代价惨重”。这些都是业界公开的经典案例：</p>
+<ul>
+<li><strong>Pentium FDIV 缺陷（1994）</strong>：Intel 早期 Pentium 处理器的浮点除法查找表中有 5 个条目漏填，导致特定操作数下除法结果精度受损，最终 Intel 召回处理器，损失约 4.75 亿美元。它直接催生了形式验证（formal verification）在算术单元验证中的大规模应用。</li>
+<li><strong>Ariane 5 首飞爆炸（1996）</strong>：火箭惯性参考系统将 64 位浮点速度值转换为 16 位有符号整数时发生溢出（overflow），控制计算机崩溃，火箭升空 37 秒后解体。<strong>数制转换与表示范围</strong>不是细枝末节，是性命攸关。</li>
+<li><strong>爱国者导弹时钟漂移（1991）</strong>：内部时钟用 0.1 秒的近似二进制小数累加计时，连续运行约 100 小时后累计误差约 0.34 秒，导致拦截窗口计算错误。<strong>有限精度表示的舍入误差会随时间累积</strong>——这是第 19 章误差分析要系统处理的问题。</li>
+</ul>
+<p>把这三个案例放在一起看，会发现它们恰好是三类<strong>不同性质</strong>的错误，而不是同一个错误的三种说法：</p>
+<ol type="1">
+<li><strong>实现错误</strong>（Pentium）：算法正确、规格正确，只是硬件里的常数表填错了。这类问题靠<strong>形式验证与穷举/定向测试</strong>来抓，也促使业界把 SRT 除法表之类”手写常数”纳入严格的等价性检查流程。</li>
+<li><strong>范围错误</strong>（Ariane 5）：数据本身没错，错在把大动态范围的量搬进了窄容器。这是<strong>表示与接口规格</strong>问题——那段转换代码在 Ariane 4 上永远不会溢出，换到更快的 Ariane 5 上就爆了。复用代码时”物理量变了但位宽没变”是极常见的坑。</li>
+<li><strong>累积误差</strong>（爱国者）：每一步的舍入都微不足道，但 <span class="math inline">\(10^6\)</span> 步之后就不可忽略。这是<strong>数值分析的范畴</strong>，需要在算法设计阶段就给出误差界，而不是事后调精度。</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled" title="解读">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">提示</span>解读
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>这三个事故恰好对应本书的三大主题：<strong>验证</strong>（实现要对）、<strong>表示</strong>（范围与编码要匹配）、<strong>误差</strong>（有限精度的数学性质要心里有数）。读后续章节时不妨时常回想这三个例子。</p>
+</div>
+</div>
+<p>工程上的一条硬经验：<strong>算术部件的 bug 不会因为”概率很低”而消失</strong>。一个 64 位乘法器的输入空间是 <span class="math inline">\(2^{128}\)</span>，随机仿真能覆盖的比例小到荒谬；而 Pentium 那 5 个坏条目，触发概率同样低到几乎测不出来，却真实存在。所以算术验证必须靠<strong>结构化的方法</strong>（分块等价性检查、形式化证明、代数性质的定向激励），而不是靠堆随机测试。</p>
+</section>
+<section id="数及其编码numbers-and-their-encodings" class="level2">
+<h2 class="anchored" data-anchor-id="数及其编码numbers-and-their-encodings">1.3 数及其编码（Numbers and Their Encodings）</h2>
+<p>一个数（number）是抽象的数学对象；它在机器里的比特串只是它的一种<strong>编码（encoding）</strong>。同一个数 25，可以编码为：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>编码方式</th>
+<th>比特串</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>二进制原码</td>
+<td><code>00011001</code></td>
+<td>标准的 positional 编码</td>
+</tr>
+<tr class="even">
+<td>BCD（8421 码）</td>
+<td><code>0010 0101</code></td>
+<td>每位十进制数字独立编码，金融系统常用</td>
+</tr>
+<tr class="odd">
+<td>独热码（one-hot）</td>
+<td>25 位中只有 1 位为 1</td>
+<td>极端冗余，状态机编码里能看到它的影子</td>
+</tr>
+</tbody>
+</table>
+<p>编码的代价会在运算电路里连本带利地还回来。以 BCD 为例：两个 BCD 数字相加，若 4 位二进制和大于 9，就必须<strong>加 6 修正</strong>并产生十进制进位：</p>
+<p><span class="math display">\[
+\text{若 } s_4 &gt; 9:\quad s \leftarrow s + 6,\quad c_{out} \leftarrow 1
+\]</span></p>
+<p>原因在于 4 位二进制的进位发生在 16，而十进制需要它在 10 发生，两者相差 6。于是 BCD 加法器 = 二进制加法器 + 一个”和 &gt; 9”检测电路 + 一个加 6 的多路选择器。对比之下，纯二进制加法器没有这一级修正。<strong>这就是”编码决定运算电路”最直观的注脚。</strong></p>
+<div class="callout callout-style-default callout-note callout-titled" title="关键概念">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>关键概念
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>编码与运算电路是成对出现的</strong>。选了 BCD 编码，加法器就要处理”逢十进一”的修正逻辑；选了二进制，修正逻辑消失但人机接口要做进制转换。<strong>没有免费的编码</strong>——你省下的每一处硬件，都在别处以复杂度还回来。</p>
+</div>
+</div>
+<p>同样的道理也适用于<strong>定点小数</strong>：把一个 <span class="math inline">\(k\)</span> 位编码解释为”整数”还是”分数”，硬件完全一样，只是小数点的<strong>约定位置</strong>不同。定点乘法中，两个 <span class="math inline">\(k\)</span> 位小数相乘得到 <span class="math inline">\(2k\)</span> 位结果，其中低 <span class="math inline">\(k\)</span> 位是”多余精度”，通常需要截断或舍入（第 17 章）。硬件不变，语义变了——这也是”数是什么由约定决定”的体现。</p>
+<p>原书 Fig. 1.2 用同一组 4 位编码展示了四种完全不同的解释：无符号整数 <span class="math inline">\([0,15]\)</span>、原码有符号整数 <span class="math inline">\([-7,+7]\)</span>（含 <span class="math inline">\(\pm 0\)</span>）、3 位整数 + 1 位小数的定点格式（<span class="math inline">\(0\)</span> 到 <span class="math inline">\(7.5\)</span>，步长 <span class="math inline">\(0.5\)</span>）、以及有符号分数（原码 <span class="math inline">\([-0.875,+0.875]\)</span>，2 的补码 <span class="math inline">\([-1,+0.875]\)</span>）。<strong>同样的 16 个码字，换个解释就是四个不同的数系</strong>——读硬件文档时，先问”这个字段按什么解释”永远是第一步。</p>
+</section>
+<section id="定基位置数制fixed-radix-positional-number-systems" class="level2">
+<h2 class="anchored" data-anchor-id="定基位置数制fixed-radix-positional-number-systems">1.4 定基位置数制（Fixed-Radix Positional Number Systems）</h2>
+<p>一个 <span class="math inline">\(k\)</span> 位整数、基数（radix）为 <span class="math inline">\(r\)</span> 的位置数制写作：</p>
+<p><span class="math display">\[
+x = \sum_{i=0}^{k-1} x_i \cdot r^i, \qquad x_i \in \{0, 1, \dots, r-1\}
+\]</span></p>
+<p>二进制（<span class="math inline">\(r=2\)</span>）统治数字硬件的原因很物理：两个稳定状态（高低电平）最容易可靠制造与区分。但”基数”这个概念远不止二进制：</p>
+<ul>
+<li><strong>八进制/十六进制</strong>：本质上是二进制的”压缩书写”，3 位/4 位二进制一组，方便人读，不改变硬件本质。</li>
+<li><strong>十进制硬件</strong>：IBM Power 系列处理器内置了十进制浮点运算单元（DFP），就是为了金融场景”0.1 元不能被二进制精确表示”这类痛点。</li>
+<li>负基数（negative radix，如 <span class="math inline">\(r=-2\)</span>）在数学上自洽且有趣，但工程上没有优势，了解即可。</li>
+</ul>
+<p>那么”最优基数”是多少？这是一个可以量化的问题。设要表示的最大数为 <span class="math inline">\(M\)</span>，所需位数 <span class="math inline">\(k = \log_r M\)</span>；若每一位数字的硬件复杂度大致正比于数字集合的大小 <span class="math inline">\(r\)</span>，则总成本</p>
+<p><span class="math display">\[
+C(r) \propto k\,r = r\log_r M = \frac{r}{\ln r}\,\ln M
+\]</span></p>
+<p>对 <span class="math inline">\(r\)</span> 求导：</p>
+<p><span class="math display">\[
+\frac{d}{dr}\left(\frac{r}{\ln r}\right) = \frac{\ln r - 1}{(\ln r)^2} = 0 \;\Longrightarrow\; r = e \approx 2.718
+\]</span></p>
+<p>也就是说，<strong>从纯成本角度，基数取 <span class="math inline">\(e\)</span> 附近最划算，实际就是 2 或 3</strong>（<span class="math inline">\(r/\ln r\)</span> 在 <span class="math inline">\(r=2\)</span> 与 <span class="math inline">\(r=4\)</span> 处都是 2.885，在 <span class="math inline">\(r=3\)</span> 处是 2.731，三者差别不到 6%）。这解释了为什么基数 2 稳坐主流、基数 4 在高基乘法/除法里同样常见（第 10、14 章），而更大的基数（8、16）只在”每次迭代要吞掉更多位”的串行算法里才划算。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="别把结论用过头">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>别把结论用过头
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>上面的 <span class="math inline">\(r=e\)</span> 结论建立在”每位成本 <span class="math inline">\(\propto r\)</span>“这个很粗的假设上。真实 VLSI 里还要算布线、管脚、时序收敛，所以实践中基数的选择往往由<strong>算法结构</strong>（比如 Booth 重编码天然适配基数 4）而非这条渐近公式决定。公式的价值在于告诉你：不要指望靠提高基数获得数量级的收益。</p>
+</div>
+</div>
+</section>
+<section id="进制转换number-radix-conversion" class="level2">
+<h2 class="anchored" data-anchor-id="进制转换number-radix-conversion">1.5 进制转换（Number Radix Conversion）</h2>
+<p>进制转换是每次”人机交互”都要做的事。两类基本方法：</p>
+<p><strong>除基取余法（用于整数， radix <span class="math inline">\(r\)</span> → 目标基数 <span class="math inline">\(R\)</span>）</strong>：反复用新基数 <span class="math inline">\(R\)</span> 去除，余数从低位到高位依次给出新表示的各位。例如十进制转二进制，就是不断除 2 取余。</p>
+<p><strong>乘基取整法（用于小数）</strong>：反复用 <span class="math inline">\(R\)</span> 去乘小数部分，整数部分从高位到低位依次给出。</p>
+<p>举一个本书后面还会遇到的例子——把 <span class="math inline">\((0.1)_{10}\)</span> 转成二进制：</p>
+<p><span class="math display">\[
+0.1\times2 = \mathbf{0}.2,\quad 0.2\times2 = \mathbf{0}.4,\quad 0.4\times2 = \mathbf{0}.8,\quad 0.8\times2 = \mathbf{1}.6,\quad 0.6\times2 = \mathbf{1}.2,\ \dots
+\]</span></p>
+<p>得到的比特序列是 <span class="math inline">\(0,0,0,1,1,0,0,1,1,\dots\)</span>，即</p>
+<p><span class="math display">\[
+(0.1)_{10} = (0.000\overline{1100})_2
+\]</span></p>
+<p><strong>它永远不会终止</strong>。因为 <span class="math inline">\(0.1 = 1/10 = 1/(2\times5)\)</span>，分母含因子 5，而二进制小数只能精确表示分母为 <span class="math inline">\(2^k\)</span> 的分数。一般判据是：</p>
+<p><span class="math display">\[
+\text{有限十进制小数 } \frac{a}{10^m} \text{ 能被有限二进制表示} \iff \frac{a}{10^m}\cdot 2^{k} \in \mathbb{Z} \text{ 对某个 } k \iff 5^m \mid a
+\]</span></p>
+<div class="callout callout-style-default callout-warning callout-titled" title="工程陷阱">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">警告</span>工程陷阱
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>大多数有限十进制小数不能被有限二进制精确表示</strong>（0.1 是最著名的例子）。这意味着进制转换对小数而言通常是<strong>有损的</strong>。做金融、计量相关硬件时，这个性质必须在系统规格阶段就讲清楚，否则就是下一个 Ariane。</p>
+</div>
+</div>
+<p>硬件上，定点数的进制转换可以用<strong>移位-累加</strong>结构实现：把目标基数 <span class="math inline">\(R\)</span> 的幂次权重预先存好，逐位累加即可，本质是一个小型的乘加阵列。更紧凑的做法是把它写成 Horner（秦九韶）形式，从最高位开始递推：</p>
+<p><span class="math display">\[
+x = ((\cdots((x_{k-1})\cdot r + x_{k-2})\cdot r + \cdots)\cdot r + x_0)
+\]</span></p>
+<p>每步一个”乘 <span class="math inline">\(r\)</span> + 加一位”，正好对应一个移位-加法单元，<span class="math inline">\(k\)</span> 步完成。反过来，当两个基数互为整数次幂时（2 ↔︎ 8 ↔︎ 16），转换退化成<strong>纯重分组</strong>，零硬件成本——这就是十六进制只是”书写便利”的原因。</p>
+</section>
+<section id="数表示的分类classes-of-number-representations" class="level2">
+<h2 class="anchored" data-anchor-id="数表示的分类classes-of-number-representations">1.6 数表示的分类（Classes of Number Representations）</h2>
+<p>本书把数的表示方法组织成一个分类空间，后续章节逐一展开：</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>类别</th>
+<th>代表</th>
+<th>解决的问题</th>
+<th>代价</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>原码（signed-magnitude）</td>
+<td>第 2 章</td>
+<td>直观、乘除符号处理简单</td>
+<td>加法不统一、有 <span class="math inline">\(\pm 0\)</span></td>
+</tr>
+<tr class="even">
+<td>补码（complement）</td>
+<td>第 2 章</td>
+<td>加减法统一、硬件最简</td>
+<td>范围不对称、取负可能溢出</td>
+</tr>
+<tr class="odd">
+<td>冗余数系（redundant）</td>
+<td>第 3 章</td>
+<td>消除进位传播，<span class="math inline">\(O(1)\)</span> 加法</td>
+<td>编码浪费、比较/转换复杂</td>
+</tr>
+<tr class="even">
+<td>剩余数系（RNS）</td>
+<td>第 4 章</td>
+<td>大数运算通道化、天然并行</td>
+<td>比较/除法/溢出检测困难</td>
+</tr>
+</tbody>
+</table>
+<p>这个分类不是任意罗列，而是沿着一条明确的线索推进：<strong>从”一个数一个码”走向”一个数多个码”</strong>。原码和补码都是一一映射（除了 <span class="math inline">\(\pm 0\)</span> 这个小瑕疵），冗余数系和 RNS 则是有意引入多对一映射，用编码空间的浪费换取运算的并行性。理解这一点，后面两章的”怪异”设计就有了统一的解释。</p>
+<p>为了在后续章节里直观描述”哪些位参与哪些运算”，本书全程使用<strong>点记号（dot notation）</strong>：用一个圆点表示一个比特（或一个数位），按权重排成阵列，纵向表示不同操作数。原书 Fig. 1.4 给出了基本约定；第 2 章会引入空心点表示负权重位（negabit），第 3 章再扩展到双位、单位等记号。<strong>点记号是本书的”电路图语言”</strong>，读懂它，后面所有乘法阵列、压缩树的图就都能一眼看懂。</p>
+<div class="callout callout-style-default callout-note callout-titled" title="本章小结">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">注记</span>本章小结
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>计算机算术的一切设计都可以追溯到两个选择：<strong>用什么编码表示数</strong>，<strong>用什么算法实现运算</strong>。本章建立了这两个维度的基本词汇表。第 2-4 章把”表示”这个维度讲透，第 5 章起进入”运算”。</p>
+</div>
+</div>
+</section>
+<section id="原书插图" class="level2">
+<h2 class="anchored" data-anchor-id="原书插图">原书插图</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch01/fig01_02.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 1.2 同一组 4 位编码的四种解释：无符号二进制 <span class="math inline">\([0,15]\)</span>、4 位原码 <span class="math inline">\([-7,+7]\)</span>（含 <span class="math inline">\(\pm0\)</span>）、3 位整数加 1 位小数的定点格式（<span class="math inline">\(0\)</span> 到 <span class="math inline">\(7.5\)</span>，步长 <span class="math inline">\(0.5\)</span>）、有符号分数（原码 <span class="math inline">\([-0.875,+0.875]\)</span>，2 的补码 <span class="math inline">\([-1,+0.875]\)</span>）</figcaption>
+</figure>
+</div>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/ch01/fig01_04.png" class="img-fluid figure-img" style="width:85.0%"></p>
+<figcaption>图 1.4 点记号（dot notation）：用一个点代表一个比特/数位，按权重排成阵列，用来直观刻画数表示格式与算术算法中的数据流</figcaption>
+</figure>
+</div>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "已复制");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "已复制");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const cellDetails = window.document.querySelectorAll(".cell details.code-fold");
+        for (let i=0; i<cellDetails.length; i++) {
+          const details = cellDetails[i];
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell div.sourceCode.cell-code");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./index.html" class="pagination-link" aria-label="前言">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">前言</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./ch02.html" class="pagination-link" aria-label="第2章 有符号数的表示（Representing Signed Numbers）">
+        <span class="nav-page-text"><span class="chapter-title">第2章 有符号数的表示（Representing Signed Numbers）</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">源代码</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 第1章 数与算术（Numbers and Arithmetic）</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## 本章导读</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>这一章回答一个看似幼稚、实则深刻的问题：**计算机里的"数"到底是什么？** 我们从小习惯的十进制纸笔算术，到了硅片上必须重新发明一遍——用比特编码、用逻辑门实现、在有限的面积与延迟预算内完成。本章是全书的地图：它告诉你为什么计算机算术（Computer Arithmetic）是一门独立的学科，而不是"把小学算术写成 Verilog"那么简单。</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">## 1.1 什么是计算机算术？（What is Computer Arithmetic?）</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>计算机算术研究的是**算术运算的算法与硬件实现之间的映射关系**。同样一个加法，可以是一串行波进位的全加器（慢但省面积），也可以是一棵并行前缀树（快但贵）——数学上完全等价，物理上判若云泥。</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>换句话说，这一学科的输入是"要算什么"，输出是"用什么电路算、要花多少钱、多久能算完"。它横跨三个层次：最上层是**数的表示**（第 2-4 章），中间层是**运算算法**（第 5-16 章加减乘除开方），最下层是**实现技术**（第 25-28 章流水、低功耗、可重构）。三个层次相互牵制：换了表示，算法就要重写；换了算法，电路结构与时序就得跟着变。</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>::: {.callout-important title="工程视角"}</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>做芯片的人常说"算法即结构，结构即性能"。一个算术部件的延迟、面积、功耗，本质上由你选择的**算法**决定，逻辑综合工具能做的优化只是锦上添花。这就是本书反复出现的主线：**先选算法，再谈实现**。</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>评价一个算术部件，业内有三个公认的度量口径，本书后文会反复拿来比较各种方案：</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**延迟（latency）**：从输入有效到输出有效的时间。早期文献用"门级延迟数"计量，现代设计更常用 FO4（一个反相器驱动四个相同反相器的延迟）或直接的 ps/ns。</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**面积/成本（cost）**：晶体管数、标准单元数，或版图意义上的 $\lambda^2$ 面积。规则性（regularity）往往比纯粹的单元数量更决定实际面积，因为布线拥塞会吃掉大量硅片。</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**功耗/能耗（power/energy）**：动态功耗 $\propto C V^2 f$，算术部件的功耗大头往往不是有用的计算，而是**毛刺（glitch）**与冗余翻转（第 26 章会专门讨论）。</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>三者构成一个不可能三角：想延迟低就得并行铺硬件，面积和功耗跟着涨；想面积小就串行复用，延迟又上去了。**所有算术设计，本质上都是在这个三角里挑一个点。**</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>几个贯穿全书的核心矛盾在本章就已埋下伏笔：</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**延迟 vs. 面积**：串行（bit-serial）方案用 1 位硬件反复算 $k$ 次；并行方案一次铺开 $k$ 位硬件。这是算术电路设计的第一性权衡。</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**规则性 vs. 性能**：行波进位加法器（ripple-carry adder）结构极其规整、版图友好，但进位链是它的阿喀琉斯之踵。</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**精确性 vs. 成本**：浮点运算的舍入（rounding）让"正确"本身变成一种需要精心设计的行为。</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="fu">## 1.2 动机实例（Motivating Examples）</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>原书用几个著名的工程事故说明"算术出错，代价惨重"。这些都是业界公开的经典案例：</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Pentium FDIV 缺陷（1994）**：Intel 早期 Pentium 处理器的浮点除法查找表中有 5 个条目漏填，导致特定操作数下除法结果精度受损，最终 Intel 召回处理器，损失约 4.75 亿美元。它直接催生了形式验证（formal verification）在算术单元验证中的大规模应用。</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**Ariane 5 首飞爆炸（1996）**：火箭惯性参考系统将 64 位浮点速度值转换为 16 位有符号整数时发生溢出（overflow），控制计算机崩溃，火箭升空 37 秒后解体。**数制转换与表示范围**不是细枝末节，是性命攸关。</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**爱国者导弹时钟漂移（1991）**：内部时钟用 0.1 秒的近似二进制小数累加计时，连续运行约 100 小时后累计误差约 0.34 秒，导致拦截窗口计算错误。**有限精度表示的舍入误差会随时间累积**——这是第 19 章误差分析要系统处理的问题。</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>把这三个案例放在一起看，会发现它们恰好是三类**不同性质**的错误，而不是同一个错误的三种说法：</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**实现错误**（Pentium）：算法正确、规格正确，只是硬件里的常数表填错了。这类问题靠**形式验证与穷举/定向测试**来抓，也促使业界把 SRT 除法表之类"手写常数"纳入严格的等价性检查流程。</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**范围错误**（Ariane 5）：数据本身没错，错在把大动态范围的量搬进了窄容器。这是**表示与接口规格**问题——那段转换代码在 Ariane 4 上永远不会溢出，换到更快的 Ariane 5 上就爆了。复用代码时"物理量变了但位宽没变"是极常见的坑。</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**累积误差**（爱国者）：每一步的舍入都微不足道，但 $10^6$ 步之后就不可忽略。这是**数值分析的范畴**，需要在算法设计阶段就给出误差界，而不是事后调精度。</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip title="解读"}</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>这三个事故恰好对应本书的三大主题：**验证**（实现要对）、**表示**（范围与编码要匹配）、**误差**（有限精度的数学性质要心里有数）。读后续章节时不妨时常回想这三个例子。</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>工程上的一条硬经验：**算术部件的 bug 不会因为"概率很低"而消失**。一个 64 位乘法器的输入空间是 $2^{128}$，随机仿真能覆盖的比例小到荒谬；而 Pentium 那 5 个坏条目，触发概率同样低到几乎测不出来，却真实存在。所以算术验证必须靠**结构化的方法**（分块等价性检查、形式化证明、代数性质的定向激励），而不是靠堆随机测试。</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="fu">## 1.3 数及其编码（Numbers and Their Encodings）</span></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>一个数（number）是抽象的数学对象；它在机器里的比特串只是它的一种**编码（encoding）**。同一个数 25，可以编码为：</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 编码方式 <span class="pp">|</span> 比特串 <span class="pp">|</span> 说明 <span class="pp">|</span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 二进制原码 <span class="pp">|</span> <span class="in">`00011001`</span> <span class="pp">|</span> 标准的 positional 编码 <span class="pp">|</span></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> BCD（8421 码） <span class="pp">|</span> <span class="in">`0010 0101`</span> <span class="pp">|</span> 每位十进制数字独立编码，金融系统常用 <span class="pp">|</span></span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 独热码（one-hot） <span class="pp">|</span> 25 位中只有 1 位为 1 <span class="pp">|</span> 极端冗余，状态机编码里能看到它的影子 <span class="pp">|</span></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>编码的代价会在运算电路里连本带利地还回来。以 BCD 为例：两个 BCD 数字相加，若 4 位二进制和大于 9，就必须**加 6 修正**并产生十进制进位：</span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>\text{若 } s_4 &gt; 9:\quad s \leftarrow s + 6,\quad c_{out} \leftarrow 1</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>原因在于 4 位二进制的进位发生在 16，而十进制需要它在 10 发生，两者相差 6。于是 BCD 加法器 = 二进制加法器 + 一个"和 &gt; 9"检测电路 + 一个加 6 的多路选择器。对比之下，纯二进制加法器没有这一级修正。**这就是"编码决定运算电路"最直观的注脚。**</span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="关键概念"}</span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>**编码与运算电路是成对出现的**。选了 BCD 编码，加法器就要处理"逢十进一"的修正逻辑；选了二进制，修正逻辑消失但人机接口要做进制转换。**没有免费的编码**——你省下的每一处硬件，都在别处以复杂度还回来。</span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>同样的道理也适用于**定点小数**：把一个 $k$ 位编码解释为"整数"还是"分数"，硬件完全一样，只是小数点的**约定位置**不同。定点乘法中，两个 $k$ 位小数相乘得到 $2k$ 位结果，其中低 $k$ 位是"多余精度"，通常需要截断或舍入（第 17 章）。硬件不变，语义变了——这也是"数是什么由约定决定"的体现。</span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>原书 Fig. 1.2 用同一组 4 位编码展示了四种完全不同的解释：无符号整数 $<span class="co">[</span><span class="ot">0,15</span><span class="co">]</span>$、原码有符号整数 $<span class="co">[</span><span class="ot">-7,+7</span><span class="co">]</span>$（含 $\pm 0$）、3 位整数 + 1 位小数的定点格式（$0$ 到 $7.5$，步长 $0.5$）、以及有符号分数（原码 $<span class="co">[</span><span class="ot">-0.875,+0.875</span><span class="co">]</span>$，2 的补码 $<span class="co">[</span><span class="ot">-1,+0.875</span><span class="co">]</span>$）。**同样的 16 个码字，换个解释就是四个不同的数系**——读硬件文档时，先问"这个字段按什么解释"永远是第一步。</span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a><span class="fu">## 1.4 定基位置数制（Fixed-Radix Positional Number Systems）</span></span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a>一个 $k$ 位整数、基数（radix）为 $r$ 的位置数制写作：</span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>x = \sum_{i=0}^{k-1} x_i \cdot r^i, \qquad x_i \in <span class="sc">\{</span>0, 1, \dots, r-1<span class="sc">\}</span></span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a>二进制（$r=2$）统治数字硬件的原因很物理：两个稳定状态（高低电平）最容易可靠制造与区分。但"基数"这个概念远不止二进制：</span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**八进制/十六进制**：本质上是二进制的"压缩书写"，3 位/4 位二进制一组，方便人读，不改变硬件本质。</span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**十进制硬件**：IBM Power 系列处理器内置了十进制浮点运算单元（DFP），就是为了金融场景"0.1 元不能被二进制精确表示"这类痛点。</span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>负基数（negative radix，如 $r=-2$）在数学上自洽且有趣，但工程上没有优势，了解即可。</span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>那么"最优基数"是多少？这是一个可以量化的问题。设要表示的最大数为 $M$，所需位数 $k = \log_r M$；若每一位数字的硬件复杂度大致正比于数字集合的大小 $r$，则总成本</span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>C(r) \propto k\,r = r\log_r M = \frac{r}{\ln r}\,\ln M</span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>对 $r$ 求导：</span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>\frac{d}{dr}\left(\frac{r}{\ln r}\right) = \frac{\ln r - 1}{(\ln r)^2} = 0 \;\Longrightarrow\; r = e \approx 2.718</span>
+<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a>也就是说，**从纯成本角度，基数取 $e$ 附近最划算，实际就是 2 或 3**（$r/\ln r$ 在 $r=2$ 与 $r=4$ 处都是 2.885，在 $r=3$ 处是 2.731，三者差别不到 6%）。这解释了为什么基数 2 稳坐主流、基数 4 在高基乘法/除法里同样常见（第 10、14 章），而更大的基数（8、16）只在"每次迭代要吞掉更多位"的串行算法里才划算。</span>
+<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="别把结论用过头"}</span>
+<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a>上面的 $r=e$ 结论建立在"每位成本 $\propto r$"这个很粗的假设上。真实 VLSI 里还要算布线、管脚、时序收敛，所以实践中基数的选择往往由**算法结构**（比如 Booth 重编码天然适配基数 4）而非这条渐近公式决定。公式的价值在于告诉你：不要指望靠提高基数获得数量级的收益。</span>
+<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a><span class="fu">## 1.5 进制转换（Number Radix Conversion）</span></span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a>进制转换是每次"人机交互"都要做的事。两类基本方法：</span>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a>**除基取余法（用于整数， radix $r$ → 目标基数 $R$）**：反复用新基数 $R$ 去除，余数从低位到高位依次给出新表示的各位。例如十进制转二进制，就是不断除 2 取余。</span>
+<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a>**乘基取整法（用于小数）**：反复用 $R$ 去乘小数部分，整数部分从高位到低位依次给出。</span>
+<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a>举一个本书后面还会遇到的例子——把 $(0.1)_{10}$ 转成二进制：</span>
+<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a>0.1\times2 = \mathbf{0}.2,\quad 0.2\times2 = \mathbf{0}.4,\quad 0.4\times2 = \mathbf{0}.8,\quad 0.8\times2 = \mathbf{1}.6,\quad 0.6\times2 = \mathbf{1}.2,\ \dots</span>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>得到的比特序列是 $0,0,0,1,1,0,0,1,1,\dots$，即</span>
+<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a>(0.1)_{10} = (0.000\overline{1100})_2</span>
+<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a>**它永远不会终止**。因为 $0.1 = 1/10 = 1/(2\times5)$，分母含因子 5，而二进制小数只能精确表示分母为 $2^k$ 的分数。一般判据是：</span>
+<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>\text{有限十进制小数 } \frac{a}{10^m} \text{ 能被有限二进制表示} \iff \frac{a}{10^m}\cdot 2^{k} \in \mathbb{Z} \text{ 对某个 } k \iff 5^m \mid a</span>
+<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a>::: {.callout-warning title="工程陷阱"}</span>
+<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a>**大多数有限十进制小数不能被有限二进制精确表示**（0.1 是最著名的例子）。这意味着进制转换对小数而言通常是**有损的**。做金融、计量相关硬件时，这个性质必须在系统规格阶段就讲清楚，否则就是下一个 Ariane。</span>
+<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a>硬件上，定点数的进制转换可以用**移位-累加**结构实现：把目标基数 $R$ 的幂次权重预先存好，逐位累加即可，本质是一个小型的乘加阵列。更紧凑的做法是把它写成 Horner（秦九韶）形式，从最高位开始递推：</span>
+<span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a>x = ((\cdots((x_{k-1})\cdot r + x_{k-2})\cdot r + \cdots)\cdot r + x_0)</span>
+<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a>每步一个"乘 $r$ + 加一位"，正好对应一个移位-加法单元，$k$ 步完成。反过来，当两个基数互为整数次幂时（2 ↔ 8 ↔ 16），转换退化成**纯重分组**，零硬件成本——这就是十六进制只是"书写便利"的原因。</span>
+<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a><span class="fu">## 1.6 数表示的分类（Classes of Number Representations）</span></span>
+<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a>本书把数的表示方法组织成一个分类空间，后续章节逐一展开：</span>
+<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 类别 <span class="pp">|</span> 代表 <span class="pp">|</span> 解决的问题 <span class="pp">|</span> 代价 <span class="pp">|</span></span>
+<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a><span class="pp">|---|---|---|---|</span></span>
+<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 原码（signed-magnitude） <span class="pp">|</span> 第 2 章 <span class="pp">|</span> 直观、乘除符号处理简单 <span class="pp">|</span> 加法不统一、有 $\pm 0$ <span class="pp">|</span></span>
+<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 补码（complement） <span class="pp">|</span> 第 2 章 <span class="pp">|</span> 加减法统一、硬件最简 <span class="pp">|</span> 范围不对称、取负可能溢出 <span class="pp">|</span></span>
+<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 冗余数系（redundant） <span class="pp">|</span> 第 3 章 <span class="pp">|</span> 消除进位传播，$O(1)$ 加法 <span class="pp">|</span> 编码浪费、比较/转换复杂 <span class="pp">|</span></span>
+<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> 剩余数系（RNS） <span class="pp">|</span> 第 4 章 <span class="pp">|</span> 大数运算通道化、天然并行 <span class="pp">|</span> 比较/除法/溢出检测困难 <span class="pp">|</span></span>
+<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>这个分类不是任意罗列，而是沿着一条明确的线索推进：**从"一个数一个码"走向"一个数多个码"**。原码和补码都是一一映射（除了 $\pm 0$ 这个小瑕疵），冗余数系和 RNS 则是有意引入多对一映射，用编码空间的浪费换取运算的并行性。理解这一点，后面两章的"怪异"设计就有了统一的解释。</span>
+<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a>为了在后续章节里直观描述"哪些位参与哪些运算"，本书全程使用**点记号（dot notation）**：用一个圆点表示一个比特（或一个数位），按权重排成阵列，纵向表示不同操作数。原书 Fig. 1.4 给出了基本约定；第 2 章会引入空心点表示负权重位（negabit），第 3 章再扩展到双位、单位等记号。**点记号是本书的"电路图语言"**，读懂它，后面所有乘法阵列、压缩树的图就都能一眼看懂。</span>
+<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a>::: {.callout-note title="本章小结"}</span>
+<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a>计算机算术的一切设计都可以追溯到两个选择：**用什么编码表示数**，**用什么算法实现运算**。本章建立了这两个维度的基本词汇表。第 2-4 章把"表示"这个维度讲透，第 5 章起进入"运算"。</span>
+<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a><span class="fu">## 原书插图</span></span>
+<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">图 1.2 同一组 4 位编码的四种解释：无符号二进制 $[0,15]$、4 位原码 $[-7,+7]$（含 $\pm0$）、3 位整数加 1 位小数的定点格式（$0$ 到 $7.5$，步长 $0.5$）、有符号分数（原码 $[-0.875,+0.875]$，2 的补码 $[-1,+0.875]$）</span><span class="co">](images/ch01/fig01_02.png)</span>{fig-align="center" width="85%"}</span>
+<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a><span class="al">![图 1.4 点记号（dot notation）：用一个点代表一个比特/数位，按权重排成阵列，用来直观刻画数表示格式与算术算法中的数据流](images/ch01/fig01_04.png)</span>{fig-align="center" width="85%"}</span></code></pre></div><button title="复制到剪贴板" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
